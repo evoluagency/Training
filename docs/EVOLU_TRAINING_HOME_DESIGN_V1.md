@@ -16,13 +16,13 @@ Fluxo: página inicial → apresentação do curso → `/area?course={id}` → a
 5. **Experiência de aprendizagem:** conteúdo, aplicação, avaliação e conclusão.
 6. **Acesso corporativo:** botão de entrada, informações sobre vagas por empresa e rodapé.
 
-## Sistema visual — direção provisória
+## Sistema visual — identidade referenciada
 
 - **Tipo:** Montserrat, pesos 300 a 800. Fonte carregada por CSS externo com fallback Arial/Helvetica; a conectividade/CSP da hospedagem precisa ser testada.
 - **Cores:** tinta `#161917`, fundo `#F5F5F1`, linha `#D8D9D1`, verde-limão `#D7F45D`. Componentes de gestão ajustados para a mesma família cromática.
 - **Composição:** editorial, grande respiro, grade modular, títulos curtos e contraste alto. Animações desnecessárias evitadas.
 - **Responsividade:** layouts adaptativos para desktop, tablet e celular, com estados de foco e preferência de movimento reduzido.
-- **Logotipo oficial EVOLU:** **não incorporado nesta versão**, pois o arquivo original de identidade não está validado neste repositório. A identificação textual `EVOLU Training` é provisória e não deve ser usada como substituto do desenho registrado da marca. O arquivo original deve ser aplicado posteriormente sem recriação gráfica.
+- **Logotipo oficial EVOLU:** aplicado por meio dos arquivos originais do proprietário (`public/brand/evolu-white.png` e `public/brand/evolu-black.png`), com recorte do espaço externo e transparência, sem tipografia redesenhada. A denominação Training é separada do logo; veja `EVOLU_TRAINING_BRAND_SYSTEM_V1.md`.
 - **Material fotográfico:** não há fotos na v0.1; se futuramente incluídas, utilizar imagens autorizadas e pertinentes.
 
 ## Governança de dados e acesso
