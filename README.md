@@ -1,6 +1,14 @@
-# Training
+# Evolu Training
 
 Plataforma privada de treinamentos corporativos, com vagas por empresa e acesso por conta ChatGPT autorizada. Cobranças permanecem desativadas.
+
+## Onde cadastrar cada item
+
+- **Treinamentos**: catálogo → novo treinamento → gerenciar treinamento → módulos → aulas → vídeo, imagem ou PDF. Na mesma tela, cadastre as questões, publique e vincule às empresas.
+- **Empresas e vagas**: empresas clientes e capacidade de acesso.
+- **Participantes**: pessoas que ocuparão as vagas.
+- **Ferramentas**: planilhas, arquivos de apoio e links por empresa ou participante.
+- **Acompanhamento**: progresso, resultados e certificados.
 
 ## Recursos
 

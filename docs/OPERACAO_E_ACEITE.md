@@ -1,4 +1,4 @@
-# Operação e aceite — Training
+# Operação e aceite — Evolu Training
 
 Objetivo: versão operacional até 25/10/2026 para o treinamento de 31/10/2026. Datas são marcos de entrega; não há execução agendada em segundo plano.
 
