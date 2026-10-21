@@ -20,6 +20,9 @@ Objetivo: versão operacional até 25/10/2026 para o treinamento de 31/10/2026. 
 | Verificação | Evidência necessária |
 | --- | --- |
 | Administrador | Login real abre o painel; criar empresa e catálogo persiste após recarregar. |
+| Página inicial | Em celular e desktop: navegação, contraste, acesso via ChatGPT, sem interface de conversa. |
+| Vitrine | Cursos rascunho e publicados sem aprovação ficam invisíveis; apenas cursos explicitamente marcados aparecem. |
+| Redirecionamento | Ao clicar em curso listado, login leva a `/area?course=ID` e respeita o vínculo com a empresa. |
 | Participante convidado | Conta ChatGPT com e-mail cadastrado abre somente os cursos da própria empresa. |
 | Isolamento | Outra empresa e conta não convidada não acessam materiais, comentários ou resultados. |
 | Vídeo/PDF/imagem | Abrir os formatos reais, avançar o vídeo e verificar download de arquivo. |
@@ -47,3 +50,7 @@ Objetivo: versão operacional até 25/10/2026 para o treinamento de 31/10/2026. 
 Os testes automatizados cobrem acesso, vagas, isolamento, prazo, correção, NPS, emissão idempotente, comentários e ferramentas. Um teste adicional executa D1/R2 localmente e valida upload, leitura protegida, intervalo de vídeo e emissão de certificado com SQL real do runtime.
 
 O login externo, convites, reprodução dos vídeos reais e ensaio completo por uma conta de participante são condições para declarar a turma pronta. A confirmação de publicação não substitui esse aceite.
+
+## Página inicial e identidade — revisão antes da publicação
+
+A tela `/` recebe a landing editorial. O treinamento fica em `/area` e usa o login do ChatGPT Sites como identificação, sem exigir interface de conversa. Conferir o mecanismo de compartilhamento privado do Site: uma landing de acesso geral não é aberta ao público automaticamente. Os cursos só podem aparecer na vitrine após publicação e aprovação manual do administrador, conforme [diretriz visual e técnica](EVOLU_TRAINING_HOME_DESIGN_V1.md). Aplicar o logotipo oficial depois de obter o arquivo original.
