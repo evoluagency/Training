@@ -33,7 +33,7 @@ export default async function HomePage(){
  }
  return <div className="home">
   <header className="home-header" id="inicio">
-   <a href="#inicio" className="home-product" aria-label="EVOLU Training — início"><span className="home-product-name">EVOLU</span><span className="home-product-divider" aria-hidden="true"/><span className="home-product-sub">Training</span></a>
+   <a href="#inicio" className="home-product" aria-label="EVOLU Training — início"><img className="home-logo" src="/brand/evolu-white.png" alt="EVOLU" width={139} height={30}/><span className="home-product-divider" aria-hidden="true"/><span className="home-product-sub">Training</span></a>
    <nav className="home-nav" aria-label="Navegação principal">
     <a href="#areas">Áreas de formação</a><a href="#cursos">Treinamentos</a><a href="#metodo">Como funciona</a>
    </nav>
@@ -43,15 +43,16 @@ export default async function HomePage(){
    <section className="home-hero" aria-labelledby="home-hero-title">
     <div className="home-hero-copy">
      <p className="home-kicker"><span className="home-kicker-dot"/> Formação corporativa · Plataforma EVOLU</p>
-     <h1 id="home-hero-title">Aprender faz parte do trabalho.<span>Aplicar faz parte do resultado.</span></h1>
-     <p className="home-lead">Treinamentos organizados para empresas e equipes, com conteúdo, materiais de apoio, avaliações e acompanhamento em um único ambiente.</p>
+     <h1 id="home-hero-title">Conhecimento estruturado.<span>Aplicação no trabalho.</span></h1>
+     <p className="home-lead">Percursos de formação para equipes, com aulas, ferramentas relacionadas a cada módulo, avaliações e acompanhamento por empresa.</p>
      <div className="home-hero-actions"><a className="home-primary" href="#cursos">Conhecer treinamentos <span aria-hidden="true">↘</span></a><a className="home-tertiary" href={accessHref} target="_top">{user?'Continuar formação':'Entrar com ChatGPT'} <span aria-hidden="true">↗</span></a></div>
      <p className="home-note">Participação mediante vagas disponibilizadas pela empresa. O acesso aos materiais requer autorização.</p>
     </div>
-    <div className="home-hero-art" aria-label="Três etapas da formação: conteúdo, prática e avaliação">
-      <div className="home-art-top"><span>EVOLU / LEARNING ENVIRONMENT</span><span>01—03</span></div>
-      <div className="home-art-symbol" aria-hidden="true"><span>→</span></div>
-      <div className="home-art-bottom"><div><small>FORMAÇÃO CORPORATIVA</small><strong>Conteúdo.</strong><strong>Prática.</strong><strong>Resultado.</strong></div><span className="home-art-index">E/T</span></div>
+    <div className="home-hero-art" aria-label="Representação editorial de conexões entre informações, aprendizagem e operação">
+      <div className="home-art-top"><span>EVOLU TRAINING / INTELIGÊNCIA APLICADA</span><span>FORMAÇÃO CORPORATIVA</span></div>
+      <div className="home-art-network" aria-hidden="true"><div className="home-art-orbit one"/><div className="home-art-orbit two"/><div className="home-art-orbit three"/><div className="home-art-node n1"/><div className="home-art-node n2"/><div className="home-art-node n3"/><div className="home-art-line l1"/><div className="home-art-line l2"/><div className="home-art-line l3"/></div>
+      <div className="home-art-side-label" aria-hidden="true">ESTRATÉGIA / INTELIGÊNCIA / OPERAÇÃO</div>
+      <div className="home-art-bottom"><div><small>FORMAÇÃO EVOLU</small><strong>Aprendizagem.</strong><strong>Ferramentas.</strong><strong>Execução.</strong></div><span className="home-art-index">01 / 03</span></div>
     </div>
    </section>
    <section className="home-areas home-section" id="areas" aria-labelledby="areas-title">
