@@ -72,3 +72,8 @@
 .home :focus-visible{outline-color:#d8fc63}
 @media(max-width:780px){.home-hero-art{min-height:380px}.home-product .home-logo{width:118px}.home-art-side-label{right:13px}}
 @media(max-width:480px){.home-product .home-logo{width:100px}.home-hero-art{min-height:340px}.home-hero h1{font-size:39px}}
+
+.home-footer-brand{display:inline-flex;align-items:center;gap:10px;white-space:nowrap}
+.home-footer-brand img{display:block;width:104px;height:auto;object-fit:contain}
+.home-footer-brand span{border-left:1px solid #b9bdb6;padding-left:9px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;font-weight:700}
+@media(max-width:480px){.home-footer-brand img{width:91px}}
