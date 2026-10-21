@@ -1,10 +1,10 @@
 import {env} from 'cloudflare:workers';
 import {getChatGPTUser,chatGPTSignInPath} from './chatgpt-auth';
+import {getPublicCatalog,type PublicCourse} from '../lib/training/public-catalog';
 import './home.css';
 
 export const dynamic='force-dynamic';
 
-type PublicCourse={id:string,title:string,description:string,hours:number,category:string};
 const areas=[
  {index:'01',name:'Estratégia e gestão',detail:'Diagnóstico, decisões e aplicação de modelos de gestão.'},
  {index:'02',name:'Dados e inteligência',detail:'Leitura de indicadores, BI e estruturação da informação.'},
@@ -25,8 +25,7 @@ export default async function HomePage(){
  let catalogReady=false;
  try{
   if(env.DB){
-   const result=await env.DB.prepare("SELECT c.id,c.title,c.description,c.hours,cat.title AS category FROM courses c JOIN catalogs cat ON cat.id=c.catalog_id WHERE c.status='published' AND c.show_on_home=1 ORDER BY cat.title,c.title").all<PublicCourse>();
-   courses=result.results;
+   courses=await getPublicCatalog(env.DB);
    catalogReady=true;
   }
  }catch(e){
