@@ -2,6 +2,17 @@
 
 Plataforma privada de treinamentos corporativos, com vagas por empresa e acesso por conta ChatGPT autorizada. Cobranças permanecem desativadas.
 
+## Página inicial, catálogo e acesso
+
+- **Página inicial (`/`):** apresentação institucional, áreas de formação e treinamentos destacados pela administração.
+- **Área protegida (`/area`):** interface própria do EVOLU Training; a autenticação utiliza o fluxo nativo de ChatGPT Sites. O participante não interage com uma tela de chat.
+- **Exibição pública:** um treinamento publicado aparece na vitrine somente quando o administrador aciona **Exibir na página inicial**, dentro do treinamento. O padrão é oculto, inclusive para cursos já existentes.
+- **Cartão do curso:** apresenta apenas título, resumo, categoria e duração; ao acessar, o aluno passa pela autenticação e continua sujeito à autorização de sua empresa.
+- **Visibilidade do Site:** o ambiente ainda é privado. Para visitantes não autenticados enxergarem a página inicial, o provedor precisa permitir essa modalidade sem remover os controles da aplicação.
+- **Identidade:** direção editorial provisória Montserrat, preto, off-white e verde-limão. A marca oficial EVOLU só será aplicada a partir do arquivo original.
+
+Diretrizes, critérios de privacidade e gates de aceite: [EVOLU_TRAINING_HOME_DESIGN_V1.md](docs/EVOLU_TRAINING_HOME_DESIGN_V1.md).
+
 ## Onde cadastrar cada item
 
 - **Treinamentos**: catálogo → novo treinamento → gerenciar treinamento → módulos → aulas → vídeo, imagem ou PDF. Na mesma tela, cadastre as questões, publique e vincule às empresas.
@@ -44,7 +55,7 @@ node node_modules/typescript/bin/tsc --noEmit
 
 Os testes usam identidades fictícias e armazenamento local, sem chamadas de inferência ou serviços pagos. A integração de armazenamento usa Miniflare, D1 e R2 locais. Não comprova o login real de participantes externos.
 
-A migration incremental `0001_link_resources_to_lessons` adiciona o vínculo opcional `resources.lesson_id`, preservando as ferramentas existentes. Migrations geradas em `drizzle/` devem ser aplicadas localmente antes de usar banco em preview. A publicação pelo Sites aplica as migrations no ambiente hospedado. Nunca alterar migrations já aplicadas. Credenciais e configuração privada ficam fora do repositório.
+As migrações incrementais `0001_link_resources_to_lessons` e `0002_public_course_showcase` adicionam o vínculo de ferramentas às aulas e a liberação opcional de cursos na vitrine (`show_on_home=0` por padrão), preservando os dados existentes. Migrations geradas em `drizzle/` devem ser aplicadas localmente antes de usar banco em preview. A publicação pelo Sites aplica as migrations no ambiente hospedado. Nunca alterar migrations já aplicadas. Credenciais e configuração privada ficam fora do repositório.
 
 Não existem GitHub Actions, workflows, jobs, deploy automático pelo GitHub ou integração de pagamento neste projeto. A publicação é feita pelo fluxo do Sites.
 
