@@ -69,6 +69,6 @@ export default async function HomePage(){
    </section>
    <section className="home-entry" aria-labelledby="entry-title"><div><p className="home-section-label">ACESSO CORPORATIVO</p><h2 id="entry-title">Seu treinamento está disponível?</h2><p>Utilize a conta ChatGPT autorizada pela sua empresa para acessar cursos, aulas, ferramentas, avaliações e certificados na interface do EVOLU Training.</p></div><a href={accessHref} target="_top">{user?'Ir para minha área':'Entrar com ChatGPT'} <span aria-hidden="true">↗</span></a></section>
   </main>
-  <footer className="home-footer"><span>EVOLU Training</span><p>Plataforma de aprendizagem corporativa. Acesso por empresa e participante autorizado.</p><a href="#inicio">Voltar ao topo ↑</a></footer>
+  <footer className="home-footer"><span className="home-footer-brand"><img src="/brand/evolu-black.png" alt="EVOLU" width={104} height={22}/><span>Training</span></span><p>Plataforma de aprendizagem corporativa. Acesso por empresa e participante autorizado.</p><a href="#inicio">Voltar ao topo ↑</a></footer>
  </div>;
 }
