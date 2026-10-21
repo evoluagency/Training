@@ -1,0 +1,25 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+import {readFileSync,realpathSync} from 'node:fs';
+
+const require=createRequire(realpathSync(new URL('../node_modules/wrangler/package.json',import.meta.url)));
+const {Miniflare}=require('miniflare');
+const {buildSync}=createRequire(realpathSync(new URL('../node_modules/drizzle-kit/package.json',import.meta.url)))('esbuild');
+test('D1 and R2: persisted metadata, private upload, cross-company denial and video range',async()=>{
+ const bundled=buildSync({entryPoints:['tests/worker-harness.ts'],bundle:true,write:false,format:'esm',platform:'neutral'}).outputFiles[0].text;
+ const mf=new Miniflare({modules:true,script:bundled,d1Databases:['DB'],r2Buckets:['BUCKET'],cf:false});
+ const handle=(request:Request,context:any)=>mf.dispatchFetch(request.url,{method:request.method,headers:{...Object.fromEntries(request.headers),'x-test-user':JSON.stringify(context.user)},body:request.body,duplex:'half'});
+ try{
+ const db=await mf.getD1Database('DB'),bucket=await mf.getR2Bucket('BUCKET');const sql=readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8');for(const statement of sql.split('--> statement-breakpoint'))if(statement.trim())await db.prepare(statement.trim()).run();
+ const owner={userId:'storage-owner',email:'owner@storage.test',displayName:'Owner'},a={userId:'a',email:'a@storage.test',displayName:'A'},b={userId:'b',email:'b@storage.test',displayName:'B'};
+ const ctx=(user:any)=>({db,bucket,user,adminEmail:owner.email});
+ async function req(path:string,user:any=owner,body?:any){const r=await handle(new Request('https://storage.test/api/training/'+path,{method:body===undefined?'GET':'POST',headers:{origin:'https://storage.test','Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}),ctx(user));assert.ok(r.status<300,await r.clone().text());return r.json() as Promise<any>}
+ const ca=await req('companies',owner,{name:'A',seats:2}),cb=await req('companies',owner,{name:'B',seats:2});for(const [u,c]of [[a,ca],[b,cb]])await req('members',owner,{companyId:c.id,name:u.displayName,jobTitle:'Analista',email:u.email,role:'learner'});
+ const cat=await req('catalogs',owner,{title:'C'}),course=await req('courses',owner,{catalogId:cat.id,title:'D1 R2',hours:1,minutes:1,passing:70,attemptLimit:1,certificate:true}),mod=await req('course/'+course.id+'/module',owner,{title:'M',position:1}),lesson=await req('course/'+course.id+'/lesson',owner,{moduleId:mod.id,title:'Aula',position:1,mode:'equivalent',body:''});const q=await req('course/'+course.id+'/question',owner,{prompt:'Q',options:['A','B'],correct:0,position:1});
+ const bytes=new TextEncoder().encode('synthetic-video-fixture');const upload=await handle(new Request('https://storage.test/api/training/upload?lesson='+lesson.id+'&name=demo.mp4',{method:'POST',headers:{origin:'https://storage.test','content-type':'video/mp4','content-length':String(bytes.length)},body:bytes}),ctx(owner));assert.equal(upload.status,201,await upload.clone().text());const asset:any=await upload.json();await req('course/'+course.id+'/publish',owner,{});await req('grants',owner,{companyId:ca.id,courseId:course.id});
+ let r=await handle(new Request('https://storage.test/api/training/asset/'+asset.id),ctx(a));assert.equal(r.status,200);assert.equal(await r.text(),'synthetic-video-fixture');r=await handle(new Request('https://storage.test/api/training/asset/'+asset.id),ctx(b));assert.equal(r.status,403);r=await handle(new Request('https://storage.test/api/training/asset/'+asset.id,{headers:{range:'bytes=0-8'}}),ctx(a));assert.equal(r.status,206);assert.equal(await r.text(),'synthetic');assert.equal(r.headers.get('content-range'),'bytes 0-8/23');
+ await req('progress/'+lesson.id,a,{});const attempt=await req('course/'+course.id+'/start',a,{});await req('attempt/'+attempt.id+'/answer',a,{questionId:q.id,choice:0});const result=await req('attempt/'+attempt.id+'/submit',a,{});assert.equal(result.score,100);await req('course/'+course.id+'/survey',a,{score:10});assert.equal((await req('course/'+course.id+'/certificate',a,{})).score,100);
+ const csv=new TextEncoder().encode('coluna\nvalor\n');const tool=await handle(new Request('https://storage.test/api/training/resource-file?companyId='+ca.id+'&title=Planilha&name=exemplo.csv',{method:'POST',headers:{origin:'https://storage.test','content-type':'text/csv','content-length':String(csv.length)},body:csv}),ctx(owner));assert.equal(tool.status,201,await tool.clone().text());const toolId:any=await tool.json();r=await handle(new Request('https://storage.test/api/training/resource/'+toolId.id),ctx(a));assert.equal(r.headers.get('content-disposition')?.startsWith('attachment;'),true);assert.equal(await r.text(),'coluna\nvalor\n');r=await handle(new Request('https://storage.test/api/training/resource/'+toolId.id),ctx(b));assert.equal(r.status,403);
+ }finally{await mf.dispose()}
+});
