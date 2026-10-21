@@ -9,3 +9,25 @@
 .panel,.course-card,.table-wrap{border-radius:2px}.button{border-radius:2px}.button:hover{background:#363d35}.button.outline{color:#222721}.asset{background:#f6f6f1}.module-number{font-family:Montserrat,Arial,sans-serif;color:#757e6c}.login h1 em{font-family:Montserrat,Arial,sans-serif;font-style:normal;color:#718333}.login-panel{background:#edf0e5}
 .lesson-tools{border:1px solid #d6dcd2;background:#f7f8f4;padding:16px;margin-top:20px}.lesson-tools .text-button{font-size:12px}.lesson-tool-upload>summary{font-size:12px;cursor:pointer;font-weight:600;padding:8px 0}.lesson-tool-upload .resource-upload{margin-top:15px}
 @media(max-width:650px){.lesson-tools{padding:12px}}
+
+/* EVOLU — identidade confirmada em materiais institucionais e editoriais da marca. */
+.brand{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-weight:400;letter-spacing:0}
+.brand-logo{object-fit:contain;display:block;height:auto;width:166px;max-width:100%;flex:none}
+.brand-unit{font:600 11px/1.2 Montserrat,Arial,sans-serif;letter-spacing:.14em;text-transform:uppercase;border-left:1px solid currentColor;padding-left:10px;color:inherit}
+.sidebar{background:#0d1011;color:#f5f6f3;border-color:#242a29}
+.sidebar .brand{font-size:inherit}
+.sidebar .brand-unit{color:#d7dad3;border-color:#606861}
+.sidebar>.eyebrow{color:#b5c3b2}
+.sidebar nav button{color:#e5e9e4;border-color:transparent;transition:background .14s,color .14s}
+.sidebar nav button:hover:not(.nav-active){background:#222a28}
+.sidebar nav button>span:first-child{color:#9ba69a}
+.sidebar nav button.nav-active{background:#dcfd6d;color:#111412;font-weight:700}
+.sidebar nav button.nav-active>span:first-child{color:#4e5949}
+.sidebar-bottom{color:#c7ccc5}
+.sidebar-bottom p{color:#aeb8ad}
+.sidebar-bottom a{color:#e2fa8d}
+.sidebar .dot{background:#d8fc63}
+.login .brand,.loading .brand{color:#111412}
+.login .brand-logo,.loading .brand-logo{max-width:166px}
+.login .brand-unit,.loading .brand-unit{color:#4f5750}
+@media(max-width:650px){.sidebar .brand-logo{width:142px}.sidebar .brand-unit{font-size:10px}.sidebar nav button{white-space:nowrap}.sidebar nav{padding-bottom:3px}}
