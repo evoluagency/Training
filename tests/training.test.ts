@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {handle} from '../lib/training/service.ts';
+import {getPublicCatalog,PUBLIC_COURSE_SQL} from '../lib/training/public-catalog.ts';
 const admin={userId:'owner',email:'owner@example.test',displayName:'Owner'};
 const alice={userId:'alice',email:'alice@example.test',displayName:'Alice'};
 const bob={userId:'bob',email:'bob@example.test',displayName:'Bob'};
 const manager={userId:'manager',email:'manager@example.test',displayName:'Manager'};
 function fixture(){
- const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));
+ const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0002_public_course_showcase.sql',import.meta.url),'utf8'));
  const db:any={prepare(query:string){let vals:any[]=[];return {bind(...v:any[]){vals=v;return this},async first(){return sql.prepare(query).get(...vals)??null},async all(){return {results:sql.prepare(query).all(...vals)}},async run(){return {meta:sql.prepare(query).run(...vals)}}}}};
  const objects=new Map<string,Uint8Array>();const bucket:any={async put(key:string,data:any){objects.set(key,new Uint8Array(await new Response(data).arrayBuffer()))},async delete(key:string){objects.delete(key)},async get(key:string){const v=objects.get(key);return v?{body:new Blob([new Uint8Array(v).buffer]).stream(),size:v.length}:null}};
  let clock=1700000000000;
@@ -18,8 +19,27 @@ function fixture(){
  }
  const post=async(path:string,body:any,user:any=admin)=>{const r=await request(path,user,body);assert.ok(r.status<300,JSON.stringify(r));return r.body};
  async function setup(){const ca=await post('companies',{name:'A',seats:2}),cb=await post('companies',{name:'B',seats:2});const ma=await post('members',{companyId:ca.id,name:'Alice Full',jobTitle:'Analista',whatsapp:'+55 11 99999-0000',email:alice.email,role:'learner'}),mb=await post('members',{companyId:cb.id,name:'Bob Full',jobTitle:'Gestor',email:bob.email,role:'learner'});const cat=await post('catalogs',{title:'Catálogo'}),course=await post('courses',{catalogId:cat.id,title:'Curso',description:'Teste',hours:2,minutes:1,passing:70,attemptLimit:2,certificate:true});const mod=await post('course/'+course.id+'/module',{title:'Módulo',position:1});const lesson=await post('course/'+course.id+'/lesson',{moduleId:mod.id,title:'Aula',body:'Conteúdo',position:1,mode:'equivalent'});const q1=await post('course/'+course.id+'/question',{prompt:'Questão 1',options:['Certa','Errada'],correct:0,position:1});const q2=await post('course/'+course.id+'/question',{prompt:'Questão 2',options:['Errada','Certa'],correct:1,position:2});await post('course/'+course.id+'/publish',{});await post('grants',{companyId:ca.id,courseId:course.id});return {ca,cb,ma,mb,course,lesson,q1,q2};}
- return {sql,ctx,request,post,setup,advance:(n:number)=>{clock+=n},close:()=>sql.close()};
+ return {sql,db,ctx,request,post,setup,advance:(n:number)=>{clock+=n},close:()=>sql.close()};
 }
+test('public homepage never exposes closed corporate courses without explicit approval',async()=>{
+ const f=fixture(),d=await f.setup();
+ assert.equal((await getPublicCatalog(f.db)).length,0);
+ assert.equal((await f.request('course/'+d.course.id+'/home',alice,{visible:true})).status,403);
+ assert.equal((await f.request('course/'+d.course.id+'/home',admin,{visible:'yes'})).status,400);
+ await f.post('course/'+d.course.id+'/home',{visible:true});
+ const published=await getPublicCatalog(f.db);
+ assert.equal(published.length,1);
+ assert.equal(published[0].id,d.course.id);
+ assert.deepEqual(Object.keys(published[0]).sort(),['category','description','hours','id','title']);
+ assert.ok(PUBLIC_COURSE_SQL.includes("c.show_on_home=1"));
+ const cat=await f.post('catalogs',{title:'Privado'});
+ const draft=await f.post('courses',{catalogId:cat.id,title:'Ainda não publicado',hours:1,minutes:10,passing:70,attemptLimit:1});
+ assert.equal((await f.request('course/'+draft.id+'/home',admin,{visible:true})).status,409);
+ assert.equal((await getPublicCatalog(f.db)).length,1);
+ await f.post('course/'+d.course.id+'/home',{visible:false});
+ assert.equal((await getPublicCatalog(f.db)).length,0);
+ f.close();
+});
 test('anonymous user cannot access data',async()=>{const f=fixture();assert.equal((await f.request('overview',null)).status,401);f.close()});
 test('no self enrolment and no admin escalation',async()=>{const f=fixture();await f.request('me');assert.equal((await f.request('me',alice)).body.role,'unassigned');assert.equal((await f.request('companies',alice,{name:'X',seats:1})).status,403);assert.equal((await f.request('me',{...admin,userId:'attacker'})).body.role,'unassigned');f.close()});
 test('cross-origin writes rejected',async()=>{const f=fixture();assert.equal((await f.request('companies',admin,{name:'X',seats:1},'POST','https://evil.test')).status,403);f.close()});
