@@ -7,7 +7,7 @@ Plataforma privada de treinamentos corporativos, com vagas por empresa e acesso 
 - **Treinamentos**: catálogo → novo treinamento → gerenciar treinamento → módulos → aulas → vídeo, imagem ou PDF. Na mesma tela, cadastre as questões, publique e vincule às empresas.
 - **Empresas e vagas**: empresas clientes e capacidade de acesso.
 - **Participantes**: pessoas que ocuparão as vagas.
-- **Ferramentas**: planilhas, arquivos de apoio e links por empresa ou participante.
+- **Ferramentas**: biblioteca de planilhas, arquivos e links por empresa ou participante. Para associar uma ferramenta a uma aula, abra **Treinamentos → Módulo → Aula**, vincule primeiro a empresa e então adicione um link ou arquivo na própria aula.
 - **Acompanhamento**: progresso, resultados e certificados.
 
 ## Recursos
@@ -19,7 +19,7 @@ Plataforma privada de treinamentos corporativos, com vagas por empresa e acesso 
 - Prova objetiva com prazo no servidor, respostas salvas, limite de tentativas e aprovação configurável.
 - NPS opcional; nota da pesquisa não interfere na aprovação.
 - Certificado com registro persistente, código único e impressão/salvamento em PDF pelo navegador.
-- Ferramentas por empresa ou participante: links HTTPS, XLSX, XLS, CSV, PDF e imagens.
+- Ferramentas por empresa ou participante, com vínculo opcional à aula: links HTTPS, XLSX, XLS, CSV, PDF e imagens. Ferramentas vinculadas aparecem na aula e deixam de estar disponíveis após a revogação do curso.
 - Comentários por treinamento e empresa, com respostas da administração.
 - Relatório de progresso, notas e certificados; gestor restrito à própria empresa.
 
@@ -44,7 +44,7 @@ node node_modules/typescript/bin/tsc --noEmit
 
 Os testes usam identidades fictícias e armazenamento local, sem chamadas de inferência ou serviços pagos. A integração de armazenamento usa Miniflare, D1 e R2 locais. Não comprova o login real de participantes externos.
 
-Migrations geradas em `drizzle/` devem ser aplicadas localmente antes de usar banco em preview. A publicação pelo Sites aplica as migrations no ambiente hospedado. Nunca alterar migrations já aplicadas. Credenciais e configuração privada ficam fora do repositório.
+A migration incremental `0001_link_resources_to_lessons` adiciona o vínculo opcional `resources.lesson_id`, preservando as ferramentas existentes. Migrations geradas em `drizzle/` devem ser aplicadas localmente antes de usar banco em preview. A publicação pelo Sites aplica as migrations no ambiente hospedado. Nunca alterar migrations já aplicadas. Credenciais e configuração privada ficam fora do repositório.
 
 Não existem GitHub Actions, workflows, jobs, deploy automático pelo GitHub ou integração de pagamento neste projeto. A publicação é feita pelo fluxo do Sites.
 

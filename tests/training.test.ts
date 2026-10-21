@@ -8,7 +8,7 @@ const alice={userId:'alice',email:'alice@example.test',displayName:'Alice'};
 const bob={userId:'bob',email:'bob@example.test',displayName:'Bob'};
 const manager={userId:'manager',email:'manager@example.test',displayName:'Manager'};
 function fixture(){
- const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));
+ const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));
  const db:any={prepare(query:string){let vals:any[]=[];return {bind(...v:any[]){vals=v;return this},async first(){return sql.prepare(query).get(...vals)??null},async all(){return {results:sql.prepare(query).all(...vals)}},async run(){return {meta:sql.prepare(query).run(...vals)}}}}};
  const objects=new Map<string,Uint8Array>();const bucket:any={async put(key:string,data:any){objects.set(key,new Uint8Array(await new Response(data).arrayBuffer()))},async delete(key:string){objects.delete(key)},async get(key:string){const v=objects.get(key);return v?{body:new Blob([new Uint8Array(v).buffer]).stream(),size:v.length}:null}};
  let clock=1700000000000;
@@ -38,4 +38,24 @@ test('NPS score zero does not change approval',async()=>{const f=fixture(),d=awa
 test('manager report cannot inspect another company via query',async()=>{const f=fixture(),d=await f.setup();await f.post('members',{companyId:d.ca.id,name:'Manager',jobTitle:'Diretor',email:manager.email,role:'manager'});await f.post('grants',{companyId:d.cb.id,courseId:d.course.id});const r=(await f.request('report?company='+d.cb.id,manager)).body;assert.ok(r.rows.length);assert.ok(r.rows.every((r:any)=>r.company==='A'));f.close()});
 test('comments stay inside company and admin can reply',async()=>{const f=fixture(),d=await f.setup();await f.post('grants',{companyId:d.cb.id,courseId:d.course.id});const path='comments?course='+d.course.id+'&company='+d.ca.id;await f.post(path,{text:'Dúvida A'},alice);assert.equal((await f.request(path,bob)).body.length,0);await f.post(path,{text:'Resposta da administração'});const r=(await f.request(path,alice)).body;assert.equal(r.length,2);assert.ok(r.some((r:any)=>r.role==='admin'));f.close()});
 test('individual resources restricted even inside same company',async()=>{const f=fixture(),d=await f.setup();await f.post('members',{companyId:d.ca.id,name:'Manager',jobTitle:'Diretor',email:manager.email,role:'manager'});await f.post('resources',{companyId:d.ca.id,memberId:d.ma.id,title:'Planilha Alice',href:'https://example.test/sheet'});assert.equal((await f.request('resources',alice)).body.length,1);assert.equal((await f.request('resources',manager)).body.length,0);assert.equal((await f.request('resources',bob)).body.length,0);assert.equal((await f.request('resources',admin,{companyId:d.ca.id,memberId:d.mb.id,title:'Bad',href:'https://example.test'})).status,400);assert.equal((await f.request('resources',admin,{companyId:d.ca.id,title:'Bad',href:'javascript:alert(1)'})).status,400);f.close()});
+test('lesson tools are scoped to an authorized company, lesson and participant',async()=>{
+ const f=fixture(),d=await f.setup();
+ const item=await f.post('resources',{companyId:d.ca.id,lessonId:d.lesson.id,title:'Planilha da aula',href:'https://example.test/sheet'});
+ const details=(await f.request('course/'+d.course.id,alice)).body;
+ assert.equal(details.lessonResources.length,1);
+ assert.equal(details.lessonResources[0].id,item.id);
+ assert.equal((await f.request('course/'+d.course.id,bob)).status,403);
+ assert.equal((await f.request('resources',bob)).body.length,0);
+ assert.equal((await f.request('resources',admin,{companyId:d.cb.id,lessonId:d.lesson.id,title:'Sem permissão',href:'https://example.test'})).status,400);
+ assert.equal((await f.request('resources',admin,{companyId:d.ca.id,lessonId:'missing',title:'Aula inexistente',href:'https://example.test'})).status,400);
+ const personal=await f.post('resources',{companyId:d.ca.id,memberId:d.ma.id,lessonId:d.lesson.id,title:'Privada',href:'https://example.test/private'});
+ await f.post('members',{companyId:d.ca.id,name:'Manager',jobTitle:'Gestor',email:manager.email,role:'manager'});
+ assert.equal((await f.request('course/'+d.course.id,manager)).body.lessonResources.length,1);
+ assert.equal((await f.request('course/'+d.course.id,alice)).body.lessonResources.length,2);
+ assert.ok((await f.request('resources',alice)).body.some((r:any)=>r.id===personal.id));
+ await f.post('grants',{companyId:d.ca.id,courseId:d.course.id,revoke:true});
+ assert.equal((await f.request('resources',alice)).body.length,0);
+ assert.equal((await f.request('course/'+d.course.id,alice)).status,403);
+ f.close();
+});
 test('suspension revokes login and existing course access',async()=>{const f=fixture(),d=await f.setup();await f.request('me',alice);await f.request('members/'+d.ma.id,admin,{active:false},'PATCH');assert.equal((await f.request('course/'+d.course.id,alice)).status,403);f.close()});

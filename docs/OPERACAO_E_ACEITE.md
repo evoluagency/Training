@@ -12,7 +12,7 @@ Objetivo: versão operacional até 25/10/2026 para o treinamento de 31/10/2026. 
 6. Vincular o treinamento às empresas autorizadas.
 7. Reservar as vagas com nome para certificado, cargo, e-mail do ChatGPT, WhatsApp opcional e perfil (participante/gestor).
 8. O proprietário deve liberar os e-mails também na lista privada de visitantes do Site. Nenhum convite ou mensagem é enviado pelo formulário da aplicação.
-9. Disponibilizar ferramentas por empresa ou participante. Links externos obedecem às permissões do serviço de destino; a plataforma não amplia essas permissões.
+9. Vincular o treinamento à empresa, abrir a aula do módulo desejado e cadastrar ali a planilha, arquivo ou link da aula. Escolher a empresa e, se necessário, o participante específico. A biblioteca Ferramentas continua aceitando itens gerais sem aula. Links externos obedecem às permissões do serviço de destino; a plataforma não amplia essas permissões.
 10. Realizar a validação abaixo com uma conta real de participante antes do treinamento.
 
 ## Validação necessária até 25/10
@@ -23,7 +23,8 @@ Objetivo: versão operacional até 25/10/2026 para o treinamento de 31/10/2026. 
 | Participante convidado | Conta ChatGPT com e-mail cadastrado abre somente os cursos da própria empresa. |
 | Isolamento | Outra empresa e conta não convidada não acessam materiais, comentários ou resultados. |
 | Vídeo/PDF/imagem | Abrir os formatos reais, avançar o vídeo e verificar download de arquivo. |
-| Ferramenta individual | Destinatário acessa o arquivo; colega sem autorização não acessa. |
+| Ferramenta da aula | Link e arquivo aparecem dentro da aula correta e apenas para a empresa autorizada. |
+| Ferramenta individual | Destinatário acessa o arquivo; colega sem autorização não acessa; revogar o treinamento retira o acesso. |
 | Prova | Iniciar, salvar respostas, recarregar, finalizar e conferir nota e limite de tentativas. |
 | Prazo | Fechar e reabrir a página não reinicia o tempo. Após o prazo, considerar apenas respostas salvas. |
 | NPS | Responder ou pular; uma nota baixa não altera a aprovação. |
