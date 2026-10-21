@@ -9,9 +9,9 @@ Plataforma privada de treinamentos corporativos, com vagas por empresa e acesso 
 - **Exibição pública:** um treinamento publicado aparece na vitrine somente quando o administrador aciona **Exibir na página inicial**, dentro do treinamento. O padrão é oculto, inclusive para cursos já existentes.
 - **Cartão do curso:** apresenta apenas título, resumo, categoria e duração; ao acessar, o aluno passa pela autenticação e continua sujeito à autorização de sua empresa.
 - **Visibilidade do Site:** o ambiente ainda é privado. Para visitantes não autenticados enxergarem a página inicial, o provedor precisa permitir essa modalidade sem remover os controles da aplicação.
-- **Identidade:** direção editorial provisória Montserrat, preto, off-white e verde-limão. A marca oficial EVOLU só será aplicada a partir do arquivo original.
+- **Identidade:** identidade editorial EVOLU verificada em materiais oficiais e na presença institucional: Montserrat, contraste preto/branco, verde-limão pontual e logotipos originais. O lettering oficial EVOLU foi incorporado a partir dos arquivos originais fornecidos, nas versões branca e preta, sem recriação tipográfica.
 
-Diretrizes, critérios de privacidade e gates de aceite: [EVOLU_TRAINING_HOME_DESIGN_V1.md](docs/EVOLU_TRAINING_HOME_DESIGN_V1.md).
+Diretrizes e gates: [Homepage e acesso](docs/EVOLU_TRAINING_HOME_DESIGN_V1.md) e [Sistema visual EVOLU Training](docs/EVOLU_TRAINING_BRAND_SYSTEM_V1.md).
 
 ## Onde cadastrar cada item
 
