@@ -47,6 +47,7 @@ test('lesson tools are scoped to an authorized company, lesson and participant',
  assert.equal((await f.request('course/'+d.course.id,bob)).status,403);
  assert.equal((await f.request('resources',bob)).body.length,0);
  assert.equal((await f.request('resources',admin,{companyId:d.cb.id,lessonId:d.lesson.id,title:'Sem permissão',href:'https://example.test'})).status,400);
+ assert.equal((await f.request('resources',admin,{companyId:d.ca.id,memberId:d.mb.id,lessonId:d.lesson.id,title:'Pessoa de outra empresa',href:'https://example.test'})).status,400);
  assert.equal((await f.request('resources',admin,{companyId:d.ca.id,lessonId:'missing',title:'Aula inexistente',href:'https://example.test'})).status,400);
  const personal=await f.post('resources',{companyId:d.ca.id,memberId:d.ma.id,lessonId:d.lesson.id,title:'Privada',href:'https://example.test/private'});
  await f.post('members',{companyId:d.ca.id,name:'Manager',jobTitle:'Gestor',email:manager.email,role:'manager'});
