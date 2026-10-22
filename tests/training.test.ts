@@ -9,7 +9,7 @@ const alice={userId:'alice',email:'alice@example.test',displayName:'Alice'};
 const bob={userId:'bob',email:'bob@example.test',displayName:'Bob'};
 const manager={userId:'manager',email:'manager@example.test',displayName:'Manager'};
 function fixture(){
- const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0002_public_course_showcase.sql',import.meta.url),'utf8'));
+ const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0002_public_course_showcase.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0003_company_profile.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));
  const db:any={prepare(query:string){let vals:any[]=[];return {bind(...v:any[]){vals=v;return this},async first(){return sql.prepare(query).get(...vals)??null},async all(){return {results:sql.prepare(query).all(...vals)}},async run(){return {meta:sql.prepare(query).run(...vals)}}}}};
  const objects=new Map<string,Uint8Array>();const bucket:any={async put(key:string,data:any){objects.set(key,new Uint8Array(await new Response(data).arrayBuffer()))},async delete(key:string){objects.delete(key)},async get(key:string){const v=objects.get(key);return v?{body:new Blob([new Uint8Array(v).buffer]).stream(),size:v.length}:null}};
  let clock=1700000000000;
@@ -40,6 +40,7 @@ test('public homepage never exposes closed corporate courses without explicit ap
  assert.equal((await getPublicCatalog(f.db)).length,0);
  f.close();
 });
+test('company profile accepts valid CNPJ and rejects duplicate',async()=>{const f=fixture();const cnpj='11.222.333/0001-81';const first=await f.post('companies',{name:'Empresa de teste',seats:2,cnpj,responsibleName:'Responsável',responsibleEmail:'responsavel@example.com'});assert.ok(first.id);assert.equal((await f.request('companies',admin,{name:'Duplicada',seats:1,cnpj})).status,409);assert.equal((await f.request('companies',admin,{name:'Inválida',seats:1,cnpj:'00.000.000/0000-00'})).status,400);f.close()});
 test('anonymous user cannot access data',async()=>{const f=fixture();assert.equal((await f.request('overview',null)).status,401);f.close()});
 test('no self enrolment and no admin escalation',async()=>{const f=fixture();await f.request('me');assert.equal((await f.request('me',alice)).body.role,'unassigned');assert.equal((await f.request('companies',alice,{name:'X',seats:1})).status,403);assert.equal((await f.request('me',{...admin,userId:'attacker'})).body.role,'unassigned');f.close()});
 test('cross-origin writes rejected',async()=>{const f=fixture();assert.equal((await f.request('companies',admin,{name:'X',seats:1},'POST','https://evil.test')).status,403);f.close()});
