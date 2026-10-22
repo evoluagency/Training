@@ -86,3 +86,15 @@ O aceite só pode ser dado após colocar as imagens no repositório, executar te
 3. Comparar as sete páginas com as imagens golden references e corrigir eventuais diferenças visuais (não foram renderizadas nesta etapa).
 4. Validar privacidade de empresas, login ChatGPT e restrição de visibilidade da vitrine no domínio real.
 5. Obter aceite formal antes de qualquer publicação em produção.
+
+## Revisão de integração e fluxos — 22/10/2026 (continuação)
+
+1. **Login e deep links:** as páginas de catch-all da administração e de aprendizagem preservam o destino validado no login via ChatGPT Sites. O fluxo legado de prova/certificado preserva o parâmetro `course` validado. Retornos são relativos e os segmentos são validados (somente alfanuméricos e hífen).
+2. **Consistência de curso:** o componente de aula ignora respostas HTTP antigas após mudança de curso, limpa os dados ao trocar de rota e só apresenta o conteúdo quando `detail.course.id` coincide com o curso da URL. As anotações são carregadas somente para o curso e a aula ativos.
+3. **Painel administrativo real:** novo endpoint `GET /api/training/activity` protegido por `admin()`, com sete dias UTC. Conta exclusivamente eventos já persistidos (aulas concluídas, provas enviadas e certificados emitidos). A UI mostra sete barras e até oito eventos recentes, com estado de falha distinto de atividade igual a zero. Não é um gráfico de acessos/visitantes.
+4. **Testes acrescentados:** acesso administrativo ao endpoint, série contínua de sete dias, estado inicial sem eventos e contagem após conclusão real de aula.
+5. **Validação SQL isolada:** as duas consultas de atividade foram executadas em SQLite de memória com tabelas equivalentes e eventos de teste; o agrupamento diário e a lista recente produziram resultados válidos.
+6. **Mídias:** o patch local `EVOLU_Training_9_Midias_git_binary.patch` foi aplicado novamente em um Git temporário isolado; **9/9** WebP passaram em comparação SHA-256 com o ZIP original. Arquivos ainda não enviados ao GitHub.
+7. **Limitação fundamental:** o ambiente disponível não tem o projeto completo com `node_modules`, e o acesso de rede do runtime à origem GitHub falhou. Portanto compilação TS/Next, testes integrados, banco D1/R2 hospedado e inspeção visual autenticada continuam pendentes, sem alegações de execução.
+
+**Regra de preservação:** branch Draft, `main` e produção intocadas. Nenhum workflow, GitHub Action, deploy, migração hospedada ou recurso pago disparado.
