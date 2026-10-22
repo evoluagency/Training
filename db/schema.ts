@@ -16,3 +16,5 @@ export const certificates=sqliteTable('certificates',{id:text('id').primaryKey()
 
 export const resources=sqliteTable('resources',{id:text('id').primaryKey(),companyId:text('company_id').notNull().references(()=>companies.id),memberId:text('member_id').references(()=>members.id),lessonId:text('lesson_id').references(()=>lessons.id),title:text('title').notNull(),href:text('href'),key:text('key'),name:text('name'),mime:text('mime'),size:integer('size')});
 export const comments=sqliteTable('comments',{id:text('id').primaryKey(),companyId:text('company_id').notNull().references(()=>companies.id),courseId:text('course_id').notNull().references(()=>courses.id),userId:text('user_id').notNull(),author:text('author').notNull(),role:text('role').notNull(),body:text('body').notNull(),createdAt:integer('created_at').notNull()});
+
+export const lessonNotes=sqliteTable('lesson_notes',{memberId:text('member_id').notNull().references(()=>members.id),lessonId:text('lesson_id').notNull().references(()=>lessons.id),body:text('body').notNull().default(''),updatedAt:integer('updated_at').notNull()},t=>[primaryKey({columns:[t.memberId,t.lessonId]})]);
