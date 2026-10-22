@@ -1,74 +1,27 @@
 import {env} from 'cloudflare:workers';
-import {getChatGPTUser,chatGPTSignInPath} from './chatgpt-auth';
+import Link from 'next/link';
+import {ArrowRight,Building2,BookOpen,UsersRound,FileText,ClipboardCheck,Network,BarChart3,Settings2} from 'lucide-react';
+import {getChatGPTUser} from './chatgpt-auth';
 import {getPublicCatalog,type PublicCourse} from '../lib/training/public-catalog';
 import './home.css';
-
+import './home-reference.css';
 export const dynamic='force-dynamic';
-
 const areas=[
- {index:'01',name:'Estratégia e gestão',detail:'Diagnóstico, decisões e aplicação de modelos de gestão.'},
- {index:'02',name:'Dados e inteligência',detail:'Leitura de indicadores, BI e estruturação da informação.'},
- {index:'03',name:'Operações e processos',detail:'Rotinas, qualidade de execução e eficiência operacional.'},
- {index:'04',name:'Finanças e tecnologia',detail:'Análise financeira e ferramentas para apoiar o trabalho.'}
+ {name:'Estratégia e Negócios',detail:'Modelos gerenciais e decisões estruturadas.',image:'estrategia_reuniao_1280x720',Icon:Network},
+ {name:'Dados e Business Intelligence',detail:'Análise, indicadores e inteligência aplicada.',image:'dados_grafico_1280x720',Icon:BarChart3},
+ {name:'Operações e Processos',detail:'Rotinas, eficiência e melhoria contínua.',image:'processos_arquitetura_1280x720',Icon:Settings2},
+ {name:'Liderança e Pessoas',detail:'Desenvolvimento de equipes e gestão.',image:'lideranca_duas_executivas_1280x720',Icon:UsersRound}
 ];
-const journey=[
- {n:'01',name:'Conteúdo',body:'Aulas em vídeo, documentos e materiais disponibilizados por treinamento.'},
- {n:'02',name:'Aplicação',body:'Ferramentas relacionadas às aulas e contexto da empresa participante.'},
- {n:'03',name:'Avaliação',body:'Verificação de aprendizagem com critérios e tempo definidos.'},
- {n:'04',name:'Conclusão',body:'Registro do resultado, pesquisa de experiência e certificado quando aplicável.'}
-];
-
-export default async function HomePage(){
- const user=await getChatGPTUser();
- const accessHref=user?'/area':chatGPTSignInPath('/area');
- let courses:PublicCourse[]=[];
- let catalogReady=false;
- try{
-  if(env.DB){
-   courses=await getPublicCatalog(env.DB);
-   catalogReady=true;
-  }
- }catch(e){
-  console.error('public_course_catalog_unavailable',e instanceof Error?e.message:'unknown');
- }
- return <div className="home">
-  <header className="home-header" id="inicio">
-   <a href="#inicio" className="home-product" aria-label="EVOLU Training — início"><img className="home-logo" src="/brand/evolu-white.png" alt="EVOLU" width={139} height={30}/><span className="home-product-divider" aria-hidden="true"/><span className="home-product-sub">Training</span></a>
-   <nav className="home-nav" aria-label="Navegação principal">
-    <a href="#areas">Áreas de formação</a><a href="#cursos">Treinamentos</a><a href="#metodo">Como funciona</a>
-   </nav>
-   <a className="home-access" href={accessHref} target="_top">{user?'Minha área':'Acesso do participante'} <span aria-hidden="true">↗</span></a>
-  </header>
-  <main className="home-main">
-   <section className="home-hero" aria-labelledby="home-hero-title">
-    <div className="home-hero-copy">
-     <p className="home-kicker"><span className="home-kicker-dot"/> Formação corporativa · Plataforma EVOLU</p>
-     <h1 id="home-hero-title">Conhecimento estruturado.<span>Aplicação no trabalho.</span></h1>
-     <p className="home-lead">Percursos de formação para equipes, com aulas, ferramentas relacionadas a cada módulo, avaliações e acompanhamento por empresa.</p>
-     <div className="home-hero-actions"><a className="home-primary" href="#cursos">Conhecer treinamentos <span aria-hidden="true">↘</span></a><a className="home-tertiary" href={accessHref} target="_top">{user?'Continuar formação':'Entrar com ChatGPT'} <span aria-hidden="true">↗</span></a></div>
-     <p className="home-note">Participação mediante vagas disponibilizadas pela empresa. O acesso aos materiais requer autorização.</p>
-    </div>
-    <div className="home-hero-art" aria-label="Representação editorial de conexões entre informações, aprendizagem e operação">
-      <div className="home-art-top"><span>EVOLU TRAINING / INTELIGÊNCIA APLICADA</span><span>FORMAÇÃO CORPORATIVA</span></div>
-      <div className="home-art-network" aria-hidden="true"><div className="home-art-orbit one"/><div className="home-art-orbit two"/><div className="home-art-orbit three"/><div className="home-art-node n1"/><div className="home-art-node n2"/><div className="home-art-node n3"/><div className="home-art-line l1"/><div className="home-art-line l2"/><div className="home-art-line l3"/></div>
-      <div className="home-art-side-label" aria-hidden="true">ESTRATÉGIA / INTELIGÊNCIA / OPERAÇÃO</div>
-      <div className="home-art-bottom"><div><small>FORMAÇÃO EVOLU</small><strong>Aprendizagem.</strong><strong>Ferramentas.</strong><strong>Execução.</strong></div><span className="home-art-index">01 / 03</span></div>
-    </div>
-   </section>
-   <section className="home-areas home-section" id="areas" aria-labelledby="areas-title">
-    <div className="home-section-heading"><div><p className="home-section-label">01 / Áreas de desenvolvimento</p><h2 id="areas-title">Temas conectados à operação das empresas.</h2></div><p>Frentes de aprendizagem que podem compor os treinamentos de cada organização. A oferta depende do catálogo efetivamente publicado.</p></div>
-    <div className="home-area-grid">{areas.map(a=><article className="home-area" key={a.index}><span>{a.index} / ÁREA</span><h3>{a.name}</h3><p>{a.detail}</p><span className="home-area-arrow" aria-hidden="true">↗</span></article>)}</div>
-   </section>
-   <section className="home-catalog home-section" id="cursos" aria-labelledby="courses-title">
-    <div className="home-section-heading"><div><p className="home-section-label">02 / Catálogo</p><h2 id="courses-title">Treinamentos em destaque.</h2></div><p>Somente treinamentos publicados e autorizados pela administração aparecem nesta vitrine. O conteúdo completo permanece restrito aos participantes convidados.</p></div>
-    {!catalogReady?<div className="home-catalog-empty"><p className="home-section-label">CATÁLOGO INDISPONÍVEL</p><h3>Não foi possível consultar os treinamentos.</h3><p>A área de aprendizagem continua disponível para as contas autorizadas.</p><a href={accessHref} target="_top">Acessar minha área ↗</a></div>:courses.length===0?<div className="home-catalog-empty"><p className="home-section-label">CATÁLOGO EM ORGANIZAÇÃO</p><h3>Os treinamentos desta vitrine estão sendo preparados.</h3><p>Se você já recebeu acesso de sua empresa, entre na área do participante para consultar seus cursos disponíveis.</p><a href={accessHref} target="_top">Acessar minha área ↗</a></div>:<div className="home-public-courses">{courses.map((course,i)=><article className="home-public-course" key={course.id}><div className="home-course-top"><span>{String(i+1).padStart(2,'0')}</span><span className="home-course-mark" aria-hidden="true">↗</span></div><div className="home-course-main"><p className="home-section-label">{course.category}</p><h3>{course.title}</h3><p>{course.description||'Formação direcionada à aplicação prática no ambiente corporativo.'}</p><div className="home-course-bottom"><span>{course.hours} {course.hours===1?'hora':'horas'}</span><a href={'/area?course='+encodeURIComponent(course.id)} target="_top" aria-label={'Acessar treinamento '+course.title}>Acessar treinamento ↗</a></div></div></article>)}</div>}
-   </section>
-   <section className="home-how home-section" id="metodo" aria-labelledby="how-title">
-    <div className="home-section-heading"><div><p className="home-section-label">03 / Experiência de aprendizagem</p><h2 id="how-title">Da formação à execução.</h2></div><p>O participante encontra os materiais do seu treinamento sem precisar navegar por uma interface de conversa.</p></div>
-    <div className="home-steps">{journey.map(j=><article key={j.n}><span>{j.n}</span><h3>{j.name}</h3><p>{j.body}</p></article>)}</div>
-   </section>
-   <section className="home-entry" aria-labelledby="entry-title"><div><p className="home-section-label">ACESSO CORPORATIVO</p><h2 id="entry-title">Seu treinamento está disponível?</h2><p>Utilize a conta ChatGPT autorizada pela sua empresa para acessar cursos, aulas, ferramentas, avaliações e certificados na interface do EVOLU Training.</p></div><a href={accessHref} target="_top">{user?'Ir para minha área':'Entrar com ChatGPT'} <span aria-hidden="true">↗</span></a></section>
-  </main>
-  <footer className="home-footer"><span className="home-footer-brand"><img src="/brand/evolu-black.png" alt="EVOLU" width={104} height={22}/><span>Training</span></span><p>Plataforma de aprendizagem corporativa. Acesso por empresa e participante autorizado.</p><a href="#inicio">Voltar ao topo ↑</a></footer>
- </div>;
+const steps=[['01','Conheça os treinamentos','Consulte o catálogo disponibilizado pela EVOLU.'],['02','Receba acesso corporativo','A empresa reserva vagas para os participantes autorizados.'],['03','Estude e pratique','Acesse aulas e ferramentas contextualizadas por módulo.'],['04','Avalie e conclua','Realize a avaliação e obtenha certificado quando elegível.']];
+const photo=(name:string)=>({backgroundImage:'linear-gradient(0deg,#020405bd,#0a0c0d17),url(/training-media/'+name+'.webp)'});
+const picture=(course:PublicCourse,i:number)=>{const t=(course.category+' '+course.title).toLowerCase();return /dado|bi|power/.test(t)?'dados_grafico_1280x720':/process|opera/.test(t)?'processos_arquitetura_1280x720':/lider|pessoa/.test(t)?'lideranca_duas_executivas_1280x720':/estratég|planej|gest/.test(t)?'estrategia_reuniao_1280x720':['escritorio_notebook_1280x720','reflexao_executiva_1280x720'][i%2]};
+export default async function Home(){
+ const user=await getChatGPTUser();let catalog:PublicCourse[]=[];let ready=false;try{if(env.DB){catalog=await getPublicCatalog(env.DB);ready=true}}catch(e){console.error('training_catalog_unavailable',e instanceof Error?e.message:'unknown')}
+ return <div className="home ev-public"><header className="home-header"><Link className="home-product" href="/"><img className="home-logo" src="/brand/evolu-white.png" alt="EVOLU" width={145} height={31}/><span className="home-product-divider"/><span className="home-product-sub">Training</span></Link><nav className="home-nav"><a href="#treinamentos">Treinamentos</a><a href="#areas">Para empresas</a><a href="#metodo">Como funciona</a></nav><Link className="home-access" href={user?'/area':'/acesso'}>Acessar plataforma <ArrowRight size={16}/></Link></header>
+ <main className="ev-public-main"><section className="ev-public-hero"><div className="ev-public-hero-photo" style={photo('home_executivo_cidade_1920x900')}/><div className="ev-public-hero-copy"><p className="ev-public-kicker">CONHECIMENTO QUE GERA IMPACTO REAL</p><h1>Conhecimento<br/>que impulsiona<br/><em>resultados.</em></h1><p>Formação corporativa nas áreas de estratégia, dados, operações e inteligência de negócios, com aplicação prática no trabalho.</p><div className="ev-public-actions"><a className="ev-public-primary" href="#treinamentos">Explorar treinamentos <ArrowRight size={16}/></a><a className="ev-public-secondary" href="#areas">Soluções para empresas</a></div></div><div className="ev-public-value"><span><BookOpen/> Conteúdo estruturado</span><span><FileText/> Ferramentas por aula</span><span><Building2/> Gestão corporativa</span><span><ClipboardCheck/> Avaliações e certificados</span></div></section>
+ <section className="ev-public-areas" id="areas"><div className="ev-public-intro"><p>FORMAÇÃO COM PROPÓSITO</p><h2>Áreas de<br/>formação</h2><span>Programas direcionados às competências de empresas e equipes.</span></div><div className="ev-public-area-list">{areas.map((a,i)=><article key={a.name} className="ev-public-area"><div className="ev-public-area-cover" style={photo(a.image)}/><div className="ev-public-area-copy"><a.Icon size={26}/><h3>{a.name}</h3><p>{a.detail}</p><span>{String(i+1).padStart(2,'0')} ↗</span></div></article>)}</div></section>
+ <section className="ev-public-featured" id="treinamentos"><div className="ev-public-intro"><p>CATÁLOGO CORPORATIVO</p><h2>Treinamentos<br/>em destaque</h2><span>Somente cursos publicados e liberados para apresentação institucional.</span></div><div className="ev-public-cards">{!ready?<div className="ev-public-empty"><h3>Catálogo temporariamente indisponível.</h3><Link href="/acesso">Acessar a plataforma →</Link></div>:catalog.length?catalog.slice(0,4).map((c,i)=><Link className="ev-public-course" key={c.id} href={'/area/treinamentos/'+encodeURIComponent(c.id)} style={photo(picture(c,i))}><span className="ev-public-category">{c.category}</span><h3>{c.title}</h3><p>{c.hours} {c.hours===1?'hora':'horas'}</p><span className="ev-public-course-action"><ArrowRight size={18}/></span></Link>):<div className="ev-public-empty"><p>CATÁLOGO EM PREPARAÇÃO</p><h3>Os treinamentos estão sendo organizados.</h3><span>Participantes já autorizados podem acessar a área de aprendizagem.</span><Link href="/acesso">Acessar a plataforma →</Link></div>}</div></section>
+ <section className="ev-public-method" id="metodo"><div className="ev-public-intro"><p>DA FORMAÇÃO À APLICAÇÃO</p><h2>Como funciona</h2><span>O acesso é reservado a empresas e participantes cadastrados.</span></div><div className="ev-public-steps">{steps.map(([number,title,desc])=><article key={number}><strong>{number}</strong><div><h3>{title}</h3><p>{desc}</p></div></article>)}</div></section>
+ <section className="ev-public-outro" style={photo('escritorio_notebook_1280x720')}><div><p>ACESSO CORPORATIVO</p><h2>Acesse o EVOLU Training</h2><span>Consulte seus treinamentos, ferramentas, avaliações e certificados.</span></div><Link href={user?'/area':'/acesso'}>Acessar plataforma <ArrowRight size={16}/></Link></section></main>
+ <footer className="ev-public-footer"><Link href="/"><img src="/brand/evolu-white.png" alt="EVOLU" width={135}/><span>TRAINING</span></Link><p>Estratégia · Inteligência de negócios · Educação corporativa</p><div><a href="https://www.linkedin.com/company/evoluagency/" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://www.instagram.com/evolu.ink/" target="_blank" rel="noreferrer">Instagram</a></div></footer></div>;
 }
