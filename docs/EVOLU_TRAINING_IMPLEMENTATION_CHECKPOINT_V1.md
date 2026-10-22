@@ -51,3 +51,38 @@ Uma rota ou página com fotografias ainda não copiadas pode mostrar fundo escur
 - **Nenhum** GitHub Action, Job ou Workflow foi iniciado. Nenhum serviço pago foi provisionado.
 
 O aceite só pode ser dado após colocar as imagens no repositório, executar testes em ambiente local isolado e comparar cada uma das sete telas com as referências.
+
+## Continuação — 22/10/2026
+
+### Implementações complementares
+
+- Cadastro empresarial detalhado agora pode ser editado. Ao alterar vagas, o `UPDATE` em SQLite inclui condição de ocupação ativa no próprio comando, evitando redução de capacidade em corrida com novas reservas.
+- Lista de participantes permite suspender ou reativar, pelo endpoint protegido com checagem de vagas.
+- Gestor corporativo tem rota `/area/relatorios`, ligada à consulta já restrita à empresa pelo backend.
+- Administração oferece `/admin/provas` (visão dos treinamentos e regras), `/admin/certificados` (registros emitidos), `/admin/comentarios` (resumo de até 200 mensagens e resposta por empresa/curso) e `/admin/configuracoes` (governança em leitura).
+- Endpoint `GET /api/training/comments-summary` só atende administradores. As respostas usam o serviço de comentários com autorização de curso e empresa; não expõem outras organizações.
+- Nova tela `/area/ajuda` explica acesso, materiais, avaliações e canal de comentários. Rota `/admin/treinamentos/novo` mostra o assistente de criação.
+- Links legados `/area?course=:id` preservam o identificador validado do curso após autenticação.
+- Publicação de curso exige confirmação explícita no navegador.
+- Testes de regressão adicionados para capacidade/ocupação, resumo administrativo de comentários, isolamento de anotações e opt-in de cursos na vitrine.
+
+### Mídias — preparadas, não incorporadas ao GitHub
+
+- O pacote `EVOLU_TRAINING_MIDIAS_PARA_REPOSITORIO.zip` contém **9 arquivos WebP** com resolução conferida.
+- `public/training-media/manifesto.json` guarda tamanho e SHA-256 dos nove arquivos; `node scripts/verify-training-media.mjs` verifica integridade local após a cópia.
+- Foi gerado e testado fora do repositório um patch binário Git (`EVOLU_Training_9_Midias_git_binary.patch`). A aplicação em uma pasta Git isolada restaurou 9/9 imagens, com hashes íntegros. **Esse patch ainda precisa ser aplicado à branch por ambiente com acesso de escrita a arquivos binários.** Não houve push de imagens, merge ou deploy.
+
+### Evidências e limites de QA
+
+- Verificações de código feitas via inspeção remota do GitHub (rotas, referências, autorização, fechamento de delimitadores e contagem de tags JSX), em vez de compilação.
+- Validação local do pacote e do patch binário: **9/9 arquivos íntegros**. Isso **não** confirma renderização no navegador nem disponibilidade em produção.
+- Tipagem TS, testes Node, Miniflare/D1/R2, screenshots 1440/1024/390 e autenticação no host continuam **pendentes**.
+- O PR continua Draft, sem alteração na branch principal, sem Actions/Jobs/Workflows ou custos de implantação.
+
+### Gates para aceitar R01–R07
+
+1. Aplicar o patch binário das nove imagens na branch com acesso autorizado; executar `node scripts/verify-training-media.mjs` localmente.
+2. Executar `pnpm check`, `pnpm test` e build em ambiente previamente qualificado e sem custo incremental, com consentimento para execução.
+3. Comparar as sete páginas com as imagens golden references e corrigir eventuais diferenças visuais (não foram renderizadas nesta etapa).
+4. Validar privacidade de empresas, login ChatGPT e restrição de visibilidade da vitrine no domínio real.
+5. Obter aceite formal antes de qualquer publicação em produção.
