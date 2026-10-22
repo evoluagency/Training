@@ -5,7 +5,7 @@ import './access.css';
 export const dynamic='force-dynamic';
 export default async function Access(){
  const user=await getChatGPTUser();
- const target=user?'/area':chatGPTSignInPath('/area');
+ const target=user?'/entrada':chatGPTSignInPath('/entrada');
  return <main className="ev-access"><section className="ev-access-photo">
   <div className="ev-access-image" aria-hidden="true"/>
   <Link className="ev-access-brand" href="/"><img src="/brand/evolu-white.png" alt="EVOLU" width="178" height="41"/><span>TRAINING</span></Link>
