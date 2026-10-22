@@ -1,5 +1,7 @@
 # EVOLU Training — Implementação baseada nas sete referências R01–R07
 
+> Registro histórico. A integração das nove imagens selecionadas e a execução local de TypeScript, build, testes e inspeção das telas foram concluídas posteriormente em 22/10/2026. O [relatório de integração visual](qa/INTEGRACAO_VISUAL_2026-10-22.md) é o estado atual dessas verificações. As limitações de autenticação e implantação hospedadas continuam em aberto.
+
 **Referência contratual:** EVOLU_TRAINING_ESTRUTURA_VISUAL_FUNCIONAL_V1.md (arquivo fornecido pelo proprietário).
 **Branch:** `feat/training-lesson-linked-tools-20261021`. **Produção:** inalterada; PR Draft.
 

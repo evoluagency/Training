@@ -4,6 +4,22 @@ import {DatabaseSync} from 'node:sqlite';
 import {readFileSync} from 'node:fs';
 import {handle} from '../lib/training/service.ts';
 import {getPublicCatalog,PUBLIC_COURSE_SQL} from '../lib/training/public-catalog.ts';
+import {orderLessons} from '../lib/training/lesson-order.ts';
+import {readTrainingResponse} from '../lib/training/client-response.ts';
+
+test('next-lesson order respects modules when lesson positions restart at one',()=>{
+ const modules=[{id:'second',position:2},{id:'first',position:1}];
+ const lessons=[{id:'b1',module_id:'second',position:1},{id:'a2',module_id:'first',position:2},{id:'a1',module_id:'first',position:1},{id:'b2',module_id:'second',position:2}];
+ assert.deepEqual(orderLessons(modules,lessons).map(l=>l.id),['a1','a2','b1','b2']);
+ assert.equal(lessons[0].id,'b1');
+});
+
+test('client response preserves API errors and handles non-JSON failures safely',async()=>{
+ assert.deepEqual(await readTrainingResponse(Response.json({role:'admin'})),{role:'admin'});
+ await assert.rejects(()=>readTrainingResponse(Response.json({error:'Vagas esgotadas'},{status:409})),/Vagas esgotadas/);
+ await assert.rejects(()=>readTrainingResponse(Response.json({error:{internal:'not a message'}},{status:500})),/Não foi possível concluir/);
+ await assert.rejects(()=>readTrainingResponse(new Response('<html>Unavailable</html>',{status:503})),/resposta válida/);
+});
 const admin={userId:'owner',email:'owner@example.test',displayName:'Owner'};
 const alice={userId:'alice',email:'alice@example.test',displayName:'Alice'};
 const bob={userId:'bob',email:'bob@example.test',displayName:'Bob'};

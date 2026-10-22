@@ -2,6 +2,12 @@
 
 Plataforma privada de treinamentos corporativos, com vagas por empresa e acesso por conta ChatGPT autorizada. Cobranças permanecem desativadas.
 
+## Estado atual — 22/10/2026
+
+As nove imagens selecionadas pelo proprietário estão incorporadas à branch de revisão. O documento visual original, as sete referências e as evidências da revisão local estão versionados. TypeScript, build de produção, 29 testes e integridade das nove mídias passaram. As sete telas foram verificadas em larguras de 1440, 1024 e 390 px.
+
+**O PR permanece Draft; a versão hospedada ainda não recebeu estas alterações.** A validação local usa dados fictícios e não comprova autenticação externa, migrações hospedadas ou aceite completo da turma. Consulte o [relatório atual de integração e pendências](docs/qa/INTEGRACAO_VISUAL_2026-10-22.md); ele atualiza os registros históricos de verificações e imagens pendentes.
+
 ## Página inicial, catálogo e acesso
 
 - **Página inicial (`/`):** apresentação institucional, áreas de formação e treinamentos destacados pela administração.

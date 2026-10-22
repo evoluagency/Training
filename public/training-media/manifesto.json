@@ -1,69 +1,133 @@
 {
-  "version": 1,
-  "source": "EVOLU_TRAINING_MIDIAS_PARA_REPOSITORIO.zip",
+  "version": 2,
+  "source": "Nove imagens enviadas e selecionadas pelo usuário em 22/10/2026",
+  "processing": "WebP qualidade 88; redução proporcional; sem recorte, regeneração ou ampliação. Nome do hero preservado por compatibilidade; dimensões reais 1536x864.",
   "assets": [
     {
-      "filename": "aula_concreto_1280x720.webp",
-      "sha256": "f2a99de8175ad114025f53624a9db0d56e0ad3249d24b275aae305754a99ee7b",
-      "width": 1280,
-      "height": 720,
-      "size_bytes": 47172
+      "filename": "home_executivo_cidade_1920x900.webp",
+      "sha256": "b81a57a9dbc7f892861fc24cd9c7964a3ffff909ec67125c74f49d5abb655589",
+      "width": 1536,
+      "height": 864,
+      "size_bytes": 139616,
+      "purpose": "Hero da página inicial",
+      "source_filename": "01-1000239683.png",
+      "source_sha256": "3a11dcb05ce765e10058eefb82d61ad5620705b9a28c4e201fd729c97188a8cc",
+      "source_dimensions": [
+        1536,
+        864
+      ]
     },
     {
       "filename": "dados_grafico_1280x720.webp",
-      "sha256": "5b377f620d73cfd65f05b217aa3382fa7aad14cf0236457e38387711d0b100d8",
+      "sha256": "1b335dfa6b759b30e1a8676a7045ed1d3cf49a0f06e48bb4b9702eed6bdac169",
       "width": 1280,
       "height": 720,
-      "size_bytes": 18308
+      "size_bytes": 18458,
+      "purpose": "Dados e Business Intelligence",
+      "source_filename": "02-1000239675.png",
+      "source_sha256": "21cf1f08acfd61e9a23921b9b93aae5345348aeef8b448b5d47e17af0fbcd550",
+      "source_dimensions": [
+        1536,
+        864
+      ]
     },
     {
       "filename": "escritorio_notebook_1280x720.webp",
-      "sha256": "0cc729abacfa6813459ff1c106185bc1c4c83e088c496e1a972456d2b284ce89",
+      "sha256": "16db4bf3c8c8e567f9acca1a13352fb6d49ceab5f98288ee3b9a870abb7b88cc",
       "width": 1280,
       "height": 720,
-      "size_bytes": 41078
-    },
-    {
-      "filename": "estrategia_reuniao_1280x720.webp",
-      "sha256": "8cab69a408157eea00d2234bad8cb7d7076635deface8e1fda6bc8d9204a2dda",
-      "width": 1280,
-      "height": 720,
-      "size_bytes": 80068
-    },
-    {
-      "filename": "home_executivo_cidade_1920x900.webp",
-      "sha256": "098db6fb8dfa80e066dbea8a7f1db66652f0e7d435908de1201d47f0f760c698",
-      "width": 1920,
-      "height": 900,
-      "size_bytes": 170974
+      "size_bytes": 41876,
+      "purpose": "Escritório e cursos",
+      "source_filename": "03-1000239676.png",
+      "source_sha256": "9b2f638285cdd50d66389bf27b6a9db1cb0aad8a78634f086cd176827a93d32c",
+      "source_dimensions": [
+        1536,
+        864
+      ]
     },
     {
       "filename": "lideranca_duas_executivas_1280x720.webp",
-      "sha256": "5b5e596a85e9f60a34caaaa251ff36975503c42aec4f29db02fa72b25ec0fdf9",
+      "sha256": "451e81dd83b7669cd3a68f25f3b9823660de13ccb5edb30f3717805dbd002dd3",
       "width": 1280,
       "height": 720,
-      "size_bytes": 56286
-    },
-    {
-      "filename": "login_retrato_executiva_900x1200.webp",
-      "sha256": "f8b4d5966f28d7064a6ac6c6943511da7c11cc6e487e81ff8379ba6d2dda3cf8",
-      "width": 900,
-      "height": 1200,
-      "size_bytes": 48596
-    },
-    {
-      "filename": "processos_arquitetura_1280x720.webp",
-      "sha256": "c114c5d8567cf604ee967615fc661ac534f2ab499606cf284f356a40e1ce7364",
-      "width": 1280,
-      "height": 720,
-      "size_bytes": 103812
+      "size_bytes": 56392,
+      "purpose": "Liderança e pessoas",
+      "source_filename": "04-1000239677.png",
+      "source_sha256": "71339b7d5339a8a53b9cef79f9c4547d4e78cbc9c96c94d078a0f567856b2ddc",
+      "source_dimensions": [
+        1536,
+        864
+      ]
     },
     {
       "filename": "reflexao_executiva_1280x720.webp",
-      "sha256": "bacf759c725a9dc3fcaaea2f2fc3e518c4afdf3ae50c8756b08d5fe2da6b2d52",
+      "sha256": "9dcb6b649165f5597d956febad5a5b0dc3022bce734f2ae2ebb37423da9e1240",
       "width": 1280,
       "height": 720,
-      "size_bytes": 40968
+      "size_bytes": 40482,
+      "purpose": "Tecnologia e reflexão",
+      "source_filename": "05-1000239678.png",
+      "source_sha256": "b188339298f0239078ec363d5932a59ced0b2fe37bf2923badef7d0af5bd366b",
+      "source_dimensions": [
+        1536,
+        864
+      ]
+    },
+    {
+      "filename": "processos_arquitetura_1280x720.webp",
+      "sha256": "ce5556e29f8685c42b5e431440499367f0c936985d3f81b4e598fb7e8212fd6f",
+      "width": 1280,
+      "height": 720,
+      "size_bytes": 46528,
+      "purpose": "Operações e processos",
+      "source_filename": "06-1000239679.png",
+      "source_sha256": "316aeb78639fb3b32ad5629616da2d469a387fd551fbb18beea2b4dfde564607",
+      "source_dimensions": [
+        1536,
+        864
+      ]
+    },
+    {
+      "filename": "aula_concreto_1280x720.webp",
+      "sha256": "7c9fefd0c780dcd973814a862a979bd5e1433dab2d8b28c349968d06eaa66121",
+      "width": 1280,
+      "height": 720,
+      "size_bytes": 98016,
+      "purpose": "Poster da aula",
+      "source_filename": "07-1000239680.png",
+      "source_sha256": "39ff5d2d852c71038a5eccec4e7c784cead26b0c8cd0fb062633b3bce118c63e",
+      "source_dimensions": [
+        1536,
+        864
+      ]
+    },
+    {
+      "filename": "login_retrato_executiva_900x1200.webp",
+      "sha256": "cff9ded1cdc9787519e36772c3a1ee7d55156f187fb9ed7f29eeb3b3716375fc",
+      "width": 900,
+      "height": 1200,
+      "size_bytes": 45706,
+      "purpose": "Painel do login",
+      "source_filename": "08-1000239681.png",
+      "source_sha256": "936747c448efdc0ec155163851eb27d7e71960609aadbedb069728ec41ef9de2",
+      "source_dimensions": [
+        1152,
+        1536
+      ]
+    },
+    {
+      "filename": "estrategia_reuniao_1280x720.webp",
+      "sha256": "91d912d829583cac729c229e5a3b4820cc22e6aeaa000cac82458ad68b2a1337",
+      "width": 1280,
+      "height": 720,
+      "size_bytes": 79120,
+      "purpose": "Estratégia e negócios",
+      "source_filename": "09-1000239682.png",
+      "source_sha256": "d56513961499890996d3770002b00f12ff57aeaab972294f2a1d900c8adeab9b",
+      "source_dimensions": [
+        1536,
+        864
+      ]
     }
   ]
 }
