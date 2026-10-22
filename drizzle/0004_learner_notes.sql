@@ -1,0 +1,1 @@
+CREATE TABLE `lesson_notes` (`member_id` text NOT NULL, `lesson_id` text NOT NULL, `body` text NOT NULL DEFAULT '', `updated_at` integer NOT NULL, PRIMARY KEY(`member_id`,`lesson_id`), FOREIGN KEY (`member_id`) REFERENCES `members`(`id`) ON UPDATE no action ON DELETE no action, FOREIGN KEY (`lesson_id`) REFERENCES `lessons`(`id`) ON UPDATE no action ON DELETE no action);
