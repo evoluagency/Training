@@ -63,6 +63,10 @@ Downloads são autorizados no servidor e redirecionados para URLs assinadas com 
 
 ## Publicação na Vercel
 
+**Publicado e validado:** https://evolu-training.vercel.app/ . Deployment de produção `dpl_CLJeQiH7MianujdbykbMGFL3NLvu`, estado `READY`, com o código do commit `89621411c828a3e93247fb8de80aa9d0df3e6d73`.
+
+A página inicial, o acesso e a configuração inicial responderam 200. Com sessão administrativa real, as rotas de administração, empresas, treinamentos, estrutura, identidade e visão geral responderam 200. A visão geral retornou as contagens originais. A comparação de campos das 17 tabelas originais confirmou a cópia; somente `administrators.user_id` foi remapeado para Supabase Auth. Os registros e arquivos temporários de verificação foram removidos.
+
 Variáveis exigidas, também descritas em `.env.example`:
 
 ```text
@@ -78,7 +82,7 @@ Não há GitHub Actions, Jobs ou Workflows adicionados. A publicação na Vercel
 
 ## Preservação do ambiente anterior
 
-O ambiente Sites só deve deixar de servir a plataforma após a nova publicação ser validada. A retirada pode manter um aviso/redirecionamento ao novo endereço, sem executar a aplicação antiga. Não excluir o projeto antigo nem seus bancos como parte de uma tentativa de implantação que falhou.
+O novo ambiente foi validado. O redirecionamento de retirada do Sites foi preparado e validado, com o código `3284274f3a6a6714c56769e39abfb459e6e72fc2` enviado ao repositório nativo do Site. A publicação desse redirecionamento retornou erro interno tanto no fluxo combinado quanto no salvamento de versão. A consulta confirmou que a versão publicada do endereço antigo continua sendo a v4. Portanto, **a retirada do endereço antigo permanece pendente**. O projeto e seus bancos antigos foram preservados; esse erro não interfere no novo ambiente Vercel/Supabase.
 
 ## Pendências de produto já existentes
 
