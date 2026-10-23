@@ -1,5 +1,5 @@
 import {redirect} from 'next/navigation';
-import {getChatGPTUser,chatGPTSignInPath} from '../chatgpt-auth';
+import {getTrainingUser,trainingSignInPath} from '../auth';
 import Portal from '../visual-portal';
 export const dynamic='force-dynamic';
-export default async function Admin(){const user=await getChatGPTUser();if(!user)redirect(chatGPTSignInPath('/admin'));return <Portal area="admin"/>}
+export default async function Admin(){const user=await getTrainingUser();if(!user)redirect(trainingSignInPath('/admin'));return <Portal area="admin"/>}

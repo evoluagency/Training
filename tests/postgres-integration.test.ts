@@ -1,0 +1,63 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {PGlite} from '@electric-sql/pglite';
+import {postgresDatabase,postgresSql} from '../lib/training/postgres-adapter.ts';
+import {handle} from '../lib/training/service.ts';
+import {isPortalRoute,activePortalNav} from '../lib/training/navigation.ts';
+const owner={userId:'qa-owner',email:'owner@example.test',displayName:'Owner'};
+const student={userId:'qa-student',email:'student@example.test',displayName:'Student'};
+const outsider={userId:'qa-outsider',email:'outsider@example.test',displayName:'Outsider'};
+test('PostgreSQL migration and complete training lifecycle preserve permissions',async()=>{
+ const pg=new PGlite();
+ await pg.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
+ await pg.exec(readFileSync(new URL('../supabase/migrations/20261023110552_training_portable.sql',import.meta.url),'utf8'));
+ const db=postgresDatabase(async(q,p)=>{const r=await pg.query<Record<string,any>>(q,p);return {rows:r.rows,affectedRows:r.affectedRows};});
+ const bucket:any={put:async()=>{},delete:async()=>{},get:async()=>null};
+ const api=async(path:string,body?:unknown,user=owner)=>{const response=await handle(new Request('https://training.test/api/training/'+path,{method:body===undefined?'GET':'POST',headers:{'content-type':'application/json',origin:'https://training.test'},body:body===undefined?undefined:JSON.stringify(body)}),{db,bucket,user,adminEmail:owner.email});return {status:response.status,body:await response.json() as any};};
+ const post=async(path:string,body:unknown,user=owner)=>{const r=await api(path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body;};
+ try{
+  const company=await post('companies',{name:'QA Company',seats:1}),other=await post('companies',{name:'Other QA Company',seats:1});
+  const member=await post('members',{companyId:company.id,name:'QA Student',jobTitle:'Analista',email:student.email,role:'learner'});
+  await post('members',{companyId:other.id,name:'QA Outsider',jobTitle:'Gestor',email:outsider.email,role:'learner'});
+  const catalog=await post('catalogs',{title:'QA Catalog'}),course=await post('courses',{catalogId:catalog.id,title:'QA Course',hours:2,minutes:1,passing:70,attemptLimit:2,certificate:true});
+  const module=await post('course/'+course.id+'/module',{title:'QA Module',position:1});
+  const lesson=await post('course/'+course.id+'/lesson',{moduleId:module.id,title:'QA Lesson',body:'QA Content',position:1,mode:'equivalent'});
+  const question=await post('course/'+course.id+'/question',{prompt:'QA Question',options:['Correct','Wrong'],correct:0,position:1});
+  await post('grants',{companyId:company.id,courseId:course.id});await post('course/'+course.id+'/publish',{});
+  assert.equal((await api('course/'+course.id,undefined,outsider)).status,403);
+  assert.equal((await api('course/'+course.id+'/start',{},student)).status,409);
+  await post('progress/'+lesson.id,{},student);
+  const attempt=await post('course/'+course.id+'/start',{},student);
+  assert.equal('correct' in attempt.questions[0],false);
+  await post('attempt/'+attempt.id+'/answer',{questionId:question.id,choice:0},student);
+  const result=await post('attempt/'+attempt.id+'/submit',{},student);assert.equal(result.score,100);assert.equal(result.passed,1);
+  assert.equal((await api('course/'+course.id+'/certificate',{},student)).status,409);
+  await post('course/'+course.id+'/survey',{skip:true},student);
+  const cert=await post('course/'+course.id+'/certificate',{},student);
+  assert.equal((await api('certificates',undefined,student)).body[0].id,cert.id);
+  assert.deepEqual((await api('certificates',undefined,outsider)).body,[]);
+  assert.equal((await api('certificate/'+cert.id,undefined,outsider)).status,403);
+  await pg.query('INSERT INTO training.assets(id,lesson_id,key,name,mime,size) VALUES ($1,$2,$3,$4,$5,$6)',['qa-file',lesson.id,'qa/file','qa.pdf','application/pdf',10]);
+  const signed:any={...bucket,get:async()=>({body:new ReadableStream({start(c){c.close()}}),size:0,redirectUrl:'https://storage.example.test/signed-file'})};
+  const file=await handle(new Request('https://training.test/api/training/asset/qa-file'),{db,bucket:signed,user:student,adminEmail:owner.email});assert.equal(file.status,302);assert.equal(file.headers.get('location'),'https://storage.example.test/signed-file');
+  const deniedFile=await handle(new Request('https://training.test/api/training/asset/qa-file'),{db,bucket:signed,user:outsider,adminEmail:owner.email});assert.equal(deniedFile.status,403);
+  await post('comments?course='+course.id,{text:'QA question'},student);
+  assert.equal((await api('comments-summary')).body[0].body,'QA question');
+  const activity=(await api('activity')).body;assert.equal(activity.days.reduce((sum:number,d:any)=>sum+d.total,0),3);
+  const count=(await pg.query('SELECT count(*)::integer n FROM training.members WHERE company_id=$1',[company.id])).rows[0] as any;assert.equal(count.n,1);
+  const rows=await pg.query("SELECT count(*)::integer n FROM pg_tables WHERE schemaname='training' AND rowsecurity=false");assert.equal((rows.rows[0] as any).n,0);
+ }finally{await pg.close();}
+});
+test('SQL placeholder conversion leaves quoted question marks untouched',()=>{
+ assert.equal(postgresSql("SELECT '?' value WHERE id=?"),"SELECT '?' value WHERE id=$1");
+ assert.equal(postgresSql('INSERT OR IGNORE INTO grants VALUES (?,?)'),'INSERT INTO grants VALUES ($1,$2) ON CONFLICT DO NOTHING');
+});
+test('connected portal routes select the current learning stage and reject unknown paths',()=>{
+ const id='12345678-1234-1234-1234-123456789012';
+ for(const step of ['avaliacao','pesquisa','certificado','comentarios'])assert.ok(isPortalRoute('/area/treinamentos/'+id+'/'+step,'learner'));
+ assert.equal(activePortalNav('/area/treinamentos/'+id+'/pesquisa'),'/area/avaliacoes');
+ assert.ok(isPortalRoute('/admin/certificados/'+id,'admin'));
+ assert.equal(isPortalRoute('/area/qualquer-coisa','learner'),false);
+ assert.equal(isPortalRoute('/area/treinamentos/'+id+'/nao-existe','learner'),false);
+});

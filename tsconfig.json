@@ -28,8 +28,7 @@
       ]
     },
     "types": [
-      "node",
-      "@cloudflare/workers-types"
+      "node"
     ],
     "allowImportingTsExtensions": true
   },
@@ -49,6 +48,14 @@
     ".wrangler",
     ".sites-runtime",
     "outputs",
-    "work"
+    "work",
+    "supabase/functions",
+    "scripts",
+    "worker",
+    "tests",
+    "db",
+    "drizzle.config.ts",
+    "vite.config.ts",
+    "worker-configuration.d.ts"
   ]
 }

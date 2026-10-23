@@ -1,8 +1,7 @@
-import {env} from 'cloudflare:workers';
 import Link from 'next/link';
 import {ArrowRight,Building2,BookOpen,UsersRound,FileText,ClipboardCheck,Network,BarChart3,Settings2} from 'lucide-react';
-import {getChatGPTUser} from './chatgpt-auth';
-import {getPublicCatalog,type PublicCourse} from '../lib/training/public-catalog';
+import {getTrainingUser} from './auth';
+import type {PublicCourse} from '../lib/training/public-catalog';
 import './home.css';
 import './home-reference.css';
 export const dynamic='force-dynamic';
@@ -16,7 +15,7 @@ const steps=[['01','Conheça os treinamentos','Consulte o catálogo disponibiliz
 const photo=(name:string)=>({backgroundImage:'linear-gradient(0deg,#020405bd,#0a0c0d17),url(/training-media/'+name+'.webp)'});
 const picture=(course:PublicCourse,i:number)=>{const t=(course.category+' '+course.title).toLowerCase();return /dado|bi|power/.test(t)?'dados_grafico_1280x720':/process|opera/.test(t)?'processos_arquitetura_1280x720':/lider|pessoa/.test(t)?'lideranca_duas_executivas_1280x720':/estratég|planej|gest/.test(t)?'estrategia_reuniao_1280x720':['escritorio_notebook_1280x720','reflexao_executiva_1280x720'][i%2]};
 export default async function Home(){
- const user=await getChatGPTUser();let catalog:PublicCourse[]=[];let ready=false;try{if(env.DB){catalog=await getPublicCatalog(env.DB);ready=true}}catch(e){console.error('training_catalog_unavailable',e instanceof Error?e.message:'unknown')}
+ const user=await getTrainingUser();let catalog:PublicCourse[]=[];let ready=false;try{if(process.env.NEXT_PUBLIC_SUPABASE_URL){const response=await fetch(process.env.NEXT_PUBLIC_SUPABASE_URL+'/functions/v1/training-api/public-catalog',{headers:{apikey:process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY||''},cache:'no-store'});if(response.ok){catalog=await response.json();ready=true}}}catch(e){console.error('training_catalog_unavailable',e instanceof Error?e.message:'unknown')}
  return <div className="home ev-public"><header className="home-header"><Link className="home-product" href="/"><img className="home-logo" src="/brand/evolu-white.png" alt="EVOLU" width={145} height={31}/><span className="home-product-divider"/><span className="home-product-sub">Training</span></Link><nav className="home-nav"><a href="#treinamentos">Treinamentos</a><a href="#areas">Para empresas</a><a href="#metodo">Como funciona</a></nav><Link className="home-access" href={user?'/entrada':'/acesso'}>Acessar plataforma <ArrowRight size={16}/></Link></header>
  <main className="ev-public-main"><section className="ev-public-hero"><div className="ev-public-hero-photo" style={photo('home_executivo_cidade_1920x900')}/><div className="ev-public-hero-copy"><p className="ev-public-kicker">CONHECIMENTO QUE GERA IMPACTO REAL</p><h1>Conhecimento<br/>que impulsiona<br/><em>resultados.</em></h1><p>Formação corporativa nas áreas de estratégia, dados, operações e inteligência de negócios, com aplicação prática no trabalho.</p><div className="ev-public-actions"><a className="ev-public-primary" href="#treinamentos">Explorar treinamentos <ArrowRight size={16}/></a><a className="ev-public-secondary" href="#areas">Soluções para empresas</a></div></div><div className="ev-public-value"><span><BookOpen/> Conteúdo estruturado</span><span><FileText/> Ferramentas por aula</span><span><Building2/> Gestão corporativa</span><span><ClipboardCheck/> Avaliações e certificados</span></div></section>
  <section className="ev-public-areas" id="areas"><div className="ev-public-intro"><p>FORMAÇÃO COM PROPÓSITO</p><h2>Áreas de<br/>formação</h2><span>Programas direcionados às competências de empresas e equipes.</span></div><div className="ev-public-area-list">{areas.map((a,i)=><article key={a.name} className="ev-public-area"><div className="ev-public-area-cover" style={photo(a.image)}/><div className="ev-public-area-copy"><a.Icon size={26}/><h3>{a.name}</h3><p>{a.detail}</p><span>{String(i+1).padStart(2,'0')} ↗</span></div></article>)}</div></section>
