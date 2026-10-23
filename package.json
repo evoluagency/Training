@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "test": "node --experimental-transform-types --test tests/training.test.ts tests/storage-integration.test.ts tests/postgres-integration.test.ts",
+    "test": "node --experimental-transform-types --test tests/training.test.ts tests/storage-integration.test.ts tests/postgres-integration.test.ts tests/recovery.test.ts",
     "check": "tsc --noEmit"
   },
   "dependencies": {

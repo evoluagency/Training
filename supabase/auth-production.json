@@ -1,0 +1,5 @@
+{
+  "site_url": "https://evolu-training.vercel.app",
+  "uri_allow_list": "https://evolu-training.vercel.app/acesso/definir-senha,https://evolu-training.vercel.app/auth/confirm",
+  "mailer_subjects_recovery": "Redefina sua senha | EVOLU Training"
+}
