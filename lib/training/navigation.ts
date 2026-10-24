@@ -16,3 +16,11 @@ export function activePortalNav(path: string): string {
   }
   return '/' + path.split('/').filter(Boolean).slice(0, 2).join('/');
 }
+
+export function portalPageTitle(path: string): string {
+  if (/\/treinamentos\/[^/]+\/estrutura$/.test(path)) return 'Módulos e materiais';
+  if (/\/treinamentos\/[^/]+\/aulas\//.test(path)) return 'Aula';
+  if (/\/treinamentos\/[^/]+$/.test(path) && !path.endsWith('/novo') && !path.endsWith('/estrutura')) return 'Treinamento';
+  const section = path.split('/').filter(Boolean).at(-1) || '';
+  return ({admin:'Painel administrativo',area:'Área do participante',empresas:'Empresas e vagas',nova:'Nova empresa',participantes:'Participantes',treinamentos:'Catálogo de treinamentos',estrutura:'Módulos e aulas',novo:'Novo treinamento',ferramentas:'Ferramentas',provas:'Provas',certificados:'Certificados',certificado:'Certificado',comentarios:'Comentários',relatorios:'Relatórios',configuracoes:'Configurações',perfil:'Meu perfil',ajuda:'Ajuda e acesso',avaliacao:'Avaliação',avaliacoes:'Avaliações',pesquisa:'Pesquisa de experiência'} as Record<string,string>)[section] || 'EVOLU Training';
+}

@@ -38,6 +38,19 @@ O proprietário recebe uma chave privada inicial de uso único para definir a se
 
 Veja [TRANSICAO_VERCEL_SUPABASE.md](docs/TRANSICAO_VERCEL_SUPABASE.md) para os registros migrados, arquitetura, validação e o estado da integração Git da Vercel. O projeto Supabase dedicado é `evolu-training`, em São Paulo. Os dados de empresas/alunos, uploads, senhas, sessões e a chave inicial não estão no GitHub.
 
-O conteúdo publicado é congelado. Artigos vinculados ao LinkedIn, checkout, importação por Excel e edição/reordenação completa de conteúdo são pendências anteriores à migração. Os documentos de revisão visual em `docs/qa/` e os checkpoints antigos são históricos; o documento de transição descreve a arquitetura atual.
+O conteúdo publicado é congelado. Artigos vinculados ao LinkedIn, checkout, importação por Excel e edição/reordenação de conteúdo já publicado são pendências anteriores à migração. Os documentos de revisão visual em `docs/qa/` e os checkpoints antigos são históricos; o documento de transição descreve a arquitetura atual.
 
 Meta operacional: 25/10/2026. Treinamento: 31/10/2026. Preparar o conteúdo real e validar a primeira turma antes de liberá-la.
+
+## Editor de conteúdo — 24/10/2026
+
+Acesse `https://training.evolu.ink/admin/treinamentos`. Os endereços estáveis antigos da Vercel redirecionam para o domínio próprio preservando página e parâmetros.
+
+- O nome do catálogo abre o treinamento quando há apenas um; quando há vários, filtra o catálogo. O cartão completo abre a estrutura.
+- Módulos e aulas têm formulários de edição com nome, texto opcional e ordem. Os formulários abrem em uma janela acessível, inclusive no celular.
+- **Anexar PDF ao módulo** envia o arquivo e cria a aula correspondente em uma operação. PDFs até 10 MB. Os materiais continuam privados.
+- Catálogos e treinamentos têm capa configurável por upload (PNG/JPG/WebP até 5 MB), biblioteca ou URL HTTPS. O treinamento herda a capa do catálogo quando não tem capa própria. Não há foto automática baseada no título.
+- Status: **Rascunho**, **Em revisão**, **Ativo**, **Desativado** e **Arquivado**. Ativar exige aulas, material e questões válidos; a publicação congela o conteúdo. Desativar remove o acesso do participante e a vitrine; reativar preserva a versão e os registros. Um treinamento publicado não pode voltar a rascunho para contornar esse bloqueio.
+- Capas só são apresentadas publicamente quando o curso está ativo e explicitamente liberado na página inicial. O bucket permanece privado.
+
+Validação: TypeScript, build Next.js e 42 testes locais, incluindo PostgreSQL, SQLite, armazenamento, bytes do PDF, autorização por empresa e transições de status. Os testes não criam cursos nem anexam documentos na base real.

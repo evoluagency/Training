@@ -26,6 +26,7 @@ const bob={userId:'bob',email:'bob@example.test',displayName:'Bob'};
 const manager={userId:'manager',email:'manager@example.test',displayName:'Manager'};
 function fixture(){
  const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0002_public_course_showcase.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0003_company_profile.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));sql.exec(readFileSync(new URL('../drizzle/0004_learner_notes.sql',import.meta.url),'utf8'));
+ sql.exec(readFileSync(new URL('../drizzle/0005_content_editor.sql',import.meta.url),'utf8'));
  const db:any={prepare(query:string){let vals:any[]=[];return {bind(...v:any[]){vals=v;return this},async first(){return sql.prepare(query).get(...vals)??null},async all(){return {results:sql.prepare(query).all(...vals)}},async run(){return {meta:sql.prepare(query).run(...vals)}}}}};
  const objects=new Map<string,Uint8Array>();const bucket:any={async put(key:string,data:any){objects.set(key,new Uint8Array(await new Response(data).arrayBuffer()))},async delete(key:string){objects.delete(key)},async get(key:string){const v=objects.get(key);return v?{body:new Blob([new Uint8Array(v).buffer]).stream(),size:v.length}:null}};
  let clock=1700000000000;
@@ -46,7 +47,7 @@ test('public homepage never exposes closed corporate courses without explicit ap
  const published=await getPublicCatalog(f.db);
  assert.equal(published.length,1);
  assert.equal(published[0].id,d.course.id);
- assert.deepEqual(Object.keys(published[0]).sort(),['category','description','hours','id','title']);
+ assert.deepEqual(Object.keys(published[0]).sort(),['category','cover_image','description','hours','id','title']);
  assert.ok(PUBLIC_COURSE_SQL.includes("c.show_on_home=1"));
  const cat=await f.post('catalogs',{title:'Privado'});
  const draft=await f.post('courses',{catalogId:cat.id,title:'Ainda não publicado',hours:1,minutes:10,passing:70,attemptLimit:1});
@@ -69,6 +70,44 @@ test('cargo and whatsapp are saved, identity binds only once',async()=>{const f=
 test('learners cannot access other company courses or reports',async()=>{const f=fixture();const d=await f.setup();assert.equal((await f.request('course/'+d.course.id,bob)).status,403);assert.equal((await f.request('report',alice)).status,403);assert.equal((await f.request('overview',bob)).body.courses.length,0);f.close()});
 test('course must have lessons and assessment before publishing',async()=>{const f=fixture();const cat=await f.post('catalogs',{title:'C'}),c=await f.post('courses',{catalogId:cat.id,title:'Empty',hours:1,minutes:10,passing:70,attemptLimit:2});assert.equal((await f.request('course/'+c.id+'/publish',admin,{})).status,400);f.close()});
 test('published content is frozen',async()=>{const f=fixture(),d=await f.setup();assert.equal((await f.request('course/'+d.course.id+'/module',admin,{title:'New',position:2})).status,409);f.close()});
+test('module and lesson edits persist and are restricted to the editable course',async()=>{
+ const f=fixture();const cat=await f.post('catalogs',{title:'Catálogo'}),course=await f.post('courses',{catalogId:cat.id,title:'Rascunho',hours:2,minutes:10,passing:70,attemptLimit:2});
+ const module=await f.post('course/'+course.id+'/module',{title:'Módulo inicial',position:1});const lesson=await f.post('course/'+course.id+'/lesson',{moduleId:module.id,title:'Aula inicial',body:'',position:1,mode:'equivalent'});
+ assert.equal((await f.request('modules/'+module.id,alice,{title:'Não autorizado'},'PATCH')).status,403);
+ assert.equal((await f.request('modules/'+module.id,admin,{title:'Módulo editado',position:2},'PATCH')).status,200);
+ assert.equal((await f.request('lessons/'+lesson.id,admin,{title:'Aula editada',body:'Objetivo revisto',position:3},'PATCH')).status,200);
+ const detail=(await f.request('course/'+course.id)).body;assert.equal(detail.modules[0].title,'Módulo editado');assert.equal(detail.modules[0].position,2);assert.equal(detail.lessons[0].body,'Objetivo revisto');
+ assert.equal((await f.request('modules/'+module.id,admin,{title:'',position:2},'PATCH')).status,400);f.close();
+});
+test('PDF attached directly to a module creates its lesson and preserves file bytes',async()=>{
+ const f=fixture();const cat=await f.post('catalogs',{title:'C'}),course=await f.post('courses',{catalogId:cat.id,title:'PDF course',hours:1,minutes:10,passing:70,attemptLimit:1}),module=await f.post('course/'+course.id+'/module',{title:'Módulo PDF',position:1});
+ const bytes=new TextEncoder().encode('%PDF-1.4\nSynthetic training document');
+ const req=(user:any,mime='application/pdf')=>handle(new Request('https://training.test/api/training/module-upload?module='+module.id+'&name=Planejamento.pdf',{method:'POST',headers:{origin:'https://training.test','content-type':mime,'content-length':String(bytes.length)},body:bytes}),f.ctx(user));
+ assert.equal((await req(alice)).status,403);assert.equal((await req(admin,'text/html')).status,400);
+ assert.equal((await f.request('course/'+course.id)).body.lessons.length,0);
+ const response=await req(admin);assert.equal(response.status,201);const result:any=await response.json();const detail=(await f.request('course/'+course.id)).body;
+ assert.equal(detail.lessons.length,1);assert.equal(detail.lessons[0].id,result.lessonId);assert.equal(detail.lessons[0].title,'Planejamento');assert.equal(detail.assets[0].lesson_id,result.lessonId);
+ const download=await handle(new Request('https://training.test/api/training/asset/'+result.id),f.ctx(admin));assert.deepEqual(new Uint8Array(await download.arrayBuffer()),bytes);
+ const bad=await handle(new Request('https://training.test/api/training/module-upload?module='+module.id+'&name=bad.pdf',{method:'POST',headers:{origin:'https://training.test','content-type':'application/pdf','content-length':String(11*1024*1024)},body:bytes}),f.ctx(admin));assert.equal(bad.status,400);assert.equal((await f.request('course/'+course.id)).body.lessons.length,1);f.close();
+});
+test('status changes revoke learner access and cannot unlock published content',async()=>{
+ const f=fixture(),d=await f.setup();await f.post('course/'+d.course.id+'/home',{visible:true});
+ assert.equal((await f.request('course/'+d.course.id+'/status',alice,{status:'disabled'})).status,403);
+ for(const status of ['disabled','archived']){await f.post('course/'+d.course.id+'/status',{status});assert.equal((await f.request('course/'+d.course.id,alice)).status,403);assert.equal((await getPublicCatalog(f.db)).length,0);assert.equal((await f.request('course/'+d.course.id+'/status',admin,{status:'draft'})).status,409);assert.equal((await f.request('course/'+d.course.id+'/module',admin,{title:'Unsafe',position:2})).status,409);await f.post('course/'+d.course.id+'/publish',{});assert.equal((await f.request('course/'+d.course.id,alice)).status,200);}
+ assert.equal((await f.request('course/'+d.course.id+'/status',admin,{status:'published'})).status,400);f.close();
+});
+test('catalog covers are editable, inherited and never expose private storage keys publicly',async()=>{
+ const f=fixture(),d=await f.setup();const catalogId=(await f.request('course/'+d.course.id)).body.course.catalog_id;
+ assert.equal((await f.request('catalogs/'+catalogId,alice,{coverImage:'https://example.test/cover.jpg'},'PATCH')).status,403);
+ assert.equal((await f.request('catalogs/'+catalogId,admin,{coverImage:'javascript:alert(1)'},'PATCH')).status,400);
+ assert.equal((await f.request('catalogs/'+catalogId,admin,{title:'Catálogo editado',coverImage:'/training-media/dados_grafico_1280x720.webp'},'PATCH')).status,200);
+ assert.equal((await f.request('course/'+d.course.id)).body.course.catalog_cover,'/training-media/dados_grafico_1280x720.webp');
+ const bytes=new Uint8Array([137,80,78,71,13,10,26,10]);
+ const response=await handle(new Request('https://training.test/api/training/cover-upload?kind=catalog&id='+catalogId,{method:'POST',headers:{origin:'https://training.test','content-type':'image/png','content-length':String(bytes.length)},body:bytes}),f.ctx(admin));assert.equal(response.status,201);
+ assert.equal((await f.request('cover/catalog/'+catalogId,bob)).status,403);
+ await f.post('course/'+d.course.id+'/home',{visible:true});const publicCourses=await getPublicCatalog(f.db);assert.equal(publicCourses[0].cover_image,'/api/capas/'+d.course.id);assert.equal(JSON.stringify(publicCourses).includes('storage:'),false);
+ const download=await handle(new Request('https://training.test/api/training/cover/course/'+d.course.id),f.ctx(alice));assert.equal(download.headers.get('Content-Type'),'image/png');assert.deepEqual(new Uint8Array(await download.arrayBuffer()),bytes);f.close();
+});
 test('progress required before exam and no answer keys exposed',async()=>{const f=fixture(),d=await f.setup();assert.equal((await f.request('course/'+d.course.id+'/start',alice,{})).status,409);await f.post('progress/'+d.lesson.id,{},alice);const a=await f.post('course/'+d.course.id+'/start',{},alice);assert.equal(a.questions[0].correct,undefined);const r=(await f.request('course/'+d.course.id,alice)).body;assert.equal(r.questions,undefined);assert.equal(r.attempts[0].questions[0].correct,undefined);f.close()});
 test('concurrent starts return the same attempt and preserve deadline',async()=>{const f=fixture(),d=await f.setup();await f.post('progress/'+d.lesson.id,{},alice);const [a,b]=await Promise.all([f.post('course/'+d.course.id+'/start',{},alice),f.post('course/'+d.course.id+'/start',{},alice)]);assert.equal(a.id,b.id);f.advance(1000);assert.equal((await f.post('course/'+d.course.id+'/start',{},alice)).deadline,a.deadline);f.close()});
 test('deadline prevents late answers and grades saved answers',async()=>{const f=fixture(),d=await f.setup();await f.post('progress/'+d.lesson.id,{},alice);const a=await f.post('course/'+d.course.id+'/start',{},alice);await f.post('attempt/'+a.id+'/answer',{questionId:d.q1.id,choice:0},alice);f.advance(60001);assert.equal((await f.request('attempt/'+a.id+'/answer',alice,{questionId:d.q2.id,choice:1})).status,409);const r=(await f.request('attempt/'+a.id,alice)).body;assert.equal(r.status,'expired');assert.equal(r.score,50);assert.equal(r.passed,0);f.close()});

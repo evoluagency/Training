@@ -57,6 +57,13 @@ Deno.serve(async request=>{
    const result=await sql.begin(async tx=>{await tx.unsafe('SET LOCAL search_path TO training, public');return getPublicCatalog(postgresDatabase(async(q,p)=>{const r=await tx.unsafe(q,p as never[]);return {rows:[...r],affectedRows:r.count};}));});
    return reply(result);
   }
+  if(path.startsWith('public-cover/')&&request.method==='GET'){
+   const id=path.split('/')[1];
+   const rows=await sql.unsafe("SELECT CASE WHEN c.cover_image<>'' THEN c.cover_image ELSE cat.cover_image END image FROM training.courses c JOIN training.catalogs cat ON cat.id=c.catalog_id WHERE c.id=$1 AND c.status='published' AND c.show_on_home=1",[id]);
+   const image=rows[0]?.image;
+   if(typeof image!=='string'||!image.startsWith('storage:'))return reply({error:'Capa não disponível.'},404);
+   const obj=await bucket([]).get(image.slice(8));if(!obj?.redirectUrl)return reply({error:'Capa não disponível.'},404);return secured(Response.redirect(obj.redirectUrl,302));
+  }
   if(path==='health'&&request.method==='GET'){await sql`SELECT 1`;return reply({ready:true,platform:'vercel-supabase'});}
   const token=request.headers.get('Authorization')?.replace(/^Bearer\s+/i,'');
   if(!token)return reply({error:'Entre na plataforma para continuar.'},401);
@@ -79,7 +86,7 @@ Deno.serve(async request=>{
    });
   }
   if(!/^[a-zA-Z0-9/-]+$/.test(path))return reply({error:'Endereço inválido.'},400);
-  const binary=['upload','resource-file'].includes(path);
+  const binary=['upload','resource-file','module-upload','cover-upload'].includes(path);
   const original=binary?request:request.clone();
   for(let retry=0;retry<(binary?1:3);retry++){
    const uploaded:string[]=[],storage=bucket(uploaded);

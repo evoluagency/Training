@@ -1,4 +1,4 @@
-import {isPortalRoute} from '../../../lib/training/navigation';
+import {isPortalRoute,portalPageTitle} from '../../../lib/training/navigation';
 import {notFound,redirect} from 'next/navigation';
 import {getTrainingUser,trainingSignInPath} from '../../auth';
 import Portal from '../../visual-portal';
@@ -12,3 +12,5 @@ export default async function LearnerRoutes({params}:{params:Promise<{segments:s
  if(!user)redirect(trainingSignInPath(target));
  return <Portal area="learner"/>;
 }
+
+export async function generateMetadata({params}:{params:Promise<{segments:string[]}>}){const {segments}=await params;return {title:portalPageTitle('/area/'+segments.join('/'))};}

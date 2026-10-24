@@ -12,9 +12,10 @@ test('PostgreSQL migration and complete training lifecycle preserve permissions'
  const pg=new PGlite();
  await pg.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
  await pg.exec(readFileSync(new URL('../supabase/migrations/20261023110552_training_portable.sql',import.meta.url),'utf8'));
+ await pg.exec(readFileSync(new URL('../supabase/migrations/20261024153608_training_content_editor.sql',import.meta.url),'utf8'));
  const db=postgresDatabase(async(q,p)=>{const r=await pg.query<Record<string,any>>(q,p);return {rows:r.rows,affectedRows:r.affectedRows};});
  const bucket:any={put:async()=>{},delete:async()=>{},get:async()=>null};
- const api=async(path:string,body?:unknown,user=owner)=>{const response=await handle(new Request('https://training.test/api/training/'+path,{method:body===undefined?'GET':'POST',headers:{'content-type':'application/json',origin:'https://training.test'},body:body===undefined?undefined:JSON.stringify(body)}),{db,bucket,user,adminEmail:owner.email});return {status:response.status,body:await response.json() as any};};
+ const api=async(path:string,body?:unknown,user=owner,method='POST')=>{const response=await handle(new Request('https://training.test/api/training/'+path,{method:body===undefined?'GET':method,headers:{'content-type':'application/json',origin:'https://training.test'},body:body===undefined?undefined:JSON.stringify(body)}),{db,bucket,user,adminEmail:owner.email});return {status:response.status,body:await response.json() as any};};
  const post=async(path:string,body:unknown,user=owner)=>{const r=await api(path,body,user);assert.ok(r.status<300,JSON.stringify(r));return r.body;};
  try{
   const company=await post('companies',{name:'QA Company',seats:1}),other=await post('companies',{name:'Other QA Company',seats:1});
@@ -23,9 +24,18 @@ test('PostgreSQL migration and complete training lifecycle preserve permissions'
   const catalog=await post('catalogs',{title:'QA Catalog'}),course=await post('courses',{catalogId:catalog.id,title:'QA Course',hours:2,minutes:1,passing:70,attemptLimit:2,certificate:true});
   const module=await post('course/'+course.id+'/module',{title:'QA Module',position:1});
   const lesson=await post('course/'+course.id+'/lesson',{moduleId:module.id,title:'QA Lesson',body:'QA Content',position:1,mode:'equivalent'});
+  assert.equal((await api('modules/'+module.id,{title:'Módulo revisado',position:2},owner,'PATCH')).status,200);
+  assert.equal((await api('lessons/'+lesson.id,{body:'Conteúdo revisado'},owner,'PATCH')).status,200);
+  assert.equal((await api('catalogs/'+catalog.id,{coverImage:'/training-media/dados_grafico_1280x720.webp'},owner,'PATCH')).status,200);
+  assert.equal((await api('course/'+course.id+'/status',{status:'review'})).status,200);
   const question=await post('course/'+course.id+'/question',{prompt:'QA Question',options:['Correct','Wrong'],correct:0,position:1});
   await post('grants',{companyId:company.id,courseId:course.id});await post('course/'+course.id+'/publish',{});
   assert.equal((await api('course/'+course.id,undefined,outsider)).status,403);
+  assert.equal((await api('course/'+course.id+'/status',{status:'disabled'})).status,200);
+  assert.equal((await api('course/'+course.id,undefined,student)).status,403);
+  assert.equal((await api('course/'+course.id+'/status',{status:'draft'})).status,409);
+  assert.equal((await api('modules/'+module.id,{title:'Unsafe edit'},owner,'PATCH')).status,409);
+  await post('course/'+course.id+'/publish',{});
   assert.equal((await api('course/'+course.id+'/start',{},student)).status,409);
   await post('progress/'+lesson.id,{},student);
   const attempt=await post('course/'+course.id+'/start',{},student);

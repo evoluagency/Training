@@ -11,3 +11,5 @@ export default async function Area({searchParams}:{searchParams:Promise<{course?
  if(course)redirect('/area/treinamentos/'+encodeURIComponent(course));
  return <Portal area="learner"/>;
 }
+
+export const metadata={title:'Área do participante'};
