@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createRecoveryHandlers,readRecoveryFragment,PASSWORD_RESET_URL} from '../lib/supabase/recovery.ts';
-const token='a'.repeat(64),origin='https://evolu-training.vercel.app';
+const token='a'.repeat(64),origin='https://training.evolu.ink';
 function fixture(error:unknown=null){const calls:unknown[]=[];return {calls,...createRecoveryHandlers(async()=>({verifyOtp:async input=>{calls.push(input);return {error};},exchangeCodeForSession:async code=>{calls.push({code});return {error};}}))};}
 test('email scanner GET requests never consume the recovery token',async()=>{
  const api=fixture(),response=await api.GET(new Request(origin+'/auth/confirm?token_hash='+token+'&type=recovery'));

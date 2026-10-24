@@ -1,4 +1,4 @@
-# Transição da Evolu Training — 23/10/2026
+# Transição da Evolu Training — atualização 24/10/2026
 
 ## Arquitetura
 
@@ -63,7 +63,9 @@ Downloads são autorizados no servidor e redirecionados para URLs assinadas com 
 
 ## Publicação na Vercel
 
-**Publicado e validado:** https://evolu-training.vercel.app/ . Deployment de produção `dpl_CLJeQiH7MianujdbykbMGFL3NLvu`, estado `READY`, com o código do commit `89621411c828a3e93247fb8de80aa9d0df3e6d73`.
+**Endereço próprio conectado e validado:** https://training.evolu.ink/ . O endereço https://evolu-training.vercel.app/ continua disponível. O projeto e o banco são os mesmos; não houve nova importação de dados para conectar o domínio. O domínio principal `evolu.ink` continua no projeto institucional, com seus registros de e-mail preservados.
+
+A correção de recuperação de senha foi publicada no deployment `dpl_2ArL1e6arkkzsjB8ER1MtiN6DXwv`, estado `READY`, commit `f1cc7c48395202a45e644e73ad19d72753a67e14`. O código passa a solicitar o retorno pelo subdomínio próprio; a configuração hospedada Auth ainda precisa ser aplicada na conta que possui o projeto migrado. Ver `RECUPERACAO_ACESSO.md`.
 
 A página inicial, o acesso e a configuração inicial responderam 200. Com sessão administrativa real, as rotas de administração, empresas, treinamentos, estrutura, identidade e visão geral responderam 200. A visão geral retornou as contagens originais. A comparação de campos das 17 tabelas originais confirmou a cópia; somente `administrators.user_id` foi remapeado para Supabase Auth. Os registros e arquivos temporários de verificação foram removidos.
 
@@ -82,7 +84,7 @@ Não há GitHub Actions, Jobs ou Workflows adicionados. A publicação na Vercel
 
 ## Preservação do ambiente anterior
 
-O novo ambiente foi validado. O redirecionamento de retirada do Sites foi preparado e validado, com o código `3284274f3a6a6714c56769e39abfb459e6e72fc2` enviado ao repositório nativo do Site. A publicação desse redirecionamento retornou erro interno tanto no fluxo combinado quanto no salvamento de versão. A consulta confirmou que a versão publicada do endereço antigo continua sendo a v4. Portanto, **a retirada do endereço antigo permanece pendente**. O projeto e seus bancos antigos foram preservados; esse erro não interfere no novo ambiente Vercel/Supabase.
+A retirada do aplicativo antigo foi publicada com sucesso em 23/10/2026: deployment `appgdep_6adb982f9d7c819182dd643830c73eac`, versão `appgprj_6ad9138936e0819196cb382e61208232~appgver_c7345e79d39c8191848f764e912e14c5`, código `0bde327da8182c71c6d0a3c6fb79eaec860b8f05`. O endereço antigo exibe uma página estática de mudança e encaminha para a Vercel após três segundos. A audiência privada do proprietário foi mantida. Os recursos antigos não foram apagados explicitamente; a aplicação operacional e seus dados ficam na Vercel/Supabase.
 
 ## Pendências de produto já existentes
 

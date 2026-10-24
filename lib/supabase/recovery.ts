@@ -1,4 +1,4 @@
-export const TRAINING_SITE_URL='https://evolu-training.vercel.app';
+export const TRAINING_SITE_URL='https://training.evolu.ink';
 export const PASSWORD_RESET_PATH='/acesso/definir-senha';
 export const PASSWORD_RESET_URL=TRAINING_SITE_URL+PASSWORD_RESET_PATH;
 export type RecoveryFragment={accessToken:string;refreshToken:string}|{error:true}|null;

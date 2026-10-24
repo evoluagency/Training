@@ -1,10 +1,12 @@
-# Recuperação de acesso — 23/10/2026
+# Recuperação de acesso — 24/10/2026
 
 ## Causa e configuração exigida
 
 O projeto hospedado manteve o endereço padrão `http://localhost:3000` na configuração Auth. O retorno solicitado pela aplicação não estava autorizado. A mensagem foi enviada, mas o link terminou no endereço local do aparelho do participante.
 
 Em Authentication → URL Configuration, aplicar os valores de `supabase/auth-production.json`. São URLs exatas da aplicação de produção; não autorizar curingas de todos os projetos Vercel. O link usado pelo botão “Esqueci minha senha” agora aponta diretamente para a tela `/acesso/definir-senha` no endereço canônico.
+
+Endereço canônico: **https://training.evolu.ink**. O subdomínio foi associado ao projeto Vercel existente, verificado por TXT e configurado por CNAME. Homepage, acesso e definição de senha responderam 200 por HTTPS. O acesso anônimo à administração redirecionou corretamente para o login. O domínio principal `evolu.ink` e o MX do Google Workspace foram preservados. Os retornos exatos do endereço Vercel anterior permanecem autorizados na configuração proposta para compatibilidade.
 
 ## Compatibilidade com celular e navegador diferente
 
@@ -29,6 +31,7 @@ Quando ativado o modelo personalizado, o botão usa `.SiteURL` e `.TokenHash`. A
 - Seis testes específicos de recuperação aprovados: scanner, confirmação, destino fixo, bloqueio entre origens, token expirado, entradas inválidas e sessão em outro navegador.
 - TypeScript e build de produção aprovados.
 - Falta aplicar a configuração hospedada de URLs no painel e conectar o SMTP para ativar o e-mail personalizado. O painel exige autenticação própria; a integração disponível não oferece alteração dessas configurações.
+- Em 24/10, a sessão do navegador mostrou a organização `EVOLU training`, com outro projeto (`klbrvqqbhodxfpvaseco`). O banco utilizado pelo site continua em `Multiplus evolu`, projeto `ljuqbkwsnouthzwrzszy`; essa organização não apareceu na lista da conta aberta. Não alterar o projeto vazio como se fosse o banco migrado.
 - Enviar e testar uma nova recuperação após a aplicação da configuração. Mensagens antigas que apontam para localhost não são corrigidas retroativamente.
 
 Referências: https://supabase.com/docs/guides/auth/auth-email-templates e https://supabase.com/docs/guides/auth/auth-smtp
