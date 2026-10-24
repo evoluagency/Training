@@ -28,8 +28,15 @@ test('PostgreSQL migration and complete training lifecycle preserve permissions'
   assert.equal((await api('lessons/'+lesson.id,{body:'Conteúdo revisado'},owner,'PATCH')).status,200);
   assert.equal((await api('catalogs/'+catalog.id,{coverImage:'/training-media/dados_grafico_1280x720.webp'},owner,'PATCH')).status,200);
   assert.equal((await api('course/'+course.id+'/status',{status:'review'})).status,200);
+  const secondModule=await post('course/'+course.id+'/module',{title:'Segundo módulo',position:3});
+  assert.equal((await api('lessons/'+lesson.id,{moduleId:secondModule.id,position:1},owner,'PATCH')).status,200);
+  assert.equal((await api('course/'+course.id)).body.lessons[0].module_id,secondModule.id);
   const question=await post('course/'+course.id+'/question',{prompt:'QA Question',options:['Correct','Wrong'],correct:0,position:1});
   await post('grants',{companyId:company.id,courseId:course.id});await post('course/'+course.id+'/publish',{});
+  const sector=await post('categories',{title:'Compras'});
+  await post('course/'+course.id+'/category',{categoryId:sector.id});
+  assert.equal((await api('course/'+course.id,undefined,student)).body.course.category_title,'Compras');
+  assert.equal((await api('categories',undefined,student)).status,403);
   assert.equal((await api('course/'+course.id,undefined,outsider)).status,403);
   assert.equal((await api('course/'+course.id+'/status',{status:'disabled'})).status,200);
   assert.equal((await api('course/'+course.id,undefined,student)).status,403);

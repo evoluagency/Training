@@ -6,7 +6,8 @@ Plataforma de treinamento corporativo com vagas por empresa. Código no GitHub, 
 
 - **Empresas:** cadastre a empresa, defina as vagas e libere os treinamentos.
 - **Participantes:** reserve a vaga com nome, cargo e e-mail; use **Configurar acesso** para definir a senha inicial. Entregue a senha por canal privado.
-- **Treinamentos:** crie o catálogo e o treinamento; organize módulos, aulas, formatos, ferramentas e questões. As ferramentas pertencem à aula selecionada.
+- **Categorias:** cadastre os setores da empresa, como Financeiro, Contábil, Compras e Marketing. Cada curso pertence a uma categoria.
+- **Treinamentos:** crie o curso na categoria desejada; organize módulos, aulas, formatos, ferramentas e questões. As ferramentas pertencem à aula selecionada.
 - **Aluno:** aulas → avaliação com prazo no servidor → pesquisa opcional → certificado, quando elegível.
 - **Administração:** relatórios, comentários por empresa, certificados e gestão dos acessos.
 
@@ -46,11 +47,14 @@ Meta operacional: 25/10/2026. Treinamento: 31/10/2026. Preparar o conteúdo real
 
 Acesse `https://training.evolu.ink/admin/treinamentos`. Os endereços estáveis antigos da Vercel redirecionam para o domínio próprio preservando página e parâmetros.
 
-- O nome do catálogo abre o treinamento quando há apenas um; quando há vários, filtra o catálogo. O cartão completo abre a estrutura.
+- A aba **Categorias** permite cadastrar e editar os setores e acessar seus cursos. No catálogo de treinamentos, os filtros por categoria organizam os cursos; o cartão completo abre a estrutura.
 - Módulos e aulas têm formulários de edição com nome, texto opcional e ordem. Os formulários abrem em uma janela acessível, inclusive no celular.
-- **Anexar PDF ao módulo** envia o arquivo e cria a aula correspondente em uma operação. PDFs até 10 MB. Os materiais continuam privados.
-- Catálogos e treinamentos têm capa configurável por upload (PNG/JPG/WebP até 5 MB), biblioteca ou URL HTTPS. O treinamento herda a capa do catálogo quando não tem capa própria. Não há foto automática baseada no título.
+- A organização é **Categoria → Curso → Módulos → Aulas e materiais**. A avaliação e o certificado pertencem ao curso. A categoria pode mudar sem alterar o conteúdo publicado ou a autorização por empresa.
+- **Criar aula a partir de PDF** envia o arquivo e cria uma aula. **Adicionar material à aula** complementa a aula existente. PDFs até 10 MB. Os materiais continuam privados.
+- No formulário **Editar aula**, o campo **Módulo da aula** permite mover a aula entre módulos do mesmo curso ainda editável, preservando materiais e ferramentas.
+- Categorias e treinamentos têm capa configurável por upload (PNG/JPG/WebP até 5 MB), biblioteca ou URL HTTPS. O treinamento herda a capa da categoria quando não tem capa própria. Não há foto automática baseada no título.
+- A lista de aulas e o painel de materiais se empilham quando não há espaço para duas colunas. Títulos e nomes de arquivos longos quebram a linha.
 - Status: **Rascunho**, **Em revisão**, **Ativo**, **Desativado** e **Arquivado**. Ativar exige aulas, material e questões válidos; a publicação congela o conteúdo. Desativar remove o acesso do participante e a vitrine; reativar preserva a versão e os registros. Um treinamento publicado não pode voltar a rascunho para contornar esse bloqueio.
 - Capas só são apresentadas publicamente quando o curso está ativo e explicitamente liberado na página inicial. O bucket permanece privado.
 
-Validação: TypeScript, build Next.js e 42 testes locais, incluindo PostgreSQL, SQLite, armazenamento, bytes do PDF, autorização por empresa e transições de status. Os testes não criam cursos nem anexam documentos na base real.
+Validação: TypeScript, build Next.js e 45 testes locais, incluindo PostgreSQL, SQLite, armazenamento, bytes do PDF, autorização por empresa, categorias, movimentação de aulas e transições de status. A validação visual usa dados sintéticos em ambiente isolado. Os testes não criam cursos nem anexam documentos na base real.

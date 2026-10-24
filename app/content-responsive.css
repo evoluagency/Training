@@ -1,0 +1,30 @@
+.ev-category-filters{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}
+.ev-category-filters .ev-pill{display:inline-flex;align-items:center;gap:6px;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-decoration:none}
+.ev-category-guide{font-size:13px;line-height:1.7;margin:8px 0 22px}
+.ev-category-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:18px}
+.ev-category-card{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ev-category-card h2{margin:0;overflow-wrap:anywhere}
+.ev-category-card p{flex:1;margin:0}
+.ev-category-card>strong{font-size:13px}
+.ev-category-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.ev-category-actions .ev-button{white-space:normal;max-width:100%}
+.ev-content-breadcrumb{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;line-height:1.7;margin:18px 0;color:#67715f}
+.ev-content-breadcrumb>*{min-width:0;overflow-wrap:anywhere}
+.ev-content-breadcrumb a{text-decoration:underline}
+.ev-module-content{container-type:inline-size}
+.ev-shell .ev-editor-lesson-layout{grid-template-columns:minmax(0,1fr)}
+.ev-editor-lesson-layout>nav,.ev-editor-lesson-layout>section{min-width:0;max-width:100%;align-self:start}
+.ev-shell .ev-editor-row{min-width:0;max-width:100%}
+.ev-shell .ev-editor-row>span{min-width:0;overflow-wrap:anywhere;white-space:normal}
+.ev-editor-row>b,.ev-editor-row>svg{flex-shrink:0}
+.ev-editor-materials .ev-panel-title{flex-wrap:wrap;align-items:flex-start}
+.ev-editor-materials .ev-panel-title h3{flex:1 1 220px;min-width:0;max-width:100%;overflow-wrap:anywhere}
+.ev-editor-materials .ev-panel-title button{flex:0 1 auto;max-width:100%}
+.ev-content-editor h3,.ev-content-editor p{overflow-wrap:anywhere}
+.ev-content-editor .ev-button,.ev-content-editor .ev-inline-actions>button,.ev-editor-materials .ev-asset{max-width:100%;white-space:normal;overflow-wrap:anywhere}
+.ev-content-editor .ev-inline-actions>*{min-width:0;max-width:100%}
+.ev-content-editor .ev-upload{position:relative;flex-wrap:wrap;text-align:center}
+.ev-editor-settings .ev-inline-actions>label{min-width:0;max-width:100%}
+.ev-editor-settings select{min-width:0;max-width:100%}
+@container (min-width:820px){.ev-shell .ev-editor-lesson-layout{grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr)}}
+@media(max-width:760px){.ev-category-actions .ev-button{flex:1 1 110px}.ev-category-filters .ev-pill{font-size:12px}.ev-content-editor .ev-inline-actions>.ev-button{flex:1 1 180px}}

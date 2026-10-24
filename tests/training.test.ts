@@ -6,6 +6,7 @@ import {handle} from '../lib/training/service.ts';
 import {getPublicCatalog,PUBLIC_COURSE_SQL} from '../lib/training/public-catalog.ts';
 import {orderLessons} from '../lib/training/lesson-order.ts';
 import {readTrainingResponse} from '../lib/training/client-response.ts';
+import {visibleCourseCategories,lessonTitleFromFile} from '../lib/training/categories.ts';
 
 test('next-lesson order respects modules when lesson positions restart at one',()=>{
  const modules=[{id:'second',position:2},{id:'first',position:1}];
@@ -70,6 +71,40 @@ test('cargo and whatsapp are saved, identity binds only once',async()=>{const f=
 test('learners cannot access other company courses or reports',async()=>{const f=fixture();const d=await f.setup();assert.equal((await f.request('course/'+d.course.id,bob)).status,403);assert.equal((await f.request('report',alice)).status,403);assert.equal((await f.request('overview',bob)).body.courses.length,0);f.close()});
 test('course must have lessons and assessment before publishing',async()=>{const f=fixture();const cat=await f.post('catalogs',{title:'C'}),c=await f.post('courses',{catalogId:cat.id,title:'Empty',hours:1,minutes:10,passing:70,attemptLimit:2});assert.equal((await f.request('course/'+c.id+'/publish',admin,{})).status,400);f.close()});
 test('published content is frozen',async()=>{const f=fixture(),d=await f.setup();assert.equal((await f.request('course/'+d.course.id+'/module',admin,{title:'New',position:2})).status,409);f.close()});
+test('sector categories support management without exposing unassigned sectors to learners',async()=>{
+ const f=fixture(),d=await f.setup();const current=(await f.request('course/'+d.course.id)).body;
+ assert.equal((await f.request('categories',alice)).status,403);
+ const category=await f.post('categories',{title:'Compras',description:'Cursos do setor de compras'});
+ assert.equal((await f.request('categories',admin,{title:'compras'})).status,409);
+ assert.equal((await f.request('categories/'+category.id,admin,{title:'Compras e Suprimentos'},'PATCH')).status,200);
+ assert.equal((await f.request('course/'+d.course.id+'/category',alice,{categoryId:category.id})).status,403);
+ assert.equal((await f.request('course/'+d.course.id+'/category',admin,{categoryId:'invalid'})).status,400);
+ await f.post('course/'+d.course.id+'/category',{categoryId:category.id});
+ const updated=(await f.request('course/'+d.course.id)).body;assert.equal(updated.course.category_title,'Compras e Suprimentos');assert.equal(updated.course.title,current.course.title);assert.equal(updated.course.content_locked,1);assert.deepEqual(updated.lessons,current.lessons);
+ const hidden=await f.post('categories',{title:'Marketing'});await f.post('courses',{categoryId:hidden.id,title:'Curso não liberado',hours:1,minutes:10,passing:70,attemptLimit:1});
+ const studentCourses=(await f.request('overview',alice)).body.courses;assert.deepEqual(visibleCourseCategories(studentCourses),[{id:category.id,title:'Compras e Suprimentos',courses:1}]);
+ assert.equal(studentCourses.some((c:any)=>c.category_title==='Marketing'),false);
+ const categories=(await f.request('categories')).body;assert.equal(categories.find((c:any)=>c.id===hidden.id).course_count,1);f.close();
+});
+test('lessons move only within their own editable course and retain PDF identity and bytes',async()=>{
+ const f=fixture();const category=await f.post('categories',{title:'Compras'}),course=await f.post('courses',{categoryId:category.id,title:'Compras Estratégicas',hours:8,minutes:30,passing:70,attemptLimit:2});
+ const first=await f.post('course/'+course.id+'/module',{title:'Planejamento',position:1}),second=await f.post('course/'+course.id+'/module',{title:'Custos',position:2});
+ const another=await f.post('courses',{categoryId:category.id,title:'Outro curso',hours:1,minutes:10,passing:70,attemptLimit:1}),foreign=await f.post('course/'+another.id+'/module',{title:'Outro módulo',position:1});
+ const bytes=new TextEncoder().encode('%PDF-1.4\nPreserved synthetic document');
+ const response=await handle(new Request('https://training.test/api/training/module-upload?module='+first.id+'&name=Modulo_02_Custos_e_Negociacao.pdf',{method:'POST',headers:{origin:'https://training.test','content-type':'application/pdf','content-length':String(bytes.length)},body:bytes}),f.ctx(admin));assert.equal(response.status,201);const upload:any=await response.json();
+ assert.equal((await f.request('lessons/'+upload.lessonId,admin,{moduleId:foreign.id},'PATCH')).status,400);
+ assert.equal((await f.request('lessons/'+upload.lessonId,alice,{moduleId:second.id},'PATCH')).status,403);
+ assert.equal((await f.request('lessons/'+upload.lessonId,admin,{moduleId:second.id,title:'Custos e negociação',position:1},'PATCH')).status,200);
+ const detail=(await f.request('course/'+course.id)).body;assert.equal(detail.lessons[0].module_id,second.id);assert.equal(detail.lessons[0].course_id,course.id);assert.equal(detail.assets[0].id,upload.id);assert.equal(detail.assets[0].lesson_id,upload.lessonId);
+ const download=await handle(new Request('https://training.test/api/training/asset/'+upload.id),f.ctx(admin));assert.deepEqual(new Uint8Array(await download.arrayBuffer()),bytes);
+ await f.post('course/'+course.id+'/question',{prompt:'Questão',options:['Sim','Não'],correct:0,position:1});await f.post('course/'+course.id+'/publish',{});
+ assert.equal((await f.request('lessons/'+upload.lessonId,admin,{moduleId:first.id},'PATCH')).status,409);f.close();
+});
+test('PDF-derived lesson names are readable and empty names have a useful fallback',()=>{
+ assert.equal(lessonTitleFromFile('Modulo_01_Planejamento_de_Compras.pdf'),'Planejamento de Compras');
+ assert.equal(lessonTitleFromFile('Módulo 02 - Custos.pdf'),'Custos');
+ assert.equal(lessonTitleFromFile('.pdf'),'Material da aula');
+});
 test('module and lesson edits persist and are restricted to the editable course',async()=>{
  const f=fixture();const cat=await f.post('catalogs',{title:'Catálogo'}),course=await f.post('courses',{catalogId:cat.id,title:'Rascunho',hours:2,minutes:10,passing:70,attemptLimit:2});
  const module=await f.post('course/'+course.id+'/module',{title:'Módulo inicial',position:1});const lesson=await f.post('course/'+course.id+'/lesson',{moduleId:module.id,title:'Aula inicial',body:'',position:1,mode:'equivalent'});
