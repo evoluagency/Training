@@ -203,3 +203,23 @@ body:has(.cp){background:#fff}
  .cp-print-bottom{break-inside:avoid;page-break-inside:avoid}
 
 }
+
+/* Origem fiscal: identificação, conteúdo importado, exceções e referência do ICMS */
+.cp-origin{background:#f7faf4;border:1px solid #d8e3d4;border-radius:7px;padding:18px;margin:19px 0 0}
+.cp-origin>.cp-group-title{margin:0 0 13px;color:#263826}
+.cp-origin-types{display:grid;grid-template-columns:1fr;gap:7px;margin:0 0 16px}
+.cp-origin-choice{display:flex!important;align-items:center;gap:10px;background:#fff;border:1px solid #d4e0d0;border-radius:5px;min-height:41px;padding:10px 12px;margin:0!important;cursor:pointer;color:#334333;font-size:11px;line-height:1.45;font-weight:600}
+.cp-origin-choice input{width:16px;height:16px;flex:none;margin:0!important;accent-color:#698e35}
+.cp-origin-choice span{display:inline}
+.cp-origin-choice.is-selected{border-color:#81a54d;background:#ecf6df;box-shadow:inset 3px 0 0 #7ba63f;color:#213b19}
+.cp-origin .cp-field span{color:#4c6148}
+.cp-origin-extras{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+.cp-origin-result{display:grid;grid-template-columns:90px 1fr;gap:14px;align-items:center;background:#fff;border:1px solid #dce8d5;border-radius:5px;padding:12px;margin-top:15px}
+.cp-origin-result.is-four{background:#eff9e5;border-color:#a0c67a}
+.cp-origin-result>div{border-right:1px solid #e1e9db;padding-right:10px}
+.cp-origin-result>div span{font-size:9px;font-weight:700;color:#60715b;display:block;line-height:1.25}
+.cp-origin-result>div strong{font-size:19px;color:#294d17;font-weight:800;letter-spacing:-.05em}
+.cp-origin-result>p{margin:0;color:#425541!important;font-size:10px;line-height:1.55!important}
+.cp-origin-disclaimer{font-size:9px!important;line-height:1.65!important;margin:10px 0 0!important;color:#60725d!important}
+@media(max-width:1000px){.cp-origin{padding:15px}}
+@media(max-width:510px){.cp-origin{padding:12px}.cp-origin-result{grid-template-columns:1fr;gap:6px}.cp-origin-result>div{border-right:0;border-bottom:1px solid #e1e9db;padding:0 0 7px}.cp-origin-result>div strong{font-size:18px}}
