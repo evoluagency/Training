@@ -153,7 +153,7 @@ body:has(.cp){background:#fff}
  .cp-main > :not(.cp-print-report){display:none!important}
  .cp-print-report{display:block!important;width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
  .cp-print-report *{box-sizing:border-box!important}
- .cp-print-page{width:100%!important;max-width:190mm!important;min-height:275mm;margin:0 auto!important;padding:0!important;background:#fff!important;color:#151b15!important;font:8pt/1.32 Montserrat,Arial,sans-serif!important;display:flex;flex-direction:column}
+  .cp-print-page{width:100%!important;max-width:190mm!important;min-height:0!important;height:auto!important;margin:0 auto!important;padding:0!important;background:#fff!important;color:#151b15!important;font:8pt/1.32 Montserrat,Arial,sans-serif!important;display:flex;flex-direction:column}
  .cp-print-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:4mm;border-bottom:.35mm solid #171c17}
  .cp-print-brand{display:flex;align-items:center;gap:4mm}
  .cp-print-brand img{width:31mm;height:auto;max-height:8mm;object-fit:contain}
@@ -197,7 +197,9 @@ body:has(.cp){background:#fff}
  .cp-print-logistics strong{font-size:7pt;color:#3b6128}
  .cp-print-logistics p{font-size:7pt;color:#384a37;line-height:1.26;margin:1mm 0 0}
  .cp-print-disclaimer{font-size:6.9pt;line-height:1.33;margin-top:3mm;padding-top:2.5mm;border-top:1px solid #d8e2d5;color:#4b5949;break-inside:avoid}
- .cp-print-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:2.3mm;border-top:1px solid #dae5d7;color:#697669;font-size:6.6pt;font-weight:600;letter-spacing:.03em}
+ .cp-print-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:3mm;padding-top:2.3mm;border-top:1px solid #dae5d7;color:#697669;font-size:6.6pt;font-weight:600;letter-spacing:.03em}
  .cp-print-page,.cp-print-proposals article,.cp-print-context,.cp-print-takeaway,.cp-print-table th,.cp-print-total td{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
- .cp-print-page{break-after:avoid}
+ .cp-print-page{break-after:avoid;break-inside:avoid}
+ .cp-print-bottom{break-inside:avoid;page-break-inside:avoid}
+
 }
