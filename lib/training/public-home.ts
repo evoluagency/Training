@@ -9,11 +9,13 @@ export type PublicHomeCategory={
 export function buildPublicHomeCategories(courses:PublicCourse[]):PublicHomeCategory[]{
  const categories=new Map<string,PublicHomeCategory>();
  for(const course of courses){
-  if(!course.catalog_id||!course.category||!course.id||!course.title)continue;
-  let category=categories.get(course.catalog_id);
+  if(!course.category||!course.id||!course.title)continue;
+  // Compatível com a versão anterior da API durante implantação gradual.
+  const categoryId=course.catalog_id||'legacy-'+course.category.toLocaleLowerCase('pt-BR').replace(/[^a-z0-9]+/g,'-');
+  let category=categories.get(categoryId);
   if(!category){
-   category={id:course.catalog_id,title:course.category,description:course.category_description||'',cover_image:course.cover_image||'',course_count:0,courses:[]};
-   categories.set(course.catalog_id,category);
+   category={id:categoryId,title:course.category,description:course.category_description||'',cover_image:course.cover_image||'',course_count:0,courses:[]};
+   categories.set(categoryId,category);
   }
   category.courses.push(course);
   category.course_count+=1;
