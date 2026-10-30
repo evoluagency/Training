@@ -188,7 +188,7 @@ export default function MelhorRegime(){
  ["Resultado estimado do vendedor*",r=>r.sellerMargin]
  ];
  return <div className="cp">
- <header className="cp-header"><Link href="/" className="cp-logo"><img src="/brand/evolu-white.png" width="145" height="31" alt="EVOLU"/><span>TRAINING</span></Link>
+ <header className="cp-header"><Link href="/" className="cp-logo"><img src="/brand/evolu-black.png" width="145" height="31" alt="EVOLU"/><span>TRAINING</span></Link>
  <Link href="/" className="cp-back"><ArrowLeft size={16}/> Voltar ao Training</Link></header>
  <main className="cp-main">
  <div className="cp-intro"><span className="cp-eyebrow">INTELIGÊNCIA TRIBUTÁRIA / SIMULADOR 2027</span>
@@ -281,5 +281,62 @@ export default function MelhorRegime(){
  </section>
  <div className="cp-law"><span>BASES LEGAIS</span><p>LC 123/2006 · Anexos I–V (2027–2028) | LC 214/2025 · CBS e IBS | Senado: Res. 22/1989 e Res. 13/2012.</p><div><a href="https://www2.camara.leg.br/legin/fed/leicom/2006/leicomplementar-123-14-dezembro-2006-548099-normaatualizada-pl.html" target="_blank" rel="noreferrer">Simples Nacional <ArrowRight size={12}/></a>
  <a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.html" target="_blank" rel="noreferrer">CBS / IBS <ArrowRight size={12}/></a></div></div>
- </main><footer className="cp-footer"><Link href="/"><img src="/brand/evolu-white.png" width="110" height="27" alt="EVOLU"/> <span>TRAINING</span></Link><p>Estratégia · Inteligência de negócios · Educação corporativa</p></footer></div>;
+
+ <section className="cp-print-report" aria-label="Relatório de comparação em A4">
+  <div className="cp-print-page">
+   <header className="cp-print-top">
+    <div className="cp-print-brand"><img src="/brand/evolu-black.png" width="130" height="30" alt="EVOLU"/><span>TRAINING · INTELIGÊNCIA TRIBUTÁRIA</span></div>
+    <span className="cp-print-label">SIMULAÇÃO 2027</span>
+   </header>
+   <div className="cp-print-title">
+    <div><span>RELATÓRIO COMPARATIVO</span><h2>{operation==="buy"?"Análise de fornecedores":"Análise de condições de venda"}</h2><p>{kind==="goods"?"Operação com mercadorias":"Prestação de serviços"} · {operation==="buy"?"Perspectiva do comprador":"Perspectiva do vendedor"}</p></div>
+    <strong>2027</strong>
+   </div>
+   <div className="cp-print-context">
+    <div><span>Regime do usuário</span><strong>{REGIMES[own.regime]}</strong></div>
+    <div><span>UF de referência</span><strong>{own.uf}</strong></div>
+    <div><span>CBS regular (premissa)</span><strong>{pct(cbsRate)}</strong></div>
+    {isSimple(own)&&<div><span>Meu Simples (RBT12 / Anexo)</span><strong>{money(own.rbt12)} · {own.annex}</strong></div>}
+   </div>
+   <div className="cp-print-proposals">
+    {result.map((r,i)=><article key={r.id}>
+     <div className="cp-print-proposal-top"><b>CENÁRIO {r.id}</b><strong>{operation==="buy"?"Fornecedor":"Cliente"} {r.id}</strong></div>
+     <div className="cp-print-description">{REGIMES[offers[i].profile.regime]} · {operation==="buy"?offers[i].profile.uf:own.uf} → {operation==="buy"?own.uf:offers[i].profile.uf}</div>
+     {isSimple(offers[i].profile)&&<div className="cp-print-description">RBT12 {money(offers[i].profile.rbt12)} · Anexo {offers[i].profile.annex}</div>}
+     <span>{operation==="buy"?"CUSTO LÍQUIDO DA COMPRA":"RESULTADO ESTIMADO DA VENDA"}</span>
+     <strong className="cp-print-value">{money(operation==="buy"?r.buyerCost:r.sellerMargin)}</strong>
+    </article>)}
+   </div>
+   <div className="cp-print-takeaway">
+    {winner?<><strong>{operation==="buy"?"Menor custo":"Maior resultado"}: cenário {winner}</strong><span>Diferença estimada: {money(gap)} entre os dois cenários, considerando as premissas indicadas.</span></>:
+    <><strong>Dados fiscais exigem revisão</strong><span>Não foi possível comparar com enquadramento válido em todos os cenários.</span></>}
+   </div>
+   <div className="cp-print-table-head"><h3>Composição financeira e tributária</h3><span>Valores em BRL</span></div>
+   <table className="cp-print-table">
+    <thead><tr><th>Indicador</th><th>Cenário A</th><th>Cenário B</th></tr></thead>
+    <tbody>{resultRows.filter(([label])=>
+      (kind==="goods"||!/(ICMS|IPI|DIFAL|frete)/i.test(label))&&
+      ["Preço-base da proposta","CBS destacada na operação","IBS destacado (transição 2027)",
+      "IPI informado","ICMS-ST informado","Total do documento fiscal estimado",
+      "Frete suportado pelo comprador","DIFAL suportado pelo comprador",
+      "Crédito CBS do comprador","Crédito IBS do comprador","Crédito ICMS mercadoria",
+      "Créditos estimados do frete","Custo líquido da compra","DAS do vendedor",
+      "ICMS da operação, fora do DAS","CBS líquida estimada do vendedor",
+      "IBS líquido estimado do vendedor","DIFAL a recolher pelo vendedor",
+      "Resultado estimado do vendedor*"].includes(label)
+    ).map(([label,compute])=><tr key={label} className={label==="Custo líquido da compra"||label.startsWith("Resultado estimado")?"cp-print-total":""}>
+     <td>{label}</td>{result.map(r=><td key={r.id}>{money(compute(r))}</td>)}</tr>)}</tbody>
+   </table>
+   <div className="cp-print-logistics">
+    <h3>Condições de transporte e enquadramento</h3>
+    <div>{result.map((r,i)=><div key={r.id}><strong>CENÁRIO {r.id}</strong>
+     <p>Transporte: {offers[i].freightMode==="carrier"?"transportadora":offers[i].freightMode==="own"?"próprio":"sem frete"} · Responsável: {offers[i].freightPayer==="buyer"?"comprador":"vendedor"} · Frete: {money(offers[i].freightMode==="none"?0:offers[i].freight)}</p>
+     <p>ICMS de referência: {pct(r.applicableIcmsRate)} · {r.valid?"Premissas sujeitas a validação fiscal.":"Atenção: possível enquadramento inválido."}</p>
+    </div>)}</div>
+   </div>
+   <div className="cp-print-disclaimer"><strong>Nota metodológica:</strong> relatório ilustrativo, não substitui apuração fiscal. CBS regular é premissa ajustável; IBS e ICMS seguem hipóteses simplificadas. Conferir NCM, CFOP, CST/CSOSN, UF, CT-e, creditamento, ICMS-ST, DIFAL, IPI, ISS e regras de cada operação. Resultado da venda não representa lucro líquido contábil.</div>
+   <div className="cp-print-bottom"><span>EVOLU TRAINING · SIMULADOR DE CENÁRIOS</span><span>Formato A4 · 210 × 297 mm</span></div>
+  </div>
+ </section>
+ </main><footer className="cp-footer"><Link href="/"><img src="/brand/evolu-black.png" width="110" height="27" alt="EVOLU"/> <span>TRAINING</span></Link><p>Estratégia · Inteligência de negócios · Educação corporativa</p></footer></div>;
 }
