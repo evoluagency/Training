@@ -15,10 +15,8 @@ export const PUBLIC_MODULE_SQL=
  "SELECT m.course_id,m.title,m.position FROM modules m JOIN courses c ON c.id=m.course_id WHERE c.status='published' AND c.show_on_home=1 ORDER BY m.course_id,m.position,m.id";
 
 export async function getPublicCatalog(db:Pick<Database,'prepare'>):Promise<PublicCourse[]>{
- const [courseRows,moduleRows]=await Promise.all([
-  db.prepare(PUBLIC_COURSE_SQL).all<Omit<PublicCourse,'modules'>>(),
-  db.prepare(PUBLIC_MODULE_SQL).all<{course_id:string;title:string;position:number}>()
- ]);
+ const courseRows=await db.prepare(PUBLIC_COURSE_SQL).all<Omit<PublicCourse,'modules'>>();
+ const moduleRows=await db.prepare(PUBLIC_MODULE_SQL).all<{course_id:string;title:string;position:number}>();
  const grouped=new Map<string,PublicModule[]>();
  for(const module of moduleRows.results){
   const current=grouped.get(module.course_id)||[];
