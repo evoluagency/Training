@@ -93,3 +93,18 @@
 @media(max-width:740px){.evsim-main{padding:36px 16px 60px}.evsim-intro{align-items:start}.evsim-year{display:none}.evsim-intro p{font-size:12px}.evsim-card{padding:21px 18px}.evsim-parties,.evsim-inputs{grid-template-columns:1fr;gap:19px}.evsim-inputs .evsim-wide{grid-column:auto}.evsim-cardtop{flex-wrap:wrap}.evsim-summary{grid-template-columns:1fr}.evsim-resulthead{align-items:flex-start;flex-wrap:wrap}.evsim-bottom{flex-direction:column}.evsim-bottom .evsim-footer-label{align-self:start}}
 @media(max-width:440px){.evsim-header{height:67px;padding:0 16px}.evsim-brand img{width:102px}.evsim-brand span{padding-left:8px;font-size:9px}.evsim-home{font-size:0;gap:0}.evsim-home svg{height:21px;width:21px}.evsim-card{padding:19px 13px}.evsim-intro h1{font-size:33px}.evsim-fieldhead{flex-wrap:wrap}.evsim-radios{flex-direction:column}.evsim-resulthead h3{font-size:17px}.evsim-table{font-size:10px}.evsim-inputrow>span{font-size:9px}.evsim-inputrow input{width:115px;min-width:115px}}
 @media print{.evsim{background:white}.evsim-header,.evsim-footer,.evsim-actions,.evsim-bottom{display:none!important}.evsim-main{padding:0;width:100%}.evsim-card{box-shadow:none}.evsim-card,.evsim-summary article{print-color-adjust:exact;-webkit-print-color-adjust:exact}.evsim-intro{margin-bottom:12px}.evsim-intro h1{font-size:25px}.evsim-card{padding:18px}.evsim-inputs{gap:13px}.evsim-footnote p{font-size:8px}}
+
+/* Identificação genérica das partes e análise econômica, sem nomes comerciais. */
+.evsim-party-role{font-size:13px;font-weight:700;color:#eff6ec;letter-spacing:-.01em;margin:0 0 15px;line-height:1.4}
+.evsim-economics{margin-top:30px;padding:23px 22px;border:1px solid #344334;border-radius:8px;background:#121a14}
+.evsim-economics-heading{margin-bottom:20px}
+.evsim-economics-heading .evsim-section-index{margin-bottom:8px}
+.evsim-economics-heading h3{font-size:16px;font-weight:700;color:#eef9e8;margin:0 0 6px;letter-spacing:-.025em}
+.evsim-economics-heading p{margin:0;font-size:10px;color:#a8bca8;line-height:1.7}
+.evsim-economics .evsim-hint strong{color:#d8fc63}
+.evsim-summary-margin{border-top:1px solid #394737;margin-top:15px;padding-top:14px;display:grid;gap:6px}
+.evsim-summary-margin span{font-size:10px;line-height:1.55;color:#b8c7b6}
+.evsim-summary-margin b{font-size:19px;font-weight:700;color:#fff;letter-spacing:-.025em;overflow-wrap:anywhere}
+.evsim-summary-margin small{font-size:10px;color:#c1d9ab}
+@media(max-width:740px){.evsim-economics{padding:19px 15px;margin-top:23px}}
+@media print{.evsim-economics{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
