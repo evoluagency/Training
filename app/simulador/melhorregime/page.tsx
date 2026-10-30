@@ -167,7 +167,7 @@ function evaluate(id:"A"|"B",offer:Offer,own:Profile,mode:Operation,kind:Kind,cb
    sellerIPI:ipi,sellerST:st,sellerDIFAL,buyerDIFAL,cbsInvoice,ibsInvoice,freightTax,
    simRate:tax.rate,applicableIcmsRate:rateIcms,icmsOriginRule,notes,buyerName:mode==="buy"?"Sua empresa":"Cliente "+id,
    sellerName:mode==="buy"?"Fornecedor "+id:"Sua empresa",
-   valid:notes.every(n=>!n.includes("cenário inválido"))};
+   valid:notes.every(n=>!/cenário inválido/i.test(n))};
 }
 const TextField=({label,value,onChange,min=0,max=1e9,step=1}:{
  label:string;value:number;onChange:(n:number)=>void;min?:number;max?:number;step?:number
@@ -291,7 +291,7 @@ export default function MelhorRegime(){
     <div className="cp-grid cp-grid-2">
      <label className="cp-field"><span>NCM da mercadoria (8 dígitos)</span>
       <input type="text" inputMode="numeric" maxLength={8} placeholder="00000000"
-       value={o.ncm} onChange={e=>updateOffer(idx,"ncm",e.target.value.replace(/\\D/g,"").slice(0,8))}/>
+       value={o.ncm} onChange={e=>updateOffer(idx,"ncm",e.target.value.replace(/\D/g,"").slice(0,8))}/>
      </label>
      {o.originCategory==="mixed"&&<TextField label="Conteúdo de importação — FCI (%)" value={o.importContent} onChange={v=>updateOffer(idx,"importContent",v)} min={0} max={100} step={0.01}/>}
     </div>
