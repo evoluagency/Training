@@ -9,8 +9,22 @@ type Regime = "sn-puro" | "sn-hibrido" | "real" | "presumido" | "final";
 type Annex = "I" | "II" | "III" | "IV" | "V";
 type Kind = "goods" | "services";
 type Operation = "buy" | "sell";
+type OriginCategory = "national" | "imported" | "mixed";
+type ImportException = "none" | "no-similar" | "ppb" | "gas";
+const ORIGINS: Array<[OriginCategory,string]> = [
+ ["national","Mercadoria nacional"],
+ ["imported","Importada diretamente / revendida sem industrialização"],
+ ["mixed","Industrializada no Brasil com conteúdo importado"]
+];
+const EXCEPTIONS: Array<[ImportException,string]> = [
+ ["none","Nenhuma exceção identificada"],
+ ["no-similar","Bem sem similar nacional (Lessin)"],
+ ["ppb","Produzido conforme Processo Produtivo Básico (PPB)"],
+ ["gas","Gás natural importado"]
+];
 type Profile = {regime:Regime; uf:string; rbt12:number; annex:Annex};
-type Offer = {price:number; profile:Profile; imported:boolean; manualIcms:boolean; icmsRate:number;
+type Offer = {price:number; profile:Profile; originCategory:OriginCategory; importContent:number;
+  importException:ImportException; ncm:string; fci:string; manualIcms:boolean; icmsRate:number;
   freight:number; freightMode:"carrier"|"own"|"none"; freightPayer:"buyer"|"seller";
   freightRoute:"municipal"|"intermunicipal"|"interestadual"; freightIcmsRate:number; carrierRegular:boolean;
   ipi:number; st:number; difal:number; difalPayer:"buyer"|"seller"; costs:number};
@@ -18,7 +32,7 @@ type Simulation = {id:"A"|"B"; buyerCost:number; sellerNet:number; sellerMargin:
   ibsCredit:number; icmsCredit:number; freightCredit:number; invoice:number; freightBuyer:number; freightSeller:number;
   sellerDAS:number; sellerICMS:number; sellerCBS:number; sellerIBS:number; sellerIPI:number; sellerST:number;
   sellerDIFAL:number; buyerDIFAL:number; cbsInvoice:number; ibsInvoice:number; freightTax:number; simRate:number;
-  applicableIcmsRate:number; notes:string[]; buyerName:string; sellerName:string; valid:boolean;};
+  applicableIcmsRate:number; icmsOriginRule:string; notes:string[]; buyerName:string; sellerName:string; valid:boolean;};
 const UF = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
 const REGIMES:Record<Regime,string>={"sn-puro":"Simples Nacional · puro","sn-hibrido":"Simples Nacional · híbrido","real":"Lucro Real","presumido":"Lucro Presumido","final":"Não contribuinte / consumidor final"};
 const ann:Record<Annex,{rate:number[];ded:number[];cbs:number[];ibs:number[];icms:number[]}> = {
@@ -47,15 +61,29 @@ function splitDAS(p:Profile) {
  if(p.annex==="IV"&&index===4&&rate>.125){cbs=Math.max(0,rate-.05)*.3627;ibs=Math.max(0,rate-.05)*.004;}
  return {rate,cbs,ibs,icms:rate*spec.icms[index]/100,index};
 }
-function suggestedICMS(origin:string,destination:string,imported:boolean){
+function usesImportedInterstateRate(offer:Offer):boolean{
+ return offer.importException==="none" &&
+   (offer.originCategory==="imported" ||
+   (offer.originCategory==="mixed"&&offer.importContent>40));
+}
+function originRule(offer:Offer,origin:string,destination:string):string{
+ if(origin===destination)return "Operação interna: 4% da Resolução 13/2012 não se aplica.";
+ if(offer.originCategory==="national")return "Origem nacional: alíquota interestadual de referência.";
+ if(offer.importException!=="none")return "Exceção legal declarada: não aplicar automaticamente os 4%; confirme o enquadramento documental.";
+ if(offer.originCategory==="imported")return "Importada sem industrialização: referência de 4% conforme Resolução 13/2012.";
+ if(offer.importContent>40)return "Conteúdo de importação superior a 40%: referência de 4% (Resolução 13/2012).";
+ return "Conteúdo de importação de até 40%: referência interestadual ordinária (7% ou 12%).";
+}
+function suggestedICMS(origin:string,destination:string,offer:Offer){
  if(origin===destination)return 18;
- if(imported)return 4;
+ if(usesImportedInterstateRate(offer))return 4;
  const southSoutheast=["RS","SC","PR","SP","RJ","MG"];
  const low=["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","PA","PB","PE","PI","RN","RO","RR","SE","TO"];
  return southSoutheast.includes(origin)&&low.includes(destination)?7:12;
 }
 const DEFAULT_A:Offer={price:10000,profile:{regime:"sn-puro",uf:"SP",rbt12:180000,annex:"I"},
- imported:false,manualIcms:false,icmsRate:18,freight:300,freightMode:"carrier",freightPayer:"buyer",
+ originCategory:"national",importContent:0,importException:"none",ncm:"",fci:"",
+ manualIcms:false,icmsRate:18,freight:300,freightMode:"carrier",freightPayer:"buyer",
  freightRoute:"intermunicipal",freightIcmsRate:12,carrierRegular:true,ipi:0,st:0,difal:0,difalPayer:"buyer",costs:0};
 const DEFAULT_B:Offer={...DEFAULT_A,price:9700,profile:{regime:"real",uf:"MG",rbt12:180000,annex:"I"},
  freight:650,freightRoute:"interestadual"};
@@ -69,7 +97,10 @@ function evaluate(id:"A"|"B",offer:Offer,own:Profile,mode:Operation,kind:Kind,cb
  const nominal=offer.price;
  const tax=splitDAS(seller);
  const across=seller.uf!==buyer.uf;
- const rateIcms=offer.manualIcms?offer.icmsRate:suggestedICMS(seller.uf,buyer.uf,offer.imported);
+ const rateIcms=offer.manualIcms?offer.icmsRate:suggestedICMS(seller.uf,buyer.uf,offer);
+ const icmsOriginRule=offer.manualIcms?
+   "Alíquota informada manualmente; a sugestão automática de origem não foi aplicada.":
+   originRule(offer,seller.uf,buyer.uf);
  const goods=kind==="goods";
  const cbsInvoice=regularSeller?nominal*cbsRate/100:0;
  const ibsInvoice=regularSeller?nominal*.001:0;
@@ -115,13 +146,26 @@ function evaluate(id:"A"|"B",offer:Offer,own:Profile,mode:Operation,kind:Kind,cb
  if(goods&&offer.freightRoute==="municipal"&&offer.freightMode==="carrier")notes.push("Frete municipal: avaliar ISS, não calculado automaticamente.");
  if(!goods&&(seller.annex==="I"||seller.annex==="II")&&simpleSeller)notes.push("Serviços exigem enquadramento apropriado no Anexo III, IV ou V.");
  if(goods&&simpleSeller&&["III","IV","V"].includes(seller.annex))notes.push("Venda de mercadorias normalmente exige Anexo I ou II; confirme a atividade.");
- if(goods&&across&&!offer.manualIcms)notes.push("Alíquota interestadual sugerida; regras especiais, origem importada e NCM podem alterá-la.");
+ if(goods&&across&&!offer.manualIcms)notes.push("Alíquota interestadual sugerida pela origem declarada; benefícios, NCM e regras estaduais podem alterá-la.");
+ if(goods&&offer.originCategory!=="national"){
+  if(!/^\d{8}$/.test(offer.ncm))notes.push("Cenário inválido: informe NCM com 8 dígitos para avaliar mercadoria importada ou industrializada com conteúdo importado.");
+  if(offer.importException==="no-similar")notes.push("Confirme o NCM na lista oficial Lessin vigente: a exceção de bem sem similar nacional foi informada pelo usuário, não validada automaticamente.");
+  if(offer.importException==="ppb")notes.push("Exceção por PPB informada pelo usuário; confira a comprovação do processo produtivo aplicável.");
+  if(offer.importException==="gas")notes.push("Gás natural importado: exceção à alíquota de 4% requer conferência da operação.");
+  if(offer.originCategory==="mixed")notes.push("Verifique o percentual de Conteúdo de Importação na FCI e o preenchimento da NF-e.");
+ }
+ if(goods&&offer.originCategory==="mixed"){
+  notes.push("Produto industrializado com insumos importados: confira a FCI, inclusive quando o conteúdo de importação for de até 40%.");
+  if(offer.importContent===40)notes.push("Conteúdo exatamente igual a 40%: não supera o limite legal; não aplica a regra de 4% apenas por esse critério.");
+ }
+ if(goods&&offer.ncm&& !/^\d{8}$/.test(offer.ncm))notes.push("Cenário inválido: NCM deve conter exatamente 8 dígitos.");
+ if(goods&&offer.manualIcms)notes.push("ICMS informado manualmente: o enquadramento de origem não altera a alíquota digitada.");
  return {id,buyerCost,sellerNet,sellerMargin,cbsCredit:buyerCBS,ibsCredit:buyerIBS,icmsCredit:buyerICMS,
    freightCredit:buyerFreightCredit+buyerFreightICMS,invoice,freightBuyer,freightSeller,sellerDAS,
    sellerICMS,sellerCBS:cbsInvoice-sellerFreightCredit*(cbsRate/(cbsRate+.1||1)),
    sellerIBS:ibsInvoice-sellerFreightCredit*(.1/(cbsRate+.1||1)),
    sellerIPI:ipi,sellerST:st,sellerDIFAL,buyerDIFAL,cbsInvoice,ibsInvoice,freightTax,
-   simRate:tax.rate,applicableIcmsRate:rateIcms,notes,buyerName:mode==="buy"?"Sua empresa":"Cliente "+id,
+   simRate:tax.rate,applicableIcmsRate:rateIcms,icmsOriginRule,notes,buyerName:mode==="buy"?"Sua empresa":"Cliente "+id,
    sellerName:mode==="buy"?"Fornecedor "+id:"Sua empresa",
    valid:notes.every(n=>!n.includes("cenário inválido"))};
 }
@@ -220,7 +264,7 @@ export default function MelhorRegime(){
   const id=idx===0?"A":"B";
   const seller=operation==="buy"?o.profile:own;
   const buyer=operation==="buy"?own:o.profile;
-  const refICMS=suggestedICMS(seller.uf,buyer.uf,o.imported);
+  const refICMS=suggestedICMS(seller.uf,buyer.uf,o);
   const sim=splitDAS(o.profile);
   return <article key={id} className="cp-offer">
    <div className="cp-offer-head"><div><span className="cp-index">CENÁRIO {id}</span><h2>{operation==="buy"?"Fornecedor":"Cliente"} {id}</h2></div>
@@ -229,13 +273,41 @@ export default function MelhorRegime(){
     <TextField label={operation==="buy"?"Preço do fornecedor (R$)":"Preço de venda (R$)"} value={o.price} onChange={v=>updateOffer(idx,"price",v)} step={100}/>
     <Dropdown label={"Regime do "+(operation==="buy"?"fornecedor":"cliente")} value={o.profile.regime} onChange={v=>updateCounter(idx,"regime",v)} items={regimeItems}/>
     <Dropdown label={"UF do "+(operation==="buy"?"fornecedor":"cliente")} value={o.profile.uf} onChange={v=>updateCounter(idx,"uf",v)} items={ufItems}/>
-    <label className="cp-checkbox cp-inline"><input type="checkbox" checked={o.imported} onChange={e=>updateOffer(idx,"imported",e.target.checked)}/><span>Mercadoria importada com ICMS interestadual de 4% (quando aplicável)</span></label>
+   
    </div>
    {isSimple(o.profile)&&<div className="cp-simple cp-offer-simple"><div className="cp-grid cp-grid-2">
     <TextField label="RBT12 da contraparte (R$)" value={o.profile.rbt12} onChange={v=>updateCounter(idx,"rbt12",v)} max={10000000} step={1000}/>
     <Dropdown label="Anexo do Simples da contraparte" value={o.profile.annex} onChange={v=>updateCounter(idx,"annex",v)} items={annexItems}/>
     </div><p>Faixa {sim.index+1} · alíquota efetiva {pct(sim.rate*100)} · CBS no DAS {pct(sim.cbs*100)}.</p></div>}
-   {kind==="goods"&&<><div className="cp-divider"/><h3 className="cp-group-title">Tributos sobre mercadoria</h3>
+   {kind==="goods"&&<>
+   <div className="cp-origin">
+    <h3 className="cp-group-title">Origem da mercadoria e conteúdo de importação</h3>
+    <div className="cp-origin-types" role="group" aria-label={"Origem da mercadoria no cenário "+id}>
+    {ORIGINS.map(([key,label])=><label key={key} className={"cp-origin-choice "+(o.originCategory===key?"is-selected":"")}>
+     <input type="radio" name={"origin-"+id} checked={o.originCategory===key} onChange={()=>updateOffer(idx,"originCategory",key)}/>
+     <span>{label}</span>
+    </label>)}
+    </div>
+    <div className="cp-grid cp-grid-2">
+     <label className="cp-field"><span>NCM da mercadoria (8 dígitos)</span>
+      <input type="text" inputMode="numeric" maxLength={8} placeholder="00000000"
+       value={o.ncm} onChange={e=>updateOffer(idx,"ncm",e.target.value.replace(/\\D/g,"").slice(0,8))}/>
+     </label>
+     {o.originCategory==="mixed"&&<TextField label="Conteúdo de importação — FCI (%)" value={o.importContent} onChange={v=>updateOffer(idx,"importContent",v)} min={0} max={100} step={0.01}/>}
+    </div>
+    {o.originCategory!=="national"&&<div className="cp-origin-extras">
+      <Dropdown label="Exceção à alíquota interestadual de 4%" value={o.importException} onChange={v=>updateOffer(idx,"importException",v)} items={EXCEPTIONS}/>
+      {o.originCategory==="mixed"&&<label className="cp-field"><span>Número da FCI (opcional para referência)</span>
+       <input type="text" maxLength={80} placeholder="Informe o identificador da FCI" value={o.fci} onChange={e=>updateOffer(idx,"fci",e.target.value)}/></label>}
+    </div>}
+    <div className={"cp-origin-result "+(seller.uf!==buyer.uf&&usesImportedInterstateRate(o)&&!o.manualIcms?"is-four":"")}>
+     <div><span>ICMS de referência</span><strong>{pct(o.manualIcms?o.icmsRate:refICMS)}</strong></div>
+     <p>{o.manualIcms?"Alíquota informada manualmente.":originRule(o,seller.uf,buyer.uf)}
+      {isSimple(seller)?" No Simples, o ICMS normalmente integra o DAS; a referência de origem não substitui sua partilha.":""}</p>
+    </div>
+    <p className="cp-origin-disclaimer">O NCM não determina automaticamente a existência de similar nacional, PPB ou benefícios. Verifique a NF-e e a FCI quando aplicáveis.</p>
+   </div>
+   <div className="cp-divider"/><h3 className="cp-group-title">Tributos sobre mercadoria</h3>
    <div className="cp-grid cp-grid-2">
      <label className="cp-checkbox"><input type="checkbox" checked={o.manualIcms} onChange={e=>updateOffer(idx,"manualIcms",e.target.checked)}/><span>Informar alíquota ICMS manualmente</span></label>
      <TextField label={o.manualIcms?"ICMS da operação (%)":"ICMS de referência (%) · auto"} value={o.manualIcms?o.icmsRate:refICMS} onChange={v=>{updateOffer(idx,"manualIcms",true);updateOffer(idx,"icmsRate",v);}} max={100} step={0.1}/>
@@ -275,12 +347,16 @@ export default function MelhorRegime(){
  </tbody></table></div>
  <div className="cp-detail-grid">{result.map(r=><article key={r.id}><h3>Cenário {r.id} · Condições e ressalvas</h3>
  <p><strong>ICMS de referência:</strong> {pct(r.applicableIcmsRate)} · <strong>ICMS no frete (dentro do valor):</strong> {money(r.freightTax)}.</p>
+ <p><strong>Origem fiscal declarada:</strong> {ORIGINS.find(([key])=>key===offers[r.id==="A"?0:1].originCategory)?.[1]} · NCM: {offers[r.id==="A"?0:1].ncm||"Não informado"}</p>
+ <p>{r.icmsOriginRule}</p>
  {r.notes.length?r.notes.map((note,i)=><p key={i} className="cp-note"><AlertTriangle size={13}/>{note}</p>):<p className="cp-note">A operação ainda exige conferência documental e das hipóteses de crédito.</p>}
  </article>)}</div>
- <div className="cp-legal"><Info size={17}/><p><strong>Limites do modelo:</strong> esta ferramenta compara propostas de mercadorias ou serviços em 2027 por premissas editáveis. A CBS regular é hipotética (padrão 11,2%) e o IBS regular é 0,1%; ICMS interno de 18% é apenas referência ilustrativa. Para o Simples, aplica RBT12, Anexo e parcelas de CBS/IBS/ICMS do DAS. O cálculo ignora especificidades de NCM, CFOP, CSOSN/CST, benefícios, reduções, base de cálculo de ICMS por dentro, MVA/ST, partilha DIFAL, FCP, IPI especial e limites de crédito. IPI, ICMS-ST e DIFAL são valores informados, não calculados automaticamente. Na venda, resultado (*) não inclui IRPJ/CSLL fora do DAS, despesas indiretas nem créditos fiscais próprios de aquisições anteriores; pode não ser lucro econômico integral. Frete com transportadora considera tributos embutidos no valor contratado, sujeitos a CT-e e crédito permitido ao tomador. Não utilize o resultado como cálculo de guia ou nota fiscal sem validação contábil.</p></div>
+ <div className="cp-legal"><Info size={17}/><p><strong>Limites do modelo:</strong> esta ferramenta compara propostas de mercadorias ou serviços em 2027 por premissas editáveis. A CBS regular é hipotética (padrão 11,2%) e o IBS regular é 0,1%; ICMS interno de 18% é apenas referência ilustrativa. Para o Simples, aplica RBT12, Anexo e parcelas de CBS/IBS/ICMS do DAS. O NCM e o conteúdo de importação são declarados pelo usuário, sem consulta automática à Lessin nem validação do PPB/FCI. A referência de 4% segue a Resolução SF nº 13/2012, sujeita às exceções. O cálculo ignora especificidades de CFOP, CSOSN/CST, benefícios, reduções, base de cálculo de ICMS por dentro, MVA/ST, partilha DIFAL, FCP, IPI especial e limites de crédito. IPI, ICMS-ST e DIFAL são valores informados, não calculados automaticamente. Na venda, resultado (*) não inclui IRPJ/CSLL fora do DAS, despesas indiretas nem créditos fiscais próprios de aquisições anteriores; pode não ser lucro econômico integral. Frete com transportadora considera tributos embutidos no valor contratado, sujeitos a CT-e e crédito permitido ao tomador. Não utilize o resultado como cálculo de guia ou nota fiscal sem validação contábil.</p></div>
  </section>
  <div className="cp-law"><span>BASES LEGAIS</span><p>LC 123/2006 · Anexos I–V (2027–2028) | LC 214/2025 · CBS e IBS | Senado: Res. 22/1989 e Res. 13/2012.</p><div><a href="https://www2.camara.leg.br/legin/fed/leicom/2006/leicomplementar-123-14-dezembro-2006-548099-normaatualizada-pl.html" target="_blank" rel="noreferrer">Simples Nacional <ArrowRight size={12}/></a>
- <a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.html" target="_blank" rel="noreferrer">CBS / IBS <ArrowRight size={12}/></a></div></div>
+ <a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.html" target="_blank" rel="noreferrer">CBS / IBS <ArrowRight size={12}/></a>
+ <a href="https://legis.senado.leg.br/norma/586999/publicacao" target="_blank" rel="noreferrer">Resolução 13/2012 <ArrowRight size={12}/></a>
+ <a href="https://www.gov.br/mdic/pt-br/assuntos/camex/se-camex/strat/lista-de-bens-sem-similar-nacional-lessin" target="_blank" rel="noreferrer">Lista Lessin <ArrowRight size={12}/></a></div></div>
 
  <section className="cp-print-report" aria-label="Relatório de comparação em A4">
   <div className="cp-print-page">
@@ -331,7 +407,9 @@ export default function MelhorRegime(){
     <h3>Condições de transporte e enquadramento</h3>
     <div>{result.map((r,i)=><div key={r.id}><strong>CENÁRIO {r.id}</strong>
      <p>Transporte: {offers[i].freightMode==="carrier"?"transportadora":offers[i].freightMode==="own"?"próprio":"sem frete"} · Responsável: {offers[i].freightPayer==="buyer"?"comprador":"vendedor"} · Frete: {money(offers[i].freightMode==="none"?0:offers[i].freight)}</p>
-     <p>ICMS de referência: {pct(r.applicableIcmsRate)} · {r.valid?"Premissas sujeitas a validação fiscal.":"Atenção: possível enquadramento inválido."}</p>
+     <p>NCM: {offers[i].ncm||"não informado"} · Origem: {ORIGINS.find(([key])=>key===offers[i].originCategory)?.[1]}</p>
+     {offers[i].originCategory==="mixed"&&<p>Conteúdo importado: {pct(offers[i].importContent)} · FCI: {offers[i].fci||"conferir"}</p>}
+     <p>ICMS: {pct(r.applicableIcmsRate)} · {r.valid?"Sujeito a validação fiscal.":"Enquadramento pendente."}</p>
     </div>)}</div>
    </div>
    <div className="cp-print-disclaimer"><strong>Nota metodológica:</strong> relatório ilustrativo, não substitui apuração fiscal. CBS regular é premissa ajustável; IBS e ICMS seguem hipóteses simplificadas. Conferir NCM, CFOP, CST/CSOSN, UF, CT-e, creditamento, ICMS-ST, DIFAL, IPI, ISS e regras de cada operação. Resultado da venda não representa lucro líquido contábil.</div>
