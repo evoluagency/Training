@@ -2,191 +2,284 @@
 
 import {useMemo, useState} from "react";
 import Link from "next/link";
-import {ArrowLeft, ArrowRight, Calculator, RotateCcw, Printer, Info, TrendingDown, Layers3} from "lucide-react";
-import "./melhorregime.css";
+import {ArrowLeft, ArrowRight, Calculator, RotateCcw, Printer, AlertTriangle, Truck, Scale, Info, ShieldCheck} from "lucide-react";
+import "./comparador.css";
 
-type SellerRegime = "simples" | "presumido" | "real";
-type BuyerRegime = "real" | "presumido" | "simples-hibrido" | "simples-puro" | "nao-contribuinte";
-type Anexo = "III" | "V";
-type Result = {
-  key:string; title:string; base:number; invoice:number; das:number; cbsDebit:number; sellerInputCredit:number;
-  cbsToPay:number; buyerCredit:number; buyerCost:number; sellerNet:number; chainBalance:number;
+type Regime = "sn-puro" | "sn-hibrido" | "real" | "presumido" | "final";
+type Annex = "I" | "II" | "III" | "IV" | "V";
+type Kind = "goods" | "services";
+type Operation = "buy" | "sell";
+type Profile = {regime:Regime; uf:string; rbt12:number; annex:Annex};
+type Offer = {price:number; profile:Profile; imported:boolean; manualIcms:boolean; icmsRate:number;
+  freight:number; freightMode:"carrier"|"own"|"none"; freightPayer:"buyer"|"seller";
+  freightRoute:"municipal"|"intermunicipal"|"interestadual"; freightIcmsRate:number; carrierRegular:boolean;
+  ipi:number; st:number; difal:number; difalPayer:"buyer"|"seller"; costs:number};
+type Simulation = {id:"A"|"B"; buyerCost:number; sellerNet:number; sellerMargin:number; cbsCredit:number;
+  ibsCredit:number; icmsCredit:number; freightCredit:number; invoice:number; freightBuyer:number; freightSeller:number;
+  sellerDAS:number; sellerICMS:number; sellerCBS:number; sellerIBS:number; sellerIPI:number; sellerST:number;
+  sellerDIFAL:number; buyerDIFAL:number; cbsInvoice:number; ibsInvoice:number; freightTax:number; simRate:number;
+  applicableIcmsRate:number; notes:string[]; buyerName:string; sellerName:string; valid:boolean;};
+const UF = ["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"];
+const REGIMES:Record<Regime,string>={"sn-puro":"Simples Nacional · puro","sn-hibrido":"Simples Nacional · híbrido","real":"Lucro Real","presumido":"Lucro Presumido","final":"Não contribuinte / consumidor final"};
+const ann:Record<Annex,{rate:number[];ded:number[];cbs:number[];ibs:number[];icms:number[]}> = {
+ I:{rate:[4,7.3,9.5,10.7,14.3,18.9],ded:[0,5940,13860,22500,87300,378000],cbs:[15.33,15.33,15.33,15.33,15.33,34.02],ibs:[.17,.17,.17,.17,.17,0],icms:[34,34,33.5,33.5,33.5,0]},
+ II:{rate:[4.5,7.8,10,11.2,14.7,29.9],ded:[0,5940,13860,22500,85500,720000],cbs:[13.85,13.85,13.85,13.85,13.85,25.22],ibs:[.15,.15,.15,.15,.15,0],icms:[32,32,32,32,32,0]},
+ III:{rate:[6,11.2,13.5,16,21,32.9],ded:[0,9360,17640,35640,125640,648000],cbs:[15.43,16.91,16.42,16.42,15.43,19.29],ibs:[.17,.19,.19,.19,.17,0],icms:[0,0,0,0,0,0]},
+ IV:{rate:[4.5,9,10.2,14,22,32.9],ded:[0,8100,12420,39780,183780,828000],cbs:[21.26,24.73,23.74,22.75,21.76,24.7],ibs:[.24,.27,.26,.25,.24,0],icms:[0,0,0,0,0,0]},
+ V:{rate:[15.5,18,19.5,20.5,23,30.4],ded:[0,4500,9900,17100,62100,540000],cbs:[16.96,16.96,17.95,18.94,16.96,19.78],ibs:[.19,.19,.2,.21,.19,0],icms:[0,0,0,0,0,0]}
 };
-const money = (n:number) => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL",maximumFractionDigits:2}).format(Number.isFinite(n)?n:0);
-const percent = (n:number,digits=2) => new Intl.NumberFormat("pt-BR",{minimumFractionDigits:digits,maximumFractionDigits:digits}).format(n)+"%";
-const caps = [180000,360000,720000,1800000,3600000,4800000];
-const annexes:Record<Anexo,{nominal:number[];deduction:number[];cbsShare:number[]}> = {
-  III:{nominal:[6,11.2,13.5,16,21,32.9],deduction:[0,9360,17640,35640,125640,648000],cbsShare:[15.43,16.91,16.42,16.42,15.43,19.29]},
-  V:{nominal:[15.5,18,19.5,20.5,23,30.4],deduction:[0,4500,9900,17100,62100,540000],cbsShare:[16.96,16.96,17.95,18.94,16.96,19.78]},
-};
-function nonnegative(value:number, max=100000000){return Math.min(max,Math.max(0,Number.isFinite(value)?value:0));}
-function taxBand(revenue:number, annex:Anexo){
-  const safe=Math.max(1,Math.min(4800000,revenue));
-  const index=Math.max(0,caps.findIndex(cap=>safe<=cap));
-  const a=annexes[annex];
-  const effective=Math.max(0,((safe*a.nominal[index]/100)-a.deduction[index])/safe);
-  // Na 5ª faixa do Anexo III, o ISS é limitado a 5%, com redistribuição da parcela federal.
-  const cbsEffective=annex==="III" && index===4 && effective>0.1492537
-    ? Math.max(0,effective-0.05)*0.232
-    : effective*a.cbsShare[index]/100;
-  return {index,effective,cbsEffective};
+const bands=[180000,360000,720000,1800000,3600000,4800000];
+const isSimple=(p:Profile)=>p.regime==="sn-puro"||p.regime==="sn-hibrido";
+const isRegular=(p:Profile)=>p.regime==="real"||p.regime==="presumido"||p.regime==="sn-hibrido";
+const isIcmsRegular=(p:Profile)=>p.regime==="real"||p.regime==="presumido";
+const nonneg=(n:number,max=1e9)=>Math.min(max,Math.max(0,Number.isFinite(n)?n:0));
+const money=(n:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(n);
+const pct=(n:number)=>new Intl.NumberFormat("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)+"%";
+function splitDAS(p:Profile) {
+ if(!isSimple(p))return {rate:0,cbs:0,ibs:0,icms:0,index:0};
+ const rb=Math.max(1,Math.min(4800000,p.rbt12));
+ const index=Math.max(0,bands.findIndex(v=>rb<=v));
+ const spec=ann[p.annex];
+ const rate=Math.max(0,(rb*spec.rate[index]/100-spec.ded[index])/rb);
+ let cbs=rate*spec.cbs[index]/100;
+ let ibs=rate*spec.ibs[index]/100;
+ if(p.annex==="III"&&index===4&&rate>.1492537){cbs=Math.max(0,rate-.05)*.232;ibs=Math.max(0,rate-.05)*.0026;}
+ if(p.annex==="IV"&&index===4&&rate>.125){cbs=Math.max(0,rate-.05)*.3627;ibs=Math.max(0,rate-.05)*.004;}
+ return {rate,cbs,ibs,icms:rate*spec.icms[index]/100,index};
 }
-const buyerNames:Record<BuyerRegime,string>={
-  real:"Lucro Real",presumido:"Lucro Presumido","simples-hibrido":"Simples híbrido",
-  "simples-puro":"Simples puro","nao-contribuinte":"Não contribuinte / consumidor final"
-};
+function suggestedICMS(origin:string,destination:string,imported:boolean){
+ if(origin===destination)return 18;
+ if(imported)return 4;
+ const southSoutheast=["RS","SC","PR","SP","RJ","MG"];
+ const low=["AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","PA","PB","PE","PI","RN","RO","RR","SE","TO"];
+ return southSoutheast.includes(origin)&&low.includes(destination)?7:12;
+}
+const DEFAULT_A:Offer={price:10000,profile:{regime:"sn-puro",uf:"SP",rbt12:180000,annex:"I"},
+ imported:false,manualIcms:false,icmsRate:18,freight:300,freightMode:"carrier",freightPayer:"buyer",
+ freightRoute:"intermunicipal",freightIcmsRate:12,carrierRegular:true,ipi:0,st:0,difal:0,difalPayer:"buyer",costs:0};
+const DEFAULT_B:Offer={...DEFAULT_A,price:9700,profile:{regime:"real",uf:"MG",rbt12:180000,annex:"I"},
+ freight:650,freightRoute:"interestadual"};
+function evaluate(id:"A"|"B",offer:Offer,own:Profile,mode:Operation,kind:Kind,cbsRate:number,costOfSale:number,
+ cbsEligible:boolean,icmsEligible:boolean,cbsUtilization:number,icmsUtilization:number):Simulation {
+ const seller=mode==="buy"?offer.profile:own;
+ const buyer=mode==="buy"?own:offer.profile;
+ const regularSeller=isRegular(seller);
+ const regularBuyer=isRegular(buyer);
+ const simpleSeller=isSimple(seller);
+ const nominal=offer.price;
+ const tax=splitDAS(seller);
+ const across=seller.uf!==buyer.uf;
+ const rateIcms=offer.manualIcms?offer.icmsRate:suggestedICMS(seller.uf,buyer.uf,offer.imported);
+ const goods=kind==="goods";
+ const cbsInvoice=regularSeller?nominal*cbsRate/100:0;
+ const ibsInvoice=regularSeller?nominal*.001:0;
+ const ipi=goods?offer.ipi:0;
+ const st=goods?offer.st:0;
+ const difal=goods?offer.difal:0;
+ const sellerDAS=simpleSeller?nominal*Math.max(0,tax.rate-(seller.regime==="sn-hibrido"?tax.cbs+tax.ibs:0)):0;
+ const outsideICMS=goods&&(isIcmsRegular(seller)||(simpleSeller&&tax.index===5));
+ const sellerICMS=outsideICMS?nominal*rateIcms/100:0;
+ const buyerCBS=regularBuyer&&cbsEligible?(regularSeller?cbsInvoice:nominal*tax.cbs)*cbsUtilization/100:0;
+ const buyerIBS=regularBuyer&&cbsEligible?(regularSeller?ibsInvoice:nominal*tax.ibs)*cbsUtilization/100:0;
+ const icmsDoc=goods?(outsideICMS?sellerICMS:(simpleSeller?nominal*tax.icms:0)):0;
+ const buyerICMS=goods&&isIcmsRegular(buyer)&&icmsEligible?icmsDoc*icmsUtilization/100:0;
+ const freight=goods&&offer.freightMode!=="none"?offer.freight:0;
+ const freightBuyer=offer.freightPayer==="buyer"?freight:0;
+ const freightSeller=offer.freightPayer==="seller"?freight:0;
+ const freightTax=offer.freightMode==="carrier"&&goods&&offer.freightRoute!=="municipal"?
+   freight*offer.freightIcmsRate/100:0;
+ const freightCBS=offer.freightMode==="carrier"&&goods&&offer.carrierRegular?freight*cbsRate/100:0;
+ const freightIBS=offer.freightMode==="carrier"&&goods&&offer.carrierRegular?freight*.001:0;
+ const buyerFreightCredit=regularBuyer&&cbsEligible&&offer.freightPayer==="buyer"?
+   (freightCBS+freightIBS)*cbsUtilization/100:0;
+ const sellerFreightCredit=regularSeller&&offer.freightPayer==="seller"?
+   (freightCBS+freightIBS):0;
+ const buyerFreightICMS=isIcmsRegular(buyer)&&icmsEligible&&offer.freightPayer==="buyer"?freightTax*icmsUtilization/100:0;
+ const sellerFreightICMS=isIcmsRegular(seller)&&offer.freightPayer==="seller"?freightTax:0;
+ const buyerDIFAL=offer.difalPayer==="buyer"?difal:0;
+ const sellerDIFAL=offer.difalPayer==="seller"?difal:0;
+ const invoice=nominal+cbsInvoice+ibsInvoice+ipi+st;
+ const buyerCost=invoice+freightBuyer+buyerDIFAL+offer.costs-buyerCBS-buyerIBS-buyerICMS-buyerFreightCredit-buyerFreightICMS;
+ // ICMS is already embedded in price; the seller deducts it once, not from buyer invoice again.
+ // IPI and ICMS-ST are included in invoice and passed through to the treasury, not seller margin.
+ const sellerNet=nominal-sellerDAS-sellerICMS-sellerDIFAL-freightSeller+sellerFreightCredit+sellerFreightICMS;
+ const sellerMargin=sellerNet-(mode==="sell"?costOfSale:0);
+ const notes:string[]=[];
+ if(simpleSeller&&seller.rbt12>4800000)notes.push("RBT12 do vendedor acima do limite geral do Simples: cenário inválido.");
+ if(isSimple(buyer)&&buyer.rbt12>4800000)notes.push("RBT12 do comprador acima do limite geral do Simples: cenário inválido.");
+ if(goods&&simpleSeller&&tax.index===5)notes.push("6ª faixa: ICMS fora do DAS estimado separadamente; conferir sublimite, recolhimento e benefícios estaduais.");
+ if(goods&&seller.uf===buyer.uf)notes.push("Alíquota interna de ICMS é ilustrativa (18%) e exige validação por UF/NCM.");
+ if(goods&&offer.st>0)notes.push("ICMS-ST informado manualmente; não há cálculo automático de MVA/base/CEST.");
+ if(goods&&offer.difal>0)notes.push("DIFAL informado manualmente; incidência e responsável devem ser validados.");
+ if(goods&&offer.freightMode==="carrier")notes.push("Tributos do frete são estimativas com transportadora do regime regular; CT-e e tomador determinam créditos.");
+ if(goods&&offer.freightRoute==="municipal"&&offer.freightMode==="carrier")notes.push("Frete municipal: avaliar ISS, não calculado automaticamente.");
+ if(!goods&&(seller.annex==="I"||seller.annex==="II")&&simpleSeller)notes.push("Serviços exigem enquadramento apropriado no Anexo III, IV ou V.");
+ if(goods&&simpleSeller&&["III","IV","V"].includes(seller.annex))notes.push("Venda de mercadorias normalmente exige Anexo I ou II; confirme a atividade.");
+ if(goods&&across&&!offer.manualIcms)notes.push("Alíquota interestadual sugerida; regras especiais, origem importada e NCM podem alterá-la.");
+ return {id,buyerCost,sellerNet,sellerMargin,cbsCredit:buyerCBS,ibsCredit:buyerIBS,icmsCredit:buyerICMS,
+   freightCredit:buyerFreightCredit+buyerFreightICMS,invoice,freightBuyer,freightSeller,sellerDAS,
+   sellerICMS,sellerCBS:cbsInvoice-sellerFreightCredit*(cbsRate/(cbsRate+.1||1)),
+   sellerIBS:ibsInvoice-sellerFreightCredit*(.1/(cbsRate+.1||1)),
+   sellerIPI:ipi,sellerST:st,sellerDIFAL,buyerDIFAL,cbsInvoice,ibsInvoice,freightTax,
+   simRate:tax.rate,applicableIcmsRate:rateIcms,notes,buyerName:mode==="buy"?"Sua empresa":"Cliente "+id,
+   sellerName:mode==="buy"?"Fornecedor "+id:"Sua empresa",
+   valid:notes.every(n=>!n.includes("cenário inválido"))};
+}
+const TextField=({label,value,onChange,min=0,max=1e9,step=1}:{
+ label:string;value:number;onChange:(n:number)=>void;min?:number;max?:number;step?:number
+})=><label className="cp-field"><span>{label}</span><input type="number" inputMode="decimal" value={value}
+ min={min} max={max} step={step} onChange={e=>onChange(nonneg(Number(e.target.value),max))}/></label>;
+const Dropdown=<T extends string,>({label,value,onChange,items}:{
+ label:string;value:T;onChange:(v:T)=>void;items:Array<[T,string]>
+})=><label className="cp-field"><span>{label}</span><select value={value} onChange={e=>onChange(e.target.value as T)}>
+ {items.map(([v,t])=><option key={v} value={v}>{t}</option>)}</select></label>;
+const ufItems: Array<[string,string]> = UF.map(uf=>[uf,uf]);
+const regimeItems: Array<[Regime,string]> = Object.entries(REGIMES) as Array<[Regime,string]>;
+const annexItems: Array<[Annex,string]> = [["I","I · Comércio"],["II","II · Indústria"],["III","III · Serviços"],["IV","IV · Serviços"],["V","V · Serviços"]];
 export default function MelhorRegime(){
-  const [sellerRegime,setSellerRegime]=useState<SellerRegime>("simples");
-  const [buyerRegime,setBuyerRegime]=useState<BuyerRegime>("real");
-  const [anexo,setAnexo]=useState<Anexo>("III");
-  const [service,setService]=useState(10000);
-  const [rbt12,setRbt12]=useState(180000);
-  const [cbsRate,setCbsRate]=useState(11.2);
-  const [eligiblePurchases,setEligiblePurchases]=useState(0);
-  const [operatingCost,setOperatingCost]=useState(5000);
-  const [hybridDiscount,setHybridDiscount]=useState(0);
-  const [buyerUtilization,setBuyerUtilization]=useState(100);
-  const regularBuyer=buyerRegime==="real"||buyerRegime==="presumido"||buyerRegime==="simples-hibrido";
-  const rate=Math.min(30,Math.max(0,cbsRate))/100;
-  const price=nonnegative(service,100000000);
-  const inputBase=nonnegative(eligiblePurchases,100000000);
-  const expense=nonnegative(operatingCost,100000000);
-  const hybridBase=price*(1-hybridDiscount/100);
-  const band=useMemo(()=>taxBand(rbt12,anexo),[rbt12,anexo]);
-  const effectiveBuyerUtilization=regularBuyer?buyerUtilization/100:0;
-  const cbsDebit=price*rate;
-  const inputCredit=Math.min(cbsDebit,inputBase*rate);
-  const embedded=price*band.cbsEffective;
-  const dasPure=price*band.effective;
-  const hybridCbs=hybridBase*rate;
-  const hybridDas=hybridBase*band.effective;
-  const hybridEmbedded=hybridBase*band.cbsEffective;
-  const hybridInputCredit=Math.min(hybridCbs,inputBase*rate);
-  const buyerParityDiscount=price>0?Math.max(0,Math.min(100,
-    100*(1-(price-embedded*effectiveBuyerUtilization)/(price*(1+rate*(1-effectiveBuyerUtilization))))
-  )):0;
-  const results:Result[]=sellerRegime==="simples"?[
-    {key:"puro",title:"Simples puro",base:price,invoice:price,das:dasPure,cbsDebit:0,sellerInputCredit:0,
-      cbsToPay:0,buyerCredit:embedded*effectiveBuyerUtilization,buyerCost:price-embedded*effectiveBuyerUtilization,
-      sellerNet:price-dasPure,chainBalance:dasPure-embedded*effectiveBuyerUtilization},
-    {key:"hibrido",title:"Simples híbrido",base:hybridBase,invoice:hybridBase+hybridCbs,
-      das:hybridDas-hybridEmbedded,cbsDebit:hybridCbs,
-      sellerInputCredit:hybridInputCredit,cbsToPay:hybridCbs-hybridInputCredit,
-      buyerCredit:hybridCbs*effectiveBuyerUtilization,
-      buyerCost:hybridBase+hybridCbs-hybridCbs*effectiveBuyerUtilization,
-      sellerNet:hybridBase-(hybridDas-hybridEmbedded)+hybridInputCredit,
-      chainBalance:(hybridDas-hybridEmbedded)+(hybridCbs-hybridInputCredit)-hybridCbs*effectiveBuyerUtilization}
-  ]:[
-    {key:"regular",title:sellerRegime==="real"?"Lucro Real":"Lucro Presumido",base:price,
-      invoice:price+cbsDebit,das:0,cbsDebit,sellerInputCredit:inputCredit,
-      cbsToPay:cbsDebit-inputCredit,buyerCredit:cbsDebit*effectiveBuyerUtilization,
-      buyerCost:price+cbsDebit-cbsDebit*effectiveBuyerUtilization,
-      sellerNet:price+cbsDebit-(cbsDebit-inputCredit),
-      chainBalance:cbsDebit-inputCredit-cbsDebit*effectiveBuyerUtilization}
-  ];
-  const reset=()=>{setSellerRegime("simples");setBuyerRegime("real");setAnexo("III");setService(10000);setRbt12(180000);setCbsRate(11.2);setEligiblePurchases(0);setOperatingCost(5000);setHybridDiscount(0);setBuyerUtilization(100);};
-  const difference=results.length===2?results[1].buyerCost-results[0].buyerCost:0;
-  const chainDifference=results.length===2?results[1].chainBalance-results[0].chainBalance:0;
-  const marginFor=(result:Result)=>result.sellerNet-expense;
-  const marginPercentFor=(result:Result)=>result.base>0?100*marginFor(result)/result.base:0;
-  const marginDifference=results.length===2?marginFor(results[1])-marginFor(results[0]):0;
-  const numeric=(value:number,setter:(value:number)=>void,min:number,max:number,step:number)=>(
-    <input type="number" inputMode="decimal" min={min} max={max} step={step} value={value}
-      onChange={e=>setter(nonnegative(Number(e.target.value),max))}/>
-  );
-  return <div className="evsim">
-    <header className="evsim-header">
-      <Link className="evsim-brand" href="/"><img src="/brand/evolu-white.png" width="137" height="29" alt="EVOLU"/><span>Training</span></Link>
-      <Link className="evsim-home" href="/"><ArrowLeft size={16}/> Voltar ao Training</Link>
-    </header>
-    <main className="evsim-main">
-      <div className="evsim-intro"><div><span className="evsim-kicker">FERRAMENTAS DE DECISÃO / REFORMA TRIBUTÁRIA</span><h1>Simulador de <em>regime tributário.</em></h1>
-        <p>Compare a incidência da CBS em 2027, os créditos de quem compra e o resultado econômico de quem presta o serviço.</p></div>
-        <span className="evsim-year">2027 <small>SIMULAÇÃO CBS</small></span>
-      </div>
-      <div className="evsim-card">
-        <div className="evsim-cardtop"><div className="evsim-cardtitle"><Calculator size={19}/><div><h2>Simulador de operações comerciais</h2><p>Prestação de serviços · Cenário genérico e ajustável</p></div></div><span className="evsim-pill">Cenário ilustrativo</span></div>
-        <div className="evsim-parties">
-          <div className="evsim-party"><span className="evsim-section-index">01 / QUEM VENDE</span>
-            <p className="evsim-party-role">Prestador / fornecedor</p>
-            <label htmlFor="sellerRegime">Regime tributário</label><select id="sellerRegime" value={sellerRegime} onChange={e=>setSellerRegime(e.target.value as SellerRegime)}>
-              <option value="simples">Simples Nacional — comparar puro × híbrido</option><option value="presumido">Lucro Presumido</option><option value="real">Lucro Real</option>
-            </select>
-          </div>
-          <div className="evsim-party"><span className="evsim-section-index">02 / QUEM COMPRA</span>
-            <p className="evsim-party-role">Contratante / adquirente</p>
-            <label htmlFor="buyerRegime">Regime tributário</label><select id="buyerRegime" value={buyerRegime} onChange={e=>setBuyerRegime(e.target.value as BuyerRegime)}>
-              {Object.entries(buyerNames).map(([key,label])=><option key={key} value={key}>{label}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="evsim-divider"/>
-        <div className="evsim-inputs">
-          <section><div className="evsim-fieldhead"><label htmlFor="serviceRange">Valor do serviço, antes da CBS</label><strong>{money(price)}</strong></div>
-            <input id="serviceRange" className="evsim-range" type="range" min="1000" max="200000" step="1000" value={Math.min(200000,Math.max(1000,service))} onChange={e=>setService(Number(e.target.value))} />
-            <div className="evsim-inputrow"><span>Valor exato (R$)</span>{numeric(service,setService,0,100000000,100)}</div>
-          </section>
-          <section><div className="evsim-fieldhead"><label htmlFor="cbsRange">CBS do regime regular — hipótese ajustável</label><strong>{percent(cbsRate,1)}</strong></div>
-            <input id="cbsRange" className="evsim-range" type="range" min="0" max="20" step="0.1" value={cbsRate} onChange={e=>setCbsRate(Number(e.target.value))}/>
-            <div className="evsim-inputrow"><span>Alíquota CBS (%)</span>{numeric(cbsRate,setCbsRate,0,30,0.1)}</div>
-          </section>
-          {sellerRegime==="simples"&&<section className="evsim-wide">
-            <div className="evsim-fieldhead"><span className="evsim-fieldlabel">Anexo do Simples — publicidade / Fator R</span><span className="evsim-meta">{(band.index+1)}ª faixa · DAS {percent(band.effective*100)}</span></div>
-            <div className="evsim-radios">
-              <label className={anexo==="III"?"selected":""}><input type="radio" name="anexo" checked={anexo==="III"} onChange={()=>setAnexo("III")}/>Anexo III — Fator R ≥ 28%</label>
-              <label className={anexo==="V"?"selected":""}><input type="radio" name="anexo" checked={anexo==="V"} onChange={()=>setAnexo("V")}/>Anexo V — Fator R &lt; 28%</label>
-            </div>
-            <div className="evsim-inputrow"><span>Receita bruta acumulada em 12 meses — RBT12 (R$)</span>{numeric(rbt12,setRbt12,1,4800000,1000)}</div>
-            <p className="evsim-hint">A faixa é calculada com o RBT12 informado. Verifique se a atividade e o Fator R efetivo correspondem ao Anexo selecionado.</p>
-          </section>}
-          <section><div className="evsim-fieldhead"><label htmlFor="inputs">Aquisições da vendedora com crédito de CBS (R$)</label><strong>{money(inputBase)}</strong></div>
-            <input id="inputs" type="number" inputMode="decimal" min="0" max="100000000" step="100" value={eligiblePurchases} onChange={e=>setEligiblePurchases(nonnegative(Number(e.target.value)))}/>
-            <p className="evsim-hint">Aplica-se apenas a vendedor no regime regular da CBS. Crédito limitado ao débito calculado nesta operação.</p>
-          </section>
-          <section><div className="evsim-fieldhead"><label htmlFor="creditRange">Aproveitamento do crédito pelo comprador</label><strong>{regularBuyer?percent(buyerUtilization,0):"0%"}</strong></div>
-            <input id="creditRange" className="evsim-range" type="range" min="0" max="100" step="5" value={regularBuyer?buyerUtilization:0} disabled={!regularBuyer} onChange={e=>setBuyerUtilization(Number(e.target.value))}/>
-            <p className="evsim-hint">{regularBuyer?"Percentual do crédito calculado efetivamente aproveitável na operação.":"O regime selecionado não apropria crédito de CBS nesta simulação."}</p>
-          </section>
-        </div>
-        <div className="evsim-economics">
-          <div className="evsim-economics-heading"><span className="evsim-section-index">03 / VIABILIDADE ECONÔMICA</span><h3>Custos e negociação</h3><p>Compare a margem da operação e o custo da contratação considerando os mesmos custos diretos.</p></div>
-          <div className="evsim-inputs">
-            <section><div className="evsim-fieldhead"><label htmlFor="operatingCost">Custo total da prestação (R$)</label><strong>{money(expense)}</strong></div>
-              <input id="operatingCost" type="number" inputMode="decimal" min="0" max="100000000" step="100" value={operatingCost} onChange={e=>setOperatingCost(nonnegative(Number(e.target.value)))}/>
-              <p className="evsim-hint">Informe o custo total da operação, incluindo a CBS paga nas compras. O mesmo custo é utilizado nas duas alternativas.</p>
-            </section>
-            {sellerRegime==="simples"&&<section><div className="evsim-fieldhead"><label htmlFor="discountRange">Desconto comercial no preço-base do híbrido</label><strong>{percent(hybridDiscount,1)}</strong></div>
-              <input id="discountRange" className="evsim-range" type="range" min="0" max="30" step="0.1" value={Math.min(30,hybridDiscount)} onChange={e=>setHybridDiscount(Number(e.target.value))}/>
-              <div className="evsim-inputrow"><span>Desconto exato (%)</span>{numeric(hybridDiscount,setHybridDiscount,0,100,0.1)}</div>
-              <p className="evsim-hint">Desconto de equilíbrio aproximado para o custo do comprador: <strong>{percent(buyerParityDiscount,2)}</strong>.</p>
-            </section>}
-          </div>
-        </div>
-        <div className="evsim-resulthead"><div><span className="evsim-section-index">04 / RESULTADOS</span><h3>Comparativo tributário e econômico</h3></div><div className="evsim-actions"><button onClick={reset} type="button"><RotateCcw size={14}/> Reiniciar</button><button onClick={()=>window.print()} type="button"><Printer size={14}/> Imprimir</button></div></div>
-        <div className="evsim-table-wrap"><table className="evsim-table"><thead><tr><th>Indicador</th>{results.map(r=><th key={r.key}>{r.title}</th>)}</tr></thead><tbody>
-          <tr><td>Preço-base do serviço</td>{results.map(r=><td key={r.key}>{money(r.base)}</td>)}</tr>
-          <tr><td>Valor da nota, com CBS por fora quando aplicável</td>{results.map(r=><td key={r.key}>{money(r.invoice)}</td>)}</tr>
-          <tr><td>DAS da vendedora {sellerRegime==="simples"?"":"(não aplicável)"}</td>{results.map(r=><td key={r.key}>{sellerRegime==="simples"?money(r.das):"—"}</td>)}</tr>
-          <tr><td>CBS destacada fora do DAS</td>{results.map(r=><td key={r.key}>{money(r.cbsDebit)}</td>)}</tr>
-          <tr><td>Crédito CBS das aquisições da vendedora (aproveitado)</td>{results.map(r=><td key={r.key}>{money(r.sellerInputCredit)}</td>)}</tr>
-          <tr><td>CBS líquida a recolher pela vendedora</td>{results.map(r=><td key={r.key}>{money(r.cbsToPay)}</td>)}</tr>
-          <tr><td>Crédito CBS aproveitado pelo comprador</td>{results.map(r=><td key={r.key}>{money(r.buyerCredit)}</td>)}</tr>
-          <tr><td>Custos diretos da prestação</td>{results.map(r=><td key={r.key}>{money(expense)}</td>)}</tr>
-          <tr className="evsim-table-emphasis"><td>Resultado estimado do vendedor após tributos e custos</td>{results.map(r=><td key={r.key}>{money(marginFor(r))}</td>)}</tr>
-          <tr><td>Margem estimada sobre o preço-base</td>{results.map(r=><td key={r.key}>{percent(marginPercentFor(r))}</td>)}</tr>
-          <tr className="evsim-table-emphasis"><td>Custo líquido da compra, após crédito CBS</td>{results.map(r=><td key={r.key}>{money(r.buyerCost)}</td>)}</tr>
-          <tr className="evsim-table-emphasis"><td>Saldo tributário parcial da operação*</td>{results.map(r=><td key={r.key}>{money(r.chainBalance)}</td>)}</tr>
-        </tbody></table></div>
-        <div className="evsim-summary">{results.map(r=><article key={r.key}><span>{r.title} · custo efetivo do comprador</span><strong>{money(r.buyerCost)}</strong><div className="evsim-summary-margin"><span>Resultado estimado do vendedor, após tributos e custos</span><b>{money(marginFor(r))}</b><small>Margem operacional estimada: {percent(marginPercentFor(r))}</small></div></article>)}</div>
-        {results.length===2&&<div className="evsim-conclusion"><TrendingDown size={18}/><div><strong>Leitura comparativa</strong>
-          <p>{Math.abs(difference)<0.005?"O custo líquido de compra é igual nos dois cenários.":difference>0?"Com as premissas adotadas, o Simples puro reduz o custo líquido da compradora em "+money(difference)+" frente ao híbrido.":"Com as premissas adotadas, o Simples híbrido reduz o custo líquido da compradora em "+money(-difference)+" frente ao puro."}
-          {" "}{Math.abs(marginDifference)<0.005?"O resultado operacional estimado do vendedor é equivalente.":marginDifference>0?"O híbrido aumenta o resultado estimado do vendedor em "+money(marginDifference)+".":"O puro aumenta o resultado estimado do vendedor em "+money(-marginDifference)+"."}
-          {" "}{Math.abs(chainDifference)<0.005?"O saldo tributário parcial da operação é equivalente.":chainDifference<0?"O híbrido reduz o saldo tributário parcial em "+money(-chainDifference)+", considerando o crédito aproveitado pela vendedora.":"O puro reduz o saldo tributário parcial em "+money(chainDifference)+"."}</p></div></div>}
-        {sellerRegime!=="simples"&&<div className="evsim-conclusion"><Layers3 size={18}/><div><strong>Regime regular de CBS</strong><p>No recorte da CBS, Lucro Real e Lucro Presumido seguem o regime regular. A escolha entre eles exige calcular também IRPJ, CSLL, ISS, folha e demais fatores, que não estão neste simulador.</p></div></div>}
-        <div className="evsim-footnote"><Info size={17}/><div><p><strong>Escopo e limites.</strong> Simulação didática de serviços em 2027. O preço-base é igual, exceto quando há desconto comercial aplicado ao híbrido. No híbrido ou regimes regulares, a CBS é adicionada por fora ao preço-base. O saldo tributário parcial (*) corresponde ao DAS + CBS líquida do vendedor − crédito de CBS do comprador; não representa a carga de toda a cadeia. O resultado e a margem do vendedor são estimativas operacionais simplificadas, não lucro líquido contábil: consideram apenas o custo direto informado, o DAS e a CBS simulados. O custo informado deve incluir CBS paga nas compras, e o crédito recuperável é demonstrado separadamente. Foram excluídos IBS (apesar da alíquota de transição de 0,1% em 2027), ISS fora do DAS, IRPJ/CSLL no Lucro Real ou Presumido, tributos de etapas anteriores, regras especiais de base de cálculo, despesas indiretas e limites individuais de créditos. A CBS de 11,2% é hipótese editável, não alíquota definitiva.</p><p>Na 6ª faixa do Simples, o ISS pode ser devido fora do DAS; este valor não é calculado. O creditamento pressupõe operação documentada e legalmente elegível. Se o RBT12 for incompatível com o Simples, ou houver impedimento societário, a projeção não deve ser usada para decisão.</p></div></div>
-      </div>
-      <div className="evsim-bottom"><div><span>BASE LEGAL</span><p>LC 214/2025, arts. 41 e 47; LC 123/2006, Anexos III e V (2027–2028).</p><div className="evsim-sources"><a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.html" target="_blank" rel="noopener noreferrer">Legislação consolidada <ArrowRight size={13}/></a><a href="https://legis.senado.gov.br/norma/40180341/publicacao/40181117" target="_blank" rel="noopener noreferrer">Anexo III <ArrowRight size={13}/></a><a href="https://legis.senado.leg.br/norma/40180341/publicacao/40181129" target="_blank" rel="noopener noreferrer">Anexo V <ArrowRight size={13}/></a></div></div><span className="evsim-footer-label">EVOLU TRAINING · FERRAMENTAS</span></div>
-    </main>
-    <footer className="evsim-footer"><Link href="/"><img src="/brand/evolu-white.png" width="105" height="23" alt="EVOLU"/> <span>TRAINING</span></Link><p>Estratégia, dados e decisões estruturadas.</p></footer>
-  </div>;
+ const [operation,setOperation]=useState<Operation>("buy");
+ const [kind,setKind]=useState<Kind>("goods");
+ const [own,setOwn]=useState<Profile>({regime:"real",uf:"SP",rbt12:180000,annex:"I"});
+ const [offers,setOffers]=useState<[Offer,Offer]>([DEFAULT_A,DEFAULT_B]);
+ const [cbsRate,setCbsRate]=useState(11.2);
+ const [costOfSale,setCostOfSale]=useState(6000);
+ const [cbsEligible,setCbsEligible]=useState(true);
+ const [icmsEligible,setIcmsEligible]=useState(true);
+ const [cbsUtilization,setCbsUtilization]=useState(100);
+ const [icmsUtilization,setIcmsUtilization]=useState(100);
+ function updateOwn<K extends keyof Profile>(key:K,val:Profile[K]){setOwn(prev=>({...prev,[key]:val}));}
+ function updateOffer<K extends keyof Offer>(idx:number,key:K,val:Offer[K]){
+   setOffers(prev=>prev.map((x,i)=>i===idx?{...x,[key]:val}:x) as [Offer,Offer]);
+ }
+ function updateCounter<K extends keyof Profile>(idx:number,key:K,val:Profile[K]){
+   setOffers(prev=>prev.map((x,i)=>i===idx?{...x,profile:{...x.profile,[key]:val}}:x) as [Offer,Offer]);
+ }
+ const result=useMemo(()=>offers.map((v,i)=>evaluate(i===0?"A":"B",v,own,operation,kind,cbsRate,costOfSale,cbsEligible,icmsEligible,cbsUtilization,icmsUtilization)) as [Simulation,Simulation],
+ [offers,own,operation,kind,cbsRate,costOfSale,cbsEligible,icmsEligible,cbsUtilization,icmsUtilization]);
+ const basis=operation==="buy"?"buyerCost":"sellerMargin";
+ const gap=Math.abs(result[0][basis]-result[1][basis]);
+ const winner=(!result[0].valid||!result[1].valid)?null:operation==="buy"?
+ (result[0].buyerCost<=result[1].buyerCost?"A":"B"):
+ (result[0].sellerMargin>=result[1].sellerMargin?"A":"B");
+ const ownDAS=splitDAS(own);
+ function reset(){setOperation("buy");setKind("goods");setOwn({regime:"real",uf:"SP",rbt12:180000,annex:"I"});setOffers([DEFAULT_A,DEFAULT_B]);setCbsRate(11.2);setCostOfSale(6000);setCbsEligible(true);setIcmsEligible(true);setCbsUtilization(100);setIcmsUtilization(100);}
+ const resultRows:Array<[string,(r:Simulation)=>number]> = [
+ ["Preço-base da proposta",r=>offers[r.id==="A"?0:1].price],
+ ["CBS destacada na operação",r=>r.cbsInvoice],
+ ["IBS destacado (transição 2027)",r=>r.ibsInvoice],
+ ["IPI informado",r=>r.sellerIPI],
+ ["ICMS-ST informado",r=>r.sellerST],
+ ["Total do documento fiscal estimado",r=>r.invoice],
+ ["Frete suportado pelo comprador",r=>r.freightBuyer],
+ ["DIFAL suportado pelo comprador",r=>r.buyerDIFAL],
+ ["Crédito CBS do comprador",r=>r.cbsCredit],
+ ["Crédito IBS do comprador",r=>r.ibsCredit],
+ ["Crédito ICMS mercadoria",r=>r.icmsCredit],
+ ["Créditos estimados do frete",r=>r.freightCredit],
+ ["Custo líquido da compra",r=>r.buyerCost],
+ ["DAS do vendedor",r=>r.sellerDAS],
+ ["ICMS da operação, fora do DAS",r=>r.sellerICMS],
+ ["CBS líquida estimada do vendedor",r=>r.sellerCBS],
+ ["IBS líquido estimado do vendedor",r=>r.sellerIBS],
+ ["IPI a recolher pelo vendedor",r=>r.sellerIPI],
+ ["ICMS-ST a recolher pelo vendedor",r=>r.sellerST],
+ ["DIFAL a recolher pelo vendedor",r=>r.sellerDIFAL],
+ ["Frete suportado pelo vendedor",r=>r.freightSeller],
+ ["Resultado estimado do vendedor*",r=>r.sellerMargin]
+ ];
+ return <div className="cp">
+ <header className="cp-header"><Link href="/" className="cp-logo"><img src="/brand/evolu-white.png" width="145" height="31" alt="EVOLU"/><span>TRAINING</span></Link>
+ <Link href="/" className="cp-back"><ArrowLeft size={16}/> Voltar ao Training</Link></header>
+ <main className="cp-main">
+ <div className="cp-intro"><span className="cp-eyebrow">INTELIGÊNCIA TRIBUTÁRIA / SIMULADOR 2027</span>
+  <h1>Compare cenários.<br/><em>Decida pelo custo real.</em></h1>
+  <p>Analise duas propostas com regimes distintos, origem e destino, frete, créditos e impostos. Nenhum nome de empresa é solicitado.</p></div>
+ <section className="cp-panel"><div className="cp-heading"><div><Scale size={22}/><div><h2>Configuração da operação</h2><p>Defina seu papel, a atividade e o regime da sua empresa.</p></div></div><span className="cp-tag">2027 · Estimativa</span></div>
+ <div className="cp-segment"><button type="button" className={operation==="buy"?"active":""} onClick={()=>setOperation("buy")}>Estou comprando</button>
+ <button type="button" className={operation==="sell"?"active":""} onClick={()=>setOperation("sell")}>Estou vendendo</button></div>
+ <div className="cp-grid cp-grid-3">
+  <Dropdown label="Natureza da operação" value={kind} onChange={setKind} items={[["goods","Mercadoria"],["services","Prestação de serviço"]]}/>
+  <Dropdown label="Meu regime tributário" value={own.regime} onChange={v=>updateOwn("regime",v)} items={regimeItems.filter(([key])=>key!=="final")}/>
+  <Dropdown label="Meu estado (UF)" value={own.uf} onChange={v=>updateOwn("uf",v)} items={ufItems}/>
+ </div>
+ {isSimple(own)&&<div className="cp-simple"><div className="cp-grid cp-grid-2">
+   <TextField label="Meu RBT12 (R$)" value={own.rbt12} onChange={v=>updateOwn("rbt12",v)} max={10000000} step={1000}/>
+   <Dropdown label="Meu Anexo do Simples" value={own.annex} onChange={v=>updateOwn("annex",v)} items={annexItems}/>
+ </div><p>Alíquota efetiva aproximada: <strong>{pct(ownDAS.rate*100)}</strong> · {ownDAS.index+1}ª faixa. A seleção do Anexo deve corresponder à atividade efetiva.</p></div>}
+ <div className="cp-grid cp-grid-3 cp-parameters"><TextField label="Alíquota CBS regular (%) · hipótese" value={cbsRate} onChange={setCbsRate} max={30} step={0.1}/>
+ <label className="cp-checkbox"><input type="checkbox" checked={cbsEligible} onChange={e=>setCbsEligible(e.target.checked)}/><span>Compra elegível a crédito de CBS/IBS</span></label>
+ <label className="cp-checkbox"><input type="checkbox" checked={icmsEligible} onChange={e=>setIcmsEligible(e.target.checked)}/><span>Compra elegível a crédito de ICMS</span></label>
+ <TextField label="Créditos CBS/IBS aproveitáveis (%)" value={cbsUtilization} onChange={setCbsUtilization} max={100} step={5}/>
+ <TextField label="Créditos ICMS aproveitáveis (%)" value={icmsUtilization} onChange={setIcmsUtilization} max={100} step={5}/>
+ {operation==="sell"&&<TextField label="Meu custo de mercadoria/serviço (R$)" value={costOfSale} onChange={setCostOfSale} step={100}/>}
+ </div>
+ <div className="cp-inline-warning"><Info size={16}/> Alíquota da CBS é editável; IBS regular de 0,1% está incluído. ICMS, ST e DIFAL exigem enquadramento fiscal e validação de NCM/UF.</div>
+ </section>
+ <section className="cp-offers">
+ {offers.map((o,idx)=>{
+  const id=idx===0?"A":"B";
+  const seller=operation==="buy"?o.profile:own;
+  const buyer=operation==="buy"?own:o.profile;
+  const refICMS=suggestedICMS(seller.uf,buyer.uf,o.imported);
+  const sim=splitDAS(o.profile);
+  return <article key={id} className="cp-offer">
+   <div className="cp-offer-head"><div><span className="cp-index">CENÁRIO {id}</span><h2>{operation==="buy"?"Fornecedor":"Cliente"} {id}</h2></div>
+    <span className="cp-route">{seller.uf} → {buyer.uf}</span></div>
+   <div className="cp-grid cp-grid-2">
+    <TextField label={operation==="buy"?"Preço do fornecedor (R$)":"Preço de venda (R$)"} value={o.price} onChange={v=>updateOffer(idx,"price",v)} step={100}/>
+    <Dropdown label={"Regime do "+(operation==="buy"?"fornecedor":"cliente")} value={o.profile.regime} onChange={v=>updateCounter(idx,"regime",v)} items={regimeItems}/>
+    <Dropdown label={"UF do "+(operation==="buy"?"fornecedor":"cliente")} value={o.profile.uf} onChange={v=>updateCounter(idx,"uf",v)} items={ufItems}/>
+    <label className="cp-checkbox cp-inline"><input type="checkbox" checked={o.imported} onChange={e=>updateOffer(idx,"imported",e.target.checked)}/><span>Mercadoria importada com ICMS interestadual de 4% (quando aplicável)</span></label>
+   </div>
+   {isSimple(o.profile)&&<div className="cp-simple cp-offer-simple"><div className="cp-grid cp-grid-2">
+    <TextField label="RBT12 da contraparte (R$)" value={o.profile.rbt12} onChange={v=>updateCounter(idx,"rbt12",v)} max={10000000} step={1000}/>
+    <Dropdown label="Anexo do Simples da contraparte" value={o.profile.annex} onChange={v=>updateCounter(idx,"annex",v)} items={annexItems}/>
+    </div><p>Faixa {sim.index+1} · alíquota efetiva {pct(sim.rate*100)} · CBS no DAS {pct(sim.cbs*100)}.</p></div>}
+   {kind==="goods"&&<><div className="cp-divider"/><h3 className="cp-group-title">Tributos sobre mercadoria</h3>
+   <div className="cp-grid cp-grid-2">
+     <label className="cp-checkbox"><input type="checkbox" checked={o.manualIcms} onChange={e=>updateOffer(idx,"manualIcms",e.target.checked)}/><span>Informar alíquota ICMS manualmente</span></label>
+     <TextField label={o.manualIcms?"ICMS da operação (%)":"ICMS de referência (%) · auto"} value={o.manualIcms?o.icmsRate:refICMS} onChange={v=>{updateOffer(idx,"manualIcms",true);updateOffer(idx,"icmsRate",v);}} max={100} step={0.1}/>
+     <TextField label="IPI adicional informado (R$)" value={o.ipi} onChange={v=>updateOffer(idx,"ipi",v)} step={10}/>
+     <TextField label="ICMS-ST informado (R$)" value={o.st} onChange={v=>updateOffer(idx,"st",v)} step={10}/>
+     <TextField label="DIFAL informado (R$)" value={o.difal} onChange={v=>updateOffer(idx,"difal",v)} step={10}/>
+     <Dropdown label="Responsável pelo DIFAL informado" value={o.difalPayer} onChange={v=>updateOffer(idx,"difalPayer",v)} items={[["buyer","Comprador"],["seller","Vendedor"]]}/>
+   </div>
+   <div className="cp-divider"/><h3 className="cp-group-title"><Truck size={16}/> Logística e transporte</h3>
+   <div className="cp-grid cp-grid-2">
+    <Dropdown label="Como será realizado o transporte?" value={o.freightMode} onChange={v=>updateOffer(idx,"freightMode",v)} items={[["carrier","Transportadora (terceirizada)"],["own","Transporte próprio"],["none","Retirada / sem frete"]]}/>
+    {o.freightMode!=="none"&&<><Dropdown label="Quem paga o transporte?" value={o.freightPayer} onChange={v=>updateOffer(idx,"freightPayer",v)} items={[["buyer","Comprador"],["seller","Vendedor"]]}/>
+    <TextField label={o.freightMode==="carrier"?"Valor do frete contratado (R$)":"Custo do transporte próprio (R$)"} value={o.freight} onChange={v=>updateOffer(idx,"freight",v)} step={50}/>
+    {o.freightMode==="carrier"&&<><Dropdown label="Abrangência do transporte" value={o.freightRoute} onChange={v=>updateOffer(idx,"freightRoute",v)} items={[["municipal","Dentro do município (ISS)"],["intermunicipal","Intermunicipal (ICMS)"],["interestadual","Interestadual (ICMS)"]]}/>
+    {o.freightRoute!=="municipal"&&<TextField label="ICMS no CT-e (%) · estimado" value={o.freightIcmsRate} onChange={v=>updateOffer(idx,"freightIcmsRate",v)} max={100} step={0.1}/>}
+    <label className="cp-checkbox"><input type="checkbox" checked={o.carrierRegular} onChange={e=>updateOffer(idx,"carrierRegular",e.target.checked)}/><span>Transportadora em regime regular da CBS/IBS</span></label></>}
+    </>}
+    <TextField label="Outros custos pagos pelo comprador (R$)" value={o.costs} onChange={v=>updateOffer(idx,"costs",v)} step={50}/>
+   </div></>}
+   {kind==="services"&&<div className="cp-inline-warning"><Info size={15}/> Para serviços, ISS e regras especiais não são apurados automaticamente; valide a incidência antes de decidir.</div>}
+  </article>})}
+ </section>
+ <section className="cp-results"><div className="cp-results-head"><div><span className="cp-eyebrow">ANÁLISE COMPARATIVA</span><h2>{operation==="buy"?"Qual proposta apresenta menor custo?":"Qual operação entrega maior resultado?"}</h2></div>
+ <div className="cp-actions"><button type="button" onClick={reset}><RotateCcw size={14}/> Reiniciar</button><button type="button" onClick={()=>window.print()}><Printer size={14}/> Imprimir</button></div></div>
+ <div className="cp-score">
+  {result.map(r=><div key={r.id} className={"cp-score-card "+(winner===r.id?"cp-best":"")}>
+   <span>{operation==="buy"?"Fornecedor":"Cliente"} {r.id} {winner===r.id&&<strong>Menor custo / melhor resultado</strong>}</span>
+   <b>{money(operation==="buy"?r.buyerCost:r.sellerMargin)}</b>
+   <small>{operation==="buy"?"Custo líquido estimado da aquisição":"Resultado operacional estimado da venda"}</small>
+   <p>Documento fiscal: {money(r.invoice)} · CBS da nota: {money(r.cbsInvoice)}</p>
+  </div>)}
+ </div>
+ <div className="cp-decision">{winner?<><ShieldCheck size={20}/><div><strong>{operation==="buy"?"Menor custo estimado":"Maior resultado estimado"}: cenário {winner}</strong><p>Diferença entre propostas: {money(gap)}. A comparação considera os valores informados e os créditos assumidos. Não substitui apuração fiscal.</p></div></>:
+ <><AlertTriangle size={20}/><div><strong>Comparação depende de validação</strong><p>Revise os dados de regime e RBT12. Não é possível recomendar um cenário com enquadramento inválido.</p></div></>}</div>
+ <div className="cp-tablewrap"><table><thead><tr><th>Composição da operação</th><th>Cenário A</th><th>Cenário B</th></tr></thead><tbody>
+ {resultRows.map(([label,compute])=><tr key={label} className={label==="Custo líquido da compra"||label.startsWith("Resultado estimado")?"cp-total":""}><td>{label}</td>{result.map(r=><td key={r.id}>{money(compute(r))}</td>)}</tr>)}
+ </tbody></table></div>
+ <div className="cp-detail-grid">{result.map(r=><article key={r.id}><h3>Cenário {r.id} · Condições e ressalvas</h3>
+ <p><strong>ICMS de referência:</strong> {pct(r.applicableIcmsRate)} · <strong>ICMS no frete (dentro do valor):</strong> {money(r.freightTax)}.</p>
+ {r.notes.length?r.notes.map((note,i)=><p key={i} className="cp-note"><AlertTriangle size={13}/>{note}</p>):<p className="cp-note">A operação ainda exige conferência documental e das hipóteses de crédito.</p>}
+ </article>)}</div>
+ <div className="cp-legal"><Info size={17}/><p><strong>Limites do modelo:</strong> esta ferramenta compara propostas de mercadorias ou serviços em 2027 por premissas editáveis. A CBS regular é hipotética (padrão 11,2%) e o IBS regular é 0,1%; ICMS interno de 18% é apenas referência ilustrativa. Para o Simples, aplica RBT12, Anexo e parcelas de CBS/IBS/ICMS do DAS. O cálculo ignora especificidades de NCM, CFOP, CSOSN/CST, benefícios, reduções, base de cálculo de ICMS por dentro, MVA/ST, partilha DIFAL, FCP, IPI especial e limites de crédito. IPI, ICMS-ST e DIFAL são valores informados, não calculados automaticamente. Na venda, resultado (*) não inclui IRPJ/CSLL fora do DAS, despesas indiretas nem créditos fiscais próprios de aquisições anteriores; pode não ser lucro econômico integral. Frete com transportadora considera tributos embutidos no valor contratado, sujeitos a CT-e e crédito permitido ao tomador. Não utilize o resultado como cálculo de guia ou nota fiscal sem validação contábil.</p></div>
+ </section>
+ <div className="cp-law"><span>BASES LEGAIS</span><p>LC 123/2006 · Anexos I–V (2027–2028) | LC 214/2025 · CBS e IBS | Senado: Res. 22/1989 e Res. 13/2012.</p><div><a href="https://www2.camara.leg.br/legin/fed/leicom/2006/leicomplementar-123-14-dezembro-2006-548099-normaatualizada-pl.html" target="_blank" rel="noreferrer">Simples Nacional <ArrowRight size={12}/></a>
+ <a href="https://www2.camara.leg.br/legin/fed/leicom/2025/leicomplementar-214-16-janeiro-2025-796905-normaatualizada-pl.html" target="_blank" rel="noreferrer">CBS / IBS <ArrowRight size={12}/></a></div></div>
+ </main><footer className="cp-footer"><Link href="/"><img src="/brand/evolu-white.png" width="110" height="27" alt="EVOLU"/> <span>TRAINING</span></Link><p>Estratégia · Inteligência de negócios · Educação corporativa</p></footer></div>;
 }
