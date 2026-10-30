@@ -65,3 +65,18 @@
 @media(max-width:1240px){.ev-public-areas,.ev-public-featured,.ev-public-method{grid-template-columns:1fr}.ev-public-area-list,.ev-public-cards{grid-template-columns:repeat(4,minmax(0,1fr))}.ev-public-intro{max-width:600px}}
 @media(max-width:900px){.ev-public-hero-copy{width:74%}.ev-public-area-list,.ev-public-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.ev-public-value{grid-template-columns:repeat(2,1fr)}.ev-public-steps{grid-template-columns:repeat(2,1fr);row-gap:16px}.ev-public-hero{min-height:590px}.ev-public-hero-photo{background-position:60% center}}
 @media(max-width:560px){.ev-public-hero{padding:50px 18px 24px;min-height:630px}.ev-public-hero-copy{width:100%}.ev-public-hero:before{background:linear-gradient(90deg,#050606ee,#050606a6)}.ev-public-hero h1{font-size:39px}.ev-public-value{grid-template-columns:1fr 1fr;gap:15px}.ev-public-value span{font-size:9px}.ev-public-areas,.ev-public-featured,.ev-public-method{padding:37px 18px}.ev-public-area-list,.ev-public-cards{grid-template-columns:1fr 1fr}.ev-public-area{min-height:245px}.ev-public-area-copy{padding:13px}.ev-public-area-copy h3{font-size:11px}.ev-public-area-copy p{font-size:9px!important}.ev-public-course{height:230px;padding:10px}.ev-public-course h3{font-size:12px}.ev-public-steps{grid-template-columns:1fr}.ev-public-outro{align-items:start;flex-direction:column;padding:32px 18px}.ev-public-footer{flex-wrap:wrap;padding:25px 18px}.ev-public-footer p{order:3;flex-basis:100%}}
+
+/* Public simulator access — integrated with EVOLU Training identity. */
+.ev-public-tool{display:grid;grid-template-columns:90px minmax(0,1fr) auto;align-items:center;gap:27px;background:#eff2e8;border-bottom:1px solid #d8e0d0;padding:28px clamp(22px,4vw,74px)}
+.ev-public-tool-symbol{height:78px;width:78px;background:#101514;color:#d8fc63;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:3px;border-radius:5px}
+.ev-public-tool-symbol span{font-weight:800;font-size:9px;letter-spacing:.17em}
+.ev-public-tool-copy{min-width:0}
+.ev-public-tool-copy>p{color:#5b6d45!important;font-size:9px!important;letter-spacing:.16em!important;font-weight:800!important;margin:0 0 7px!important}
+.ev-public-tool-copy h2{color:#121913;font-size:clamp(20px,2.2vw,29px);font-weight:700;letter-spacing:-.035em;line-height:1.2;margin:0 0 7px}
+.ev-public-tool-copy h2 span{color:#60822e}
+.ev-public-tool-copy>span{display:block;font-size:11px;line-height:1.7;color:#57645a;max-width:700px}
+.ev-public-tool-link{display:inline-flex;align-items:center;justify-content:space-between;gap:23px;white-space:nowrap;background:#101514;color:#fff!important;padding:16px 18px;font-weight:700;font-size:11px;border-radius:4px;min-height:48px;transition:background-color .15s}
+.ev-public-tool-link:hover{background:#2a3c24}
+.ev-public-tool-link svg{color:#d8fc63}
+@media(max-width:900px){.ev-public-tool{grid-template-columns:70px minmax(0,1fr);gap:18px}.ev-public-tool-symbol{width:68px;height:68px}.ev-public-tool-link{grid-column:2;justify-self:start}}
+@media(max-width:560px){.ev-public-tool{padding:25px 18px;grid-template-columns:54px minmax(0,1fr);gap:12px}.ev-public-tool-symbol{width:52px;height:56px}.ev-public-tool-symbol svg{width:23px}.ev-public-tool-copy h2{font-size:22px}.ev-public-tool-copy>span{font-size:10px}.ev-public-tool-link{grid-column:1/-1;width:100%;justify-content:space-between;margin-top:5px}}
