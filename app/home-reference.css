@@ -80,3 +80,26 @@
 .ev-public-tool-link svg{color:#d8fc63}
 @media(max-width:900px){.ev-public-tool{grid-template-columns:70px minmax(0,1fr);gap:18px}.ev-public-tool-symbol{width:68px;height:68px}.ev-public-tool-link{grid-column:2;justify-self:start}}
 @media(max-width:560px){.ev-public-tool{padding:25px 18px;grid-template-columns:54px minmax(0,1fr);gap:12px}.ev-public-tool-symbol{width:52px;height:56px}.ev-public-tool-symbol svg{width:23px}.ev-public-tool-copy h2{font-size:22px}.ev-public-tool-copy>span{font-size:10px}.ev-public-tool-link{grid-column:1/-1;width:100%;justify-content:space-between;margin-top:5px}}
+
+/* Catálogos, treinamentos e módulos são derivados de registros publicados, sem placeholders. */
+.ev-public-area{color:#151918;min-width:0;text-decoration:none}
+.ev-public-area:hover{border-color:#a3b985}
+.ev-public-area:focus-visible,.ev-public-course:focus-visible{outline:2px solid #b8eb4f;outline-offset:3px}
+.ev-public-category-count{display:block;margin-top:auto;padding-top:6px;font-size:10px;font-weight:700;color:#586650}
+.ev-public-area-copy{display:flex;flex-direction:column}
+.ev-public-area-copy>span:last-child{right:12px;bottom:12px}
+.ev-public-catalog-groups{display:grid;gap:31px;min-width:0}
+.ev-public-catalog-group{scroll-margin-top:90px;min-width:0}
+.ev-public-catalog-heading{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:0 0 12px;border-bottom:1px solid #353c39;margin-bottom:14px}
+.ev-public-catalog-heading h3{font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.35;margin:0;color:#fff}
+.ev-public-catalog-heading span{font-size:10px;color:#bec8bf;white-space:nowrap}
+.ev-public-course-tile{min-width:0;background:#111715;border:1px solid #37413b;display:flex;flex-direction:column}
+.ev-public-course-tile>.ev-public-course{width:100%;border:0;flex:none}
+.ev-public-course .ev-public-description{font-size:10px;line-height:1.4;max-height:42px;overflow:hidden;margin:0 0 8px}
+.ev-public-modules{border-top:1px solid #333d36;color:#e7ede6;font-size:11px;line-height:1.5}
+.ev-public-modules summary{padding:12px 14px;cursor:pointer;font-weight:600;color:#ddf4b4}
+.ev-public-modules ol{padding:0 18px 13px 32px;margin:0}
+.ev-public-modules li{padding:5px 0;color:#e2e8e3;overflow-wrap:anywhere}
+.ev-public-catalog-status{margin:0!important;padding:13px clamp(22px,4vw,74px);background:#f3f3ec;color:#535c52!important;font-size:12px!important}
+@media(min-width:1241px){.ev-public-catalog-groups{min-width:0}}
+@media(max-width:560px){.ev-public-catalog-heading h3{font-size:14px}.ev-public-catalog-heading span{font-size:9px}.ev-public-modules summary{font-size:10px}.ev-public-area-copy>span:last-child{display:none}.ev-public-area-copy p{margin-bottom:12px!important}}
