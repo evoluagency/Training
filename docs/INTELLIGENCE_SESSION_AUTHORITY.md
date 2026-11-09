@@ -1,5 +1,9 @@
 # EVOLU Training — autoridade de sessão para Intelligence (CP041)
 
+## Estado atual — rotação Ed25519 v3 (09/11/2026)
+
+O par Ed25519 v3 foi gerado de forma criptograficamente aleatória, e a **chave privada foi provisionada** exclusivamente como variável `sensitive` no Preview da branch `feat/practice-engine-research-v0-1` do projeto Vercel Intelligence. Nenhum valor privado foi versionado. A chave pública v3 deste arquivo foi preparada para publicação independente da `training-api`. A prova real de sessão ativa/logout permanece pendente; não confundir deploy ACTIVE com E2E. Este estado substitui as notas históricas abaixo relativas ao par v2.
+
 Escopo exclusivamente backend. Nova Edge Function independente da training-api, sem mudanças em Auth, frontend, schemas ou migrations.
 
 A função recebe POST autenticado por assinatura Ed25519 da Intelligence: path fixo /functions/v1/intelligence-session-authority; headers x-evolu-service, x-evolu-timestamp, x-evolu-nonce, x-evolu-signature (base64url). O texto assinado é composto por v1, intelligence, POST, path, timestamp_ms, nonce e JSON do corpo, unidos por newline. O corpo contém somente issuer, subject (UUID), sessionId (UUID). A janela é de dez segundos e o endpoint não tem CORS.

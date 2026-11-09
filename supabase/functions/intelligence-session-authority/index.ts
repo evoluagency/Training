@@ -7,7 +7,7 @@ try{
  // Public verification key is not a secret. Pin it at build time to avoid
  // an unavailable Supabase secrets-management dependency; private key exists
  // only as a sensitive, branch-scoped Vercel Preview environment variable.
- const key={kty:'OKP',crv:'Ed25519',x:'yqqdf5HO3zUBMeugBdqkQ-jrTg3qbTAwgblRYxyxirw'};
+ const key={kty:'OKP',crv:'Ed25519',x:'I9m9rMnvnpgRdSEHLIsAlOyEAY9Ekm5MuFw4Qq_V1Uo'};
  if(Deno.env.get('SUPABASE_URL')!=='https://ljuqbkwsnouthzwrzszy.supabase.co')throw Error('wrong project');
  const databaseUrl=Deno.env.get('SUPABASE_DB_URL');
  if(!databaseUrl)throw Error('database unavailable');
