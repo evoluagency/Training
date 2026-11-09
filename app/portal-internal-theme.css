@@ -219,6 +219,10 @@
   outline-offset: 3px;
 }
 
+/* Editores e painel de aula mantêm a densidade aprovada nos layouts próprios. */
+.ev-shell .ev-editor > .ev-panel { padding: 16px 14px; }
+.ev-shell .ev-lesson-right .ev-panel { padding: 17px; }
+
 /* Aula e avaliações preservam sua composição, com cores compartilhadas. */
 .ev-shell .ev-lesson-sidebar { background: #111516; }
 .ev-shell .ev-mini-module a.active { border-left-color: var(--lime); color: var(--lime); }
@@ -243,7 +247,8 @@
   .ev-shell .ev-topbar { padding-inline: 16px; }
   .ev-shell .ev-topbar-search { padding: 10px 12px; }
   .ev-shell .ev-content .ev-heading { align-items: flex-start; flex-direction: column; }
-  .ev-shell .ev-account strong { max-width: 120px; }
+  .ev-shell .ev-account strong { max-width: 120px; font-size: 10px; }
+  .ev-shell .ev-account small { font-size: 9px; }
   .ev-shell .ev-stat-grid,
   .ev-shell .ev-course-grid,
   .ev-shell .ev-fields { grid-template-columns: 1fr; }
