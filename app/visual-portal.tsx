@@ -5,6 +5,7 @@ import {usePathname,useRouter,useSearchParams} from 'next/navigation';
 import {LayoutDashboard,Building2,UsersRound,BookOpen,Layers,Link2,ClipboardCheck,GraduationCap,MessageSquare,BarChart3,Settings,ChevronRight,ArrowRight,ArrowLeft,Plus,Upload,Search,Download,Play,CheckCircle2,Clock3,BriefcaseBusiness,CalendarDays,FileText,LogOut,Menu,X,ShieldCheck,RefreshCw} from 'lucide-react';
 import './portal.css';
 import './content-responsive.css';
+import './portal-internal-theme.css';
 import {readTrainingResponse} from '../lib/training/client-response';
 import {orderLessons} from '../lib/training/lesson-order';
 import {activePortalNav,portalPageTitle} from '../lib/training/navigation';

@@ -1,0 +1,259 @@
+/*
+ * EVOLU Training — padrão visual INTERNO (área do participante + administração).
+ * Referência: captura 1440 × 900 da rota /area fornecida em 09/11/2026.
+ * Escopo restrito a .ev-shell; não aplicar à home, login ou simulador.
+ * Nenhuma regra altera conteúdo, rotas, permissões ou lógica de negócios.
+ */
+.ev-shell {
+  --black: #090b0c;
+  --paper: #f5f5f2;
+  --lime: #d8fc63;
+  --line: #e3e5e0;
+  --ink: #151819;
+  --muted: #6f746f;
+  --ev-card-radius: 8px;
+  --ev-control-radius: 5px;
+  --ev-surface: #fff;
+  --ev-surface-soft: #f4f5f2;
+  background: var(--paper);
+  color: var(--ink);
+  min-width: 0;
+  width: 100%;
+  overflow-x: clip;
+}
+
+/* Navegação compartilhada — mesma identidade em todos os perfis. */
+.ev-shell .ev-sidebar {
+  width: 238px;
+  min-width: 238px;
+  background: var(--black);
+  color: #fff;
+  border-right: 1px solid #252b29;
+}
+.ev-shell .ev-sidebar-head { padding-bottom: 28px; }
+.ev-shell .ev-sidebar-kicker {
+  color: #a0a7a2 !important;
+  font-size: 9px !important;
+  font-weight: 700;
+  letter-spacing: .16em;
+}
+.ev-shell .ev-sidebar nav { gap: 4px; }
+.ev-shell .ev-nav-link {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 12px;
+  border-radius: var(--ev-control-radius);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ev-shell .ev-nav-link svg { flex: 0 0 auto; }
+.ev-shell .ev-nav-link.active,
+.ev-shell .ev-nav-link[aria-current="page"] {
+  background: var(--lime);
+  color: var(--black) !important;
+  font-weight: 700;
+}
+.ev-shell .ev-sidebar-call {
+  background: #1b2020;
+  border-color: #303736;
+  border-radius: 0 0 6px 6px;
+}
+
+/* Cabeçalho e conteúdo — referência: topo branco, corpo off-white. */
+.ev-shell .ev-body { min-width: 0; }
+.ev-shell .ev-topbar {
+  height: 80px;
+  min-height: 80px;
+  background: var(--ev-surface);
+  border-bottom: 1px solid var(--line);
+  gap: 16px;
+}
+.ev-shell .ev-topbar-search {
+  width: min(580px, 65%);
+  min-width: 0;
+  min-height: 44px;
+  padding: 13px 18px;
+  border-radius: var(--ev-control-radius);
+  border: 1px solid #eef0ed;
+  background: var(--ev-surface-soft);
+  color: #929992;
+}
+.ev-shell .ev-topbar-search span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ev-shell .ev-account { min-width: 0; }
+.ev-shell .ev-account > div:last-child { min-width: 0; }
+.ev-shell .ev-account strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.ev-shell .ev-account small { color: #858e86; }
+.ev-shell .ev-avatar {
+  flex: 0 0 35px;
+  background: var(--black);
+  color: #fff;
+}
+.ev-shell .ev-content {
+  width: 100%;
+  min-width: 0;
+  max-width: 1680px;
+  padding: 32px clamp(18px, 2.6vw, 45px) 65px;
+}
+.ev-shell .ev-heading { min-width: 0; }
+.ev-shell .ev-content .ev-heading { margin: 2px 0 25px; }
+.ev-shell .ev-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: #777e76;
+}
+.ev-shell .ev-heading h1 {
+  font-size: clamp(29px, 3vw, 43px);
+  font-weight: 700;
+  letter-spacing: -.048em;
+  line-height: 1.18;
+}
+.ev-shell .ev-heading p {
+  margin: 8px 0;
+  color: #747974 !important;
+  font-size: 14px !important;
+  line-height: 1.65;
+}
+
+/* Superfícies reutilizadas por painéis, categorias, relatórios e formulários. */
+.ev-shell .ev-panel,
+.ev-shell .ev-stat,
+.ev-shell .ev-course-card,
+.ev-shell .ev-category-card,
+.ev-shell .ev-lesson-main,
+.ev-shell .ev-editor-materials {
+  background: var(--ev-surface);
+  border: 1px solid var(--line);
+  border-radius: var(--ev-card-radius);
+  min-width: 0;
+  box-shadow: none;
+}
+.ev-shell .ev-panel { padding: 20px 22px; }
+.ev-shell .ev-panel h2,
+.ev-shell .ev-triple > .ev-panel h2,
+.ev-shell .ev-dual > .ev-panel h2 {
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: -.028em;
+}
+.ev-shell :is(.ev-course-grid,.ev-triple,.ev-stat-grid,.ev-dual,.ev-form-layout,.ev-flow-cards) {
+  gap: 16px;
+}
+.ev-shell :is(.ev-category-grid,.ev-editor) { gap: 16px; }
+.ev-shell .ev-section-title {
+  margin: 30px 0 17px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid #d9dfd8;
+}
+.ev-shell .ev-section-title h2 {
+  font-size: 11px;
+  letter-spacing: .13em;
+  font-weight: 700;
+}
+.ev-shell .ev-empty { color: #8a938c; }
+.ev-shell .ev-empty h3 { color: #4f5752; }
+.ev-shell .ev-empty p { color: #838b85 !important; }
+
+/* Filtros, estados ativos, ações e editores seguem a mesma hierarquia. */
+.ev-shell .ev-button,
+.ev-shell .ev-upload,
+.ev-shell .ev-inline-actions button {
+  border-radius: var(--ev-control-radius);
+}
+.ev-shell .ev-button.lime,
+.ev-shell .ev-panel-title button,
+.ev-shell .ev-nav-link.active {
+  background-color: var(--lime);
+}
+.ev-shell .ev-button.lime { border-color: var(--lime); color: var(--black); }
+.ev-shell .ev-button.outline {
+  border-color: #bfc6be;
+  background: var(--ev-surface);
+  color: var(--ink);
+}
+.ev-shell .ev-category-filters .ev-pill.success {
+  background: #e4f8c3;
+  border-color: #e4f8c3;
+  color: #25371e;
+}
+.ev-shell .ev-course-tabs a.active {
+  background: var(--lime);
+  border-color: var(--lime);
+  color: var(--black);
+}
+.ev-shell .ev-editor-row.selected,
+.ev-shell .ev-module-block.selected > .ev-editor-row { background: #f1fadf; }
+.ev-shell .ev-form-actions { border-top-color: var(--line); }
+.ev-shell :is(.ev-fields input,.ev-fields select,.ev-fields textarea,.ev-inline-form input,.ev-inline-form select,.ev-inline-form textarea,.ev-editor-materials select,.ev-cover-control select,.ev-note-input,.ev-comment-reply textarea) {
+  border-color: #dde1dc;
+  border-radius: var(--ev-control-radius);
+  color: var(--ink);
+}
+.ev-shell .ev-table {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+.ev-shell .ev-table th { background: #f8f9f7; }
+.ev-shell .ev-table td,
+.ev-shell .ev-table th { border-bottom-color: var(--line); }
+.ev-shell .ev-editor-dialog {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--ev-surface);
+  color: var(--ink);
+}
+.ev-shell :is(a,button,input,select,textarea,summary):focus-visible {
+  outline: 2px solid #94bc22;
+  outline-offset: 3px;
+}
+
+/* Editores e painel de aula mantêm a densidade aprovada nos layouts próprios. */
+.ev-shell .ev-editor > .ev-panel { padding: 16px 14px; }
+.ev-shell .ev-lesson-right .ev-panel { padding: 17px; }
+
+/* Aula e avaliações preservam sua composição, com cores compartilhadas. */
+.ev-shell .ev-lesson-sidebar { background: #111516; }
+.ev-shell .ev-mini-module a.active { border-left-color: var(--lime); color: var(--lime); }
+.ev-shell .ev-answer:has(input:checked) {
+  border-color: #90aa45;
+  background: #f1fadf;
+}
+.ev-shell .ev-activity-bar { background: #b8eb4f; }
+.ev-shell .ev-ring { color: var(--ink); }
+
+/* Os breakpoints existentes continuam a determinar a arquitetura responsiva. */
+@media (max-width: 1150px) and (min-width: 801px) {
+  .ev-shell .ev-sidebar { width: 204px; min-width: 204px; }
+}
+@media (max-width: 800px) {
+  .ev-shell .ev-sidebar { width: 248px; min-width: 248px; }
+  .ev-shell .ev-content { padding: 25px 19px 90px; }
+  .ev-shell .ev-topbar-search { width: auto; flex: 1 1 auto; }
+  .ev-shell .ev-panel { padding: 18px; }
+}
+@media (max-width: 600px) {
+  .ev-shell .ev-topbar { padding-inline: 16px; }
+  .ev-shell .ev-topbar-search { padding: 10px 12px; }
+  .ev-shell .ev-content .ev-heading { align-items: flex-start; flex-direction: column; }
+  .ev-shell .ev-account strong { max-width: 120px; font-size: 10px; }
+  .ev-shell .ev-account small { font-size: 9px; }
+  .ev-shell .ev-stat-grid,
+  .ev-shell .ev-course-grid,
+  .ev-shell .ev-fields { grid-template-columns: 1fr; }
+  .ev-shell :is(input,select,textarea) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ev-shell .ev-course-card { transition: none; }
+}
