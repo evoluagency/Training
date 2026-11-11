@@ -5,5 +5,10 @@
     "gru1"
   ],
   "installCommand": "npx --yes pnpm@11.25.0 install --frozen-lockfile",
-  "buildCommand": "npx --yes pnpm@11.25.0 build"
+  "buildCommand": "npx --yes pnpm@11.25.0 build",
+  "git": {
+    "deploymentEnabled": {
+      "feat/intelligence-avatar-meeting": false
+    }
+  }
 }
