@@ -96,3 +96,38 @@ test('intelligence: rota da entrevista no /admin e fora da área do participante
   assert.equal(isPortalRoute('/area/entrevista-avatar','learner'),false);
   assert.equal(portalPageTitle('/admin/entrevista-avatar'),'Entrevista do avatar');
 });
+
+import {visemeFor,levelFromSamples,avatarMood,moodTarget,approach} from '../app/intelligence/avatar-motion.ts';
+
+test('avatar 3D: visema pela vogal, lábios fechados em m/b/p, acentos ignorados',()=>{
+  assert.ok(visemeFor('casa').open>visemeFor('isso').open);
+  assert.ok(visemeFor('uva').round>visemeFor('ela').round);
+  assert.ok(visemeFor('igual').width>visemeFor('outro').width);
+  assert.equal(visemeFor('mesa').closed,true);
+  assert.equal(visemeFor('tarde').closed,false);
+  assert.deepEqual(visemeFor('ótimo'),visemeFor('otimo'));
+  assert.equal(visemeFor('').closed,false);
+  assert.equal(visemeFor(undefined).open,visemeFor('xyz').open);
+});
+
+test('avatar 3D: volume do áudio entre 0 e 1, silêncio é zero',()=>{
+  assert.equal(levelFromSamples(new Uint8Array(512).fill(128)),0);
+  assert.equal(levelFromSamples([]),0);
+  const loud=Uint8Array.from({length:512},(_,i)=>i%2?255:0);
+  assert.equal(levelFromSamples(loud),1);
+  const mid=Uint8Array.from({length:512},(_,i)=>128+Math.round(12*Math.sin(i/5)));
+  const l=levelFromSamples(mid);assert.ok(l>0&&l<1,String(l));
+});
+
+test('avatar 3D: estados ouvindo, pensando, falando e encaminhando',()=>{
+  const base={thinking:false,speaking:false,listening:false,routed:false};
+  assert.equal(avatarMood(base),'idle');
+  assert.equal(avatarMood({...base,listening:true}),'listening');
+  assert.equal(avatarMood({...base,speaking:true,listening:true}),'speaking');
+  assert.equal(avatarMood({...base,speaking:true,routed:true}),'routing');
+  assert.equal(avatarMood({...base,thinking:true,speaking:true}),'thinking');
+  assert.notEqual(moodTarget('routing').led,moodTarget('speaking').led);
+  assert.ok(moodTarget('thinking').ledPulse>0);
+  assert.equal(approach(0,1,5,0),0);
+  assert.ok(Math.abs(approach(0,1,5,10)-1)<1e-9);
+});

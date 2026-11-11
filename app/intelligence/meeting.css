@@ -54,7 +54,7 @@
 .ev-lobby-side{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
 .ev-lobby-side h1{font-size:30px;font-weight:600;letter-spacing:-.035em;line-height:1.2}
 .ev-lobby-who{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
-.ev-lobby-dot{width:34px;height:34px;border-radius:50%;background:var(--tile);overflow:hidden;display:grid;place-items:end center;flex:none}
+.ev-lobby-dot{width:34px;height:34px;border-radius:50%;background:var(--tile);color:var(--lime);overflow:hidden;display:grid;place-items:center;flex:none}
 .ev-lobby-dot svg{width:34px;height:auto;margin-bottom:-4px}
 .ev-lobby-context{font-size:12px;color:var(--muted)}
 .ev-lobby-side .ev-pill-button{margin-top:6px;min-width:220px}
@@ -88,6 +88,9 @@
 .ev-tile.speaking{box-shadow:inset 0 0 0 3px var(--lime)}
 .ev-tile.avatar{position:absolute;inset:0;display:grid;place-items:center;width:100%;height:100%}
 .ev-tile.avatar.thinking .ev-meet-face{opacity:.8}
+.ev-avatar3d{position:absolute;inset:0;width:100%;height:100%}
+.ev-avatar3d canvas{display:block;width:100%;height:100%}
+.ev-tile.avatar .ev-meet-face{position:relative}
 .ev-meet-face{height:min(72%,560px);width:auto;max-width:90%}
 .ev-meet-face .av-shirt{fill:#3a4241}.ev-meet-face .av-skin{fill:#e8c4a2}.ev-meet-face .av-skin-shade{fill:#d3a985}.ev-meet-face .av-hair{fill:#2b2622}
 .ev-meet-face .av-line{stroke:#2a2522}.ev-meet-face .av-nose{stroke:#b98c6a}.ev-meet-face .av-eye{fill:#2a2522}.ev-meet-face .av-mouth{fill:#7a3b33}

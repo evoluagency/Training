@@ -10,8 +10,9 @@
 // Entrevista: gravação opcional, com aceite, só neste computador. A lógica roda no Intelligence (/api/intelligence/*).
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {createPortal} from 'react-dom';
-import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck} from 'lucide-react';
-import {IllustratedAvatar,type AvatarHandle} from './avatar';
+import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot} from 'lucide-react';
+import {Avatar3D,type Avatar3DHandle} from './avatar3d';
+import {avatarMood} from './avatar-motion';
 import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,CAMERA_POLICY,type MeetingMode} from './meeting-text';
 import './meeting.css';
 
@@ -73,7 +74,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const [hasSynth,setHasSynth]=useState(true);
   const [hasRecognition,setHasRecognition]=useState(true);
 
-  const avatarRef=useRef<AvatarHandle>(null);
+  const avatarRef=useRef<Avatar3DHandle>(null);
   const meVideo=useRef<HTMLVideoElement>(null),lobbyVideo=useRef<HTMLVideoElement>(null);
   const micDialog=useRef<HTMLDialogElement>(null),recDialog=useRef<HTMLDialogElement>(null),camDialog=useRef<HTMLDialogElement>(null);
   const logEnd=useRef<HTMLLIElement>(null);
@@ -160,7 +161,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       const cps=15*s.rate,t0=performance.now();let last=from;
       const tick=()=>{if(token!==s.speakToken)return resolve();
         const pos=Math.min(text.length,from+Math.floor((performance.now()-t0)/1000*cps));
-        if(pos!==last){setCaption({who,text,upTo:pos,badge});if(/\s/.test(text[pos]??''))avatarRef.current?.word();last=pos}
+        if(pos!==last){setCaption({who,text,upTo:pos,badge});if(/\s/.test(text[pos]??''))avatarRef.current?.word(text.slice(pos+1).match(/^\S+/)?.[0]);last=pos}
         if(pos>=text.length){done();return resolve()}requestAnimationFrame(tick)};
       tick();
     });
@@ -176,7 +177,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
         const u=new SpeechSynthesisUtterance(chunk);u.lang='pt-BR';if(s.voice)u.voice=s.voice;u.rate=s.rate;
         let began=false;
         u.onstart=()=>{began=true};
-        u.onboundary=ev=>{if(token===s.speakToken){avatarRef.current?.word();setCaption({who,text,upTo:base+(ev.charIndex??0),badge})}};
+        u.onboundary=ev=>{if(token===s.speakToken){avatarRef.current?.word(chunk.slice(ev.charIndex??0).match(/^\S+/)?.[0]);setCaption({who,text,upTo:base+(ev.charIndex??0),badge})}};
         u.onend=()=>{if(token===s.speakToken)setCaption({who,text,upTo:offset,badge});next()};
         u.onerror=()=>{if(began)next()};
         synth.speak(u);
@@ -320,7 +321,8 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const usage=app?.usage;
   const stepLabel=lesson?(l?.run_status!=='LIVE'?'Aula encerrada':cur&&cur.order===l.segments.length?'Encerrar aula':'Próximo trecho'):(interview?.status==='OPEN'?'Encerrar e gerar rascunho':'Entrevista encerrada');
   const stepDisabled=thinking||(lesson?l?.run_status!=='LIVE':interview?.status!=='OPEN');
-  const avatarState=thinking?'pensando':speech.speaking?'falando':listening?'ouvindo você':'pronto';
+  const mood=avatarMood({thinking,speaking:speech.speaking,listening,routed:caption?.badge===ROUTE_BADGE.ESCALATE});
+  const avatarState=({thinking:'pensando',speaking:'falando',routing:'encaminhando',listening:'ouvindo você',idle:'pronto'} as const)[mood];
   const title=lesson?(l?.title||'Aula com o avatar'):'Entrevista do capacitador';
   const cov=interview?.coverage??{covered:0,total:13};
 
@@ -344,7 +346,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
         <div className="ev-lobby-side">
           <span className="ev-eyebrow">{lesson?'AULA COM O AVATAR':'ENTREVISTA DO CAPACITADOR'}</span>
           <h1>Pronto para participar?</h1>
-          <div className="ev-lobby-who"><span className="ev-lobby-dot" aria-hidden="true"><IllustratedAvatar speaking={false} label=""/></span><span>{lesson?'O avatar do proprietário já está na sala.':'O avatar do proprietário vai conduzir a conversa.'}</span></div>
+          <div className="ev-lobby-who"><span className="ev-lobby-dot" aria-hidden="true"><Bot size={18}/></span><span>{lesson?'O avatar do proprietário já está na sala.':'O avatar do proprietário vai conduzir a conversa.'}</span></div>
           {contextTitle&&<p className="ev-lobby-context">{contextTitle}</p>}
           <button className="ev-pill-button lime" onClick={join} disabled={joining}>{joining?'Entrando…':lesson?'Participar agora':'Iniciar entrevista'}</button>
           {lobbyNotice&&<p className="ev-lobby-error" role="alert">{lobbyNotice}</p>}
@@ -386,7 +388,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       <div className="ev-room-main">
         <div className="ev-room-stage">
           <button type="button" className={'ev-tile avatar'+(speech.speaking?' speaking':'')+(thinking?' thinking':'')} onClick={()=>{if(speech.speaking)stopSpeaking()}} aria-label={speech.speaking?'Interromper a fala do avatar':avatarLabel}>
-            <IllustratedAvatar ref={avatarRef} speaking={speech.speaking} label={avatarLabel}/>
+            <Avatar3D ref={avatarRef} mood={mood} label={avatarLabel}/>
             <span className="ev-tile-name">{avatarLabel}</span>
             <span className="ev-tile-state">{avatarState}</span>
           </button>
