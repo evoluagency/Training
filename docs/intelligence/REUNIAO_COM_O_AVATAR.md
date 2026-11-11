@@ -9,7 +9,7 @@ Tela do Intelligence dentro do Training, com a identidade visual do Training, no
 | Aula | `/area/treinamentos/:id/aulas/:aulaId` (R04), botão **Entrar na sala** abaixo do player | participante autenticado | respostas por voz e chat |
 | Entrevista | `/admin/entrevista-avatar` | só administração | rascunho (DRAFT) para download |
 
-Na R04 a reunião ocupa o lugar do player, no centro. O chat e o roteiro ficam na lateral da reunião (abaixo dela quando falta largura). Sair devolve o player.
+A sala abre em **tela cheia**, por cima da página, no formato das videochamadas: sala de espera clara (prévia da câmera com botões de microfone e câmera, "Pronto para participar?"), sala escura com o avatar em destaque, o quadro do usuário flutuando, legenda ao vivo, barra inferior com botões redondos e painel lateral de mensagens ou roteiro. Sair mostra a tela de saída e volta à aula (ou ao painel).
 
 ## Ligação Training → Intelligence
 
@@ -21,8 +21,9 @@ Na R04 a reunião ocupa o lugar do player, no centro. O chat e o roteiro ficam n
 
 ## Mídia e privacidade (padrões adotados)
 
-- Câmera do usuário só local. Nenhuma imagem vai ao servidor.
-- O participante nunca é gravado (o botão Gravar não existe no modo aula).
+- **Câmera do participante (decisão do proprietário, 11/11):** opcional e real. Ligar exige aceitar a *Política de imagem da aula online* (`CAMERA_POLICY` em `meeting-text.ts`, versão `rascunho-0.1`, a revisar). Com a câmera ligada, a EVOLU pode ver e registrar a imagem e o comportamento visual. A sala mostra "Câmera ligada · política aceita".
+- **Ainda não há envio:** o destino das imagens (armazenamento, formato, retenção, quem acessa) depende de decisão do proprietário. Até lá a imagem aparece só na tela do participante e o texto da política diz isso.
+- O botão Gravar (arquivo local) continua só na entrevista.
 - Entrevista: gravar é opcional, pede aceite explícito, mostra **Gravando** o tempo todo e salva o arquivo só no computador do capacitador.
 - Avatar ilustrado neutro (sem foto) e voz do navegador até haver consentimento de imagem e voz.
 - Reconhecimento de voz do navegador com aviso (no Chrome o áudio vai para o Google). O chat funciona sempre.

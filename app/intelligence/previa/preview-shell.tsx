@@ -2,8 +2,7 @@
 // Casca estática da área do Training (classes ev-*) com dados fictícios, só para a prévia local.
 import {BookOpen,LayoutDashboard,MessageSquare,Video,ArrowLeft,CheckCircle2,ArrowRight} from 'lucide-react';
 import '../../portal.css';
-import {LessonMeetingSlot} from '../lesson-slot';
-import {IntelligenceMeeting} from '../meeting';
+import {LessonMeetingSlot,MeetingEntryCard} from '../lesson-slot';
 
 const MODULES=[{title:'Fundamentos',lessons:['Problema antes da solução','Hipóteses que dá para testar']},{title:'Validação',lessons:['Entrevistas com clientes','Evidência e margem']}];
 
@@ -33,7 +32,7 @@ export function PreviewShell({mode}:{mode:'lesson'|'interview'}){
               <div className="ev-lesson-actions"><button className="ev-button lime" disabled><CheckCircle2 size={17}/>Marcar aula concluída</button><a className="ev-button outline" href="?">Próxima aula <ArrowRight size={16}/></a></div></section>
             <aside className="ev-lesson-right"><section className="ev-panel"><h2>Conteúdo do curso</h2><progress value={1} max={4}/>{MODULES.map(m=><details key={m.title} open><summary>{m.title}</summary>{m.lessons.map(l=><a key={l} href="?">○ {l}</a>)}</details>)}</section><section className="ev-panel"><h2>Ferramentas da aula</h2><p>Nenhum material na prévia.</p></section></aside>
           </div></>
-        :<><div className="ev-heading"><div><span className="ev-eyebrow">INTELLIGENCE / CAPACITADORES</span><h1>Entrevista do avatar</h1><p>O avatar do proprietário entrevista o capacitador para montar o avatar dele. A saída é sempre um rascunho (DRAFT), revisado antes de qualquer uso.</p></div></div><IntelligenceMeeting mode="interview"/></>}
+        :<><div className="ev-heading"><div><span className="ev-eyebrow">INTELLIGENCE / CAPACITADORES</span><h1>Entrevista do avatar</h1><p>O avatar do proprietário entrevista o capacitador para montar o avatar dele. A saída é sempre um rascunho (DRAFT), revisado antes de qualquer uso.</p></div></div><MeetingEntryCard mode="interview" title="Sala de entrevista" description="Abra a sala junto com o capacitador. A conversa fica no profissional, o rascunho sai ao final e a gravação, se houver, fica só neste computador." action="Abrir a sala"/></>}
       </main>
     </div>
   </div>;

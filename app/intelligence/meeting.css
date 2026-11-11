@@ -1,127 +1,199 @@
-/* Reunião com o avatar do Intelligence. Tokens do EVOLU Training: preto e papel, lima pontual, bordas, Montserrat. */
-.ev-meet{--black:#090b0c;--stage:#111516;--tile:#1b2020;--line-dark:#303736;--on-dark:#eef0ed;--on-dark-muted:#c9cbc6;--kicker:#9ea5a1;--lime:#d8fc63;--on-lime:#101310;--lime-text:#4b6c1e;--line:#e3e5e0;--ink:#151819;--muted:#6f746f;--error-bg:#f9e6e1;--error-border:#edc6b8;--error-ink:#822e23;
-  container-type:inline-size;font-family:Montserrat,Arial,sans-serif;color:var(--ink);margin:20px 0 24px}
+/* Sala com o avatar do Intelligence. Estrutura de videochamada (sala de espera clara, sala escura em tela cheia,
+   barra inferior com botões redondos, painel lateral) com os tokens do EVOLU Training: preto e papel, lima pontual,
+   Montserrat, raios 5–8 px (pill 30, diálogo 12). Fica fora do .ev-shell (portal), por isso redefine o básico. */
+.ev-meet{--black:#090b0c;--tile:#1b2020;--tile-2:#242a29;--ctl:#2a3030;--ctl-hover:#343b3a;--line-dark:#303736;--on-dark:#eef0ed;--on-dark-muted:#c9cbc6;--kicker:#9ea5a1;
+  --lime:#d8fc63;--on-lime:#101310;--lime-text:#4b6c1e;--lime-border:#b4d933;--paper:#f5f5f2;--line:#e3e5e0;--line-strong:#bfc6be;--ink:#151819;--muted:#6f746f;
+  --error-bg:#f9e6e1;--error-border:#edc6b8;--error-ink:#822e23;
+  position:fixed;inset:0;z-index:60;font:400 14px/1.55 Montserrat,Arial,sans-serif;color:var(--ink);overflow:hidden}
+.ev-meet.is-light{background:#fff}
+.ev-meet.is-call{background:var(--black);color:var(--on-dark)}
 .ev-meet *{box-sizing:border-box}
-.ev-meet button,.ev-meet input{font-family:Montserrat,Arial,sans-serif}
-.ev-meet button{cursor:pointer}
-.ev-meet button:focus-visible,.ev-meet input:focus-visible{outline:2px solid #accc32;outline-offset:3px}
-.ev-meet label{display:flex;align-items:center;gap:9px;margin:0;font-size:12px;color:var(--ink)}
+.ev-meet h1,.ev-meet h2,.ev-meet h3{font-family:Montserrat,Arial,sans-serif;color:inherit;margin:0}
+.ev-meet p{margin:0;color:inherit;line-height:1.6}
+.ev-meet button,.ev-meet input,.ev-meet summary{font-family:Montserrat,Arial,sans-serif}
+.ev-meet button{cursor:pointer;margin:0}
+.ev-meet button:disabled{cursor:not-allowed;opacity:.45}
+.ev-meet button:focus-visible,.ev-meet input:focus-visible,.ev-meet summary:focus-visible{outline:2px solid #accc32;outline-offset:3px}
+.ev-meet label{display:flex;align-items:center;gap:9px;margin:0;font-size:12px;color:inherit}
 .ev-meet input[type=checkbox]{display:inline-block;width:16px;height:16px;margin:0;padding:0;accent-color:#7f9c45;flex:none}
 .ev-meet input[type=range]{display:inline-block;width:120px;margin:0;padding:0;border:0;accent-color:#7f9c45}
+.ev-meet .ev-eyebrow{font-size:10px;letter-spacing:.19em;color:#69716b;font-weight:700;text-transform:uppercase}
 
-/* ---------- sala de espera ---------- */
-.ev-meet-lobby{display:grid;grid-template-columns:minmax(0,1fr);gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
-.ev-meet-lobby-preview{position:relative;aspect-ratio:16/9;background:var(--black);display:grid;place-items:center}
-.ev-meet-lobby-preview video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.ev-meet-lobby-off{display:grid;justify-items:center;gap:8px;color:var(--on-dark-muted);font-size:12px}
-.ev-meet-chip{position:absolute;left:12px;bottom:12px;background:#090b0ccc;color:var(--on-dark);border:1px solid var(--line-dark);border-radius:30px;padding:5px 11px;font-size:10px;font-weight:600}
-.ev-meet-lobby-body{padding:22px}
-.ev-meet-lobby-body h2{font-size:19px;letter-spacing:-.028em;font-weight:700;margin:8px 0 6px}
-.ev-meet-lobby-body p{font-size:13px;color:var(--muted);line-height:1.65;margin:6px 0}
-.ev-meet-context strong{color:var(--ink)}
-.ev-meet-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 18px;margin:18px 0 14px;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.ev-meet-rate{flex-wrap:wrap}
-.ev-meet-notes{margin:0 0 16px;padding-left:18px;font-size:11px;color:var(--muted);line-height:1.6}
-.ev-meet-lobby-actions{display:flex;gap:12px;flex-wrap:wrap}
-.ev-meet .ev-alert{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:0 0 14px}
-@container (min-width:860px){.ev-meet-lobby{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}.ev-meet-lobby-preview{aspect-ratio:auto;min-height:100%}}
+/* marca */
+.ev-room-brand{display:inline-flex;align-items:center;gap:9px}
+.ev-room-brand img{height:20px;width:auto;display:block}
+.ev-room-brand small{text-transform:uppercase;letter-spacing:.17em;border-left:1px solid #606766;padding-left:8px;font-size:9px;font-weight:600}
 
-/* ---------- chamada ---------- */
-.ev-meet-call{background:var(--black);color:var(--on-dark);border-radius:8px;overflow:hidden;border:1px solid var(--black)}
-.ev-meet-top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line-dark)}
-.ev-meet-title{display:flex;align-items:center;gap:10px;min-width:0}
-.ev-meet-title strong{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ev-meet-live{background:var(--lime);color:var(--on-lime);font-size:9px;font-weight:700;letter-spacing:.16em;border-radius:30px;padding:4px 9px;flex:none}
-.ev-meet-meta{display:flex;align-items:center;gap:10px;flex:none}
-.ev-meet-clock{font-size:12px;font-variant-numeric:tabular-nums;color:var(--on-dark-muted)}
-.ev-meet-rec{display:inline-flex;align-items:center;gap:6px;background:var(--error-bg);color:var(--error-ink);border:1px solid var(--error-border);border-radius:30px;padding:4px 10px;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
-.ev-meet-body{display:grid;grid-template-columns:minmax(0,1fr)}
-@container (min-width:820px){.ev-meet-body.with-panel{grid-template-columns:minmax(0,1fr) 300px}}
+/* botões */
+.ev-meet .ev-pill-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 24px;border-radius:30px;border:1px solid transparent;font-size:13px;font-weight:700;white-space:nowrap}
+.ev-meet .ev-pill-button.lime{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+.ev-meet .ev-pill-button.outline{background:#fff;border-color:var(--line-strong);color:var(--ink)}
+.ev-meet .ev-pill-button.leave{background:var(--error-ink);border-color:var(--error-ink);color:#fff;padding:0;width:64px}
+.ev-meet .ev-round{width:48px;height:48px;border-radius:50%;border:0;display:inline-grid;place-items:center;background:var(--ctl);color:var(--on-dark);padding:0;transition:background .15s}
+.ev-meet .ev-round:hover:not(:disabled){background:var(--ctl-hover)}
+.ev-meet .ev-round.off{background:var(--error-ink);color:#fff}
+.ev-meet .ev-round.active{background:var(--lime);color:var(--on-lime)}
+.ev-meet .ev-round.rec{background:var(--error-bg);color:var(--error-ink)}
+.ev-meet .ev-icon{width:44px;height:44px;border-radius:50%;border:0;background:transparent;color:inherit;display:inline-grid;place-items:center;padding:0}
+.ev-meet .ev-icon:hover:not(:disabled){background:var(--tile-2)}
+.ev-meet .ev-icon.active{background:var(--tile-2);color:var(--lime)}
 
-.ev-meet-stage{position:relative;aspect-ratio:16/9;background:var(--stage);padding:14px;min-height:260px}
-.ev-meet-tile{position:relative;border-radius:8px;background:var(--tile);border:2px solid var(--tile);overflow:hidden;color:var(--on-dark);transition:border-color .15s}
-.ev-meet-tile.speaking{border-color:var(--lime)}
-.ev-meet-tile.avatar{position:absolute;inset:14px;display:grid;place-items:center;padding:0}
-.ev-meet-tile.avatar.thinking .ev-meet-face{opacity:.82}
-.ev-meet-face{height:78%;max-height:340px;width:auto}
+/* ---------- sala de espera (clara) ---------- */
+.ev-lobby{height:100%;display:flex;flex-direction:column;overflow:auto}
+.ev-lobby-head{display:flex;justify-content:space-between;align-items:center;padding:18px 28px;color:var(--ink)}
+.ev-lobby-x{width:44px;height:44px;border:0;border-radius:50%;background:transparent;color:var(--ink);display:grid;place-items:center}
+.ev-lobby-x:hover{background:var(--paper)}
+.ev-lobby-main{flex:1;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);gap:56px;align-items:center;width:100%;max-width:1240px;margin:0 auto;padding:12px 32px 48px}
+.ev-lobby-preview{position:relative;aspect-ratio:16/9;background:var(--tile);border-radius:8px;overflow:hidden;display:grid;place-items:center;color:var(--on-dark)}
+.ev-lobby-preview video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.ev-lobby-off{display:grid;justify-items:center;gap:14px;font-size:14px;color:var(--on-dark-muted)}
+.ev-lobby-name{position:absolute;left:16px;top:14px;font-size:13px;font-weight:600;color:#fff;text-shadow:0 1px 2px #0008}
+.ev-lobby-toggles{position:absolute;left:0;right:0;bottom:16px;display:flex;justify-content:center;gap:14px}
+.ev-lobby-toggles .ev-round{width:54px;height:54px;background:#ffffff26;border:1px solid #ffffff59;backdrop-filter:blur(4px)}
+.ev-lobby-toggles .ev-round.off{background:var(--error-ink);border-color:var(--error-ink)}
+.ev-lobby-side{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.ev-lobby-side h1{font-size:30px;font-weight:600;letter-spacing:-.035em;line-height:1.2}
+.ev-lobby-who{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.ev-lobby-dot{width:34px;height:34px;border-radius:50%;background:var(--tile);overflow:hidden;display:grid;place-items:end center;flex:none}
+.ev-lobby-dot svg{width:34px;height:auto;margin-bottom:-4px}
+.ev-lobby-context{font-size:12px;color:var(--muted)}
+.ev-lobby-side .ev-pill-button{margin-top:6px;min-width:220px}
+.ev-lobby-error{font-size:12px;color:var(--error-ink);background:var(--error-bg);border:1px solid var(--error-border);border-radius:5px;padding:8px 12px}
+.ev-lobby-more{font-size:12px;color:var(--muted);display:grid;gap:10px;justify-items:center}
+.ev-lobby-more summary{cursor:pointer;font-weight:600;color:var(--ink);list-style:none;padding:6px 10px;border-radius:30px}
+.ev-lobby-more summary::-webkit-details-marker{display:none}
+.ev-lobby-more summary:hover{background:var(--paper)}
+.ev-lobby-notes{list-style:none;margin:8px 0 0;padding:14px 0 0;border-top:1px solid var(--line);display:grid;gap:6px;font-size:11px;color:var(--muted);max-width:380px;text-align:left}
+.ev-lobby-notes li{padding-left:14px;position:relative}
+.ev-lobby-notes li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:var(--lime-border)}
+.ev-room-initial{width:96px;height:96px;border-radius:50%;background:var(--tile-2);border:1px solid var(--line-dark);display:grid;place-items:center;font-size:36px;font-weight:600;color:var(--on-dark)}
+
+.ev-left-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+.ev-left-body h1{font-size:30px;font-weight:600;letter-spacing:-.035em}
+.ev-left-body p{color:var(--muted);font-size:13px}
+.ev-left-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+
+/* ---------- sala (escura, tela cheia) ---------- */
+.ev-room{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto}
+.ev-room-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 20px;min-height:56px}
+.ev-room-head .ev-room-brand{color:var(--on-dark)}
+.ev-room-flags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ev-room-live{background:var(--lime);color:var(--on-lime);font-size:9px;font-weight:700;letter-spacing:.16em;border-radius:30px;padding:5px 10px}
+.ev-room-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-dark);background:var(--tile);color:var(--on-dark-muted);border-radius:30px;padding:4px 10px;font-size:10px;font-weight:600}
+.ev-room-rec{display:inline-flex;align-items:center;gap:6px;background:var(--error-bg);color:var(--error-ink);border:1px solid var(--error-border);border-radius:30px;padding:4px 10px;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.ev-room-main{display:flex;gap:16px;padding:0 16px;min-height:0;position:relative}
+.ev-room-stage{position:relative;flex:1;min-width:0;min-height:0}
+
+.ev-tile{border-radius:8px;background:var(--tile);overflow:hidden;color:var(--on-dark);border:0;padding:0}
+.ev-tile.speaking{box-shadow:inset 0 0 0 3px var(--lime)}
+.ev-tile.avatar{position:absolute;inset:0;display:grid;place-items:center;width:100%;height:100%}
+.ev-tile.avatar.thinking .ev-meet-face{opacity:.8}
+.ev-meet-face{height:min(72%,560px);width:auto;max-width:90%}
 .ev-meet-face .av-shirt{fill:#3a4241}.ev-meet-face .av-skin{fill:#e8c4a2}.ev-meet-face .av-skin-shade{fill:#d3a985}.ev-meet-face .av-hair{fill:#2b2622}
-.ev-meet-face .av-line,.ev-meet-face .av-nose{stroke:#2a2522}.ev-meet-face .av-nose{stroke:#b98c6a}.ev-meet-face .av-eye{fill:#2a2522}.ev-meet-face .av-mouth{fill:#7a3b33}
-.ev-meet-name{position:absolute;left:10px;bottom:10px;display:inline-flex;align-items:center;gap:7px;background:#090b0cd9;border-radius:5px;padding:5px 9px;font-size:11px;font-weight:600;max-width:calc(100% - 20px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ev-meet-name small{font-size:10px;font-weight:500;color:var(--kicker)}
-.ev-meet-tile.me{position:absolute;right:24px;top:24px;width:min(30%,220px);aspect-ratio:16/10;display:grid;place-items:center;border-color:var(--line-dark);z-index:2}
-.ev-meet-tile.me.speaking{border-color:var(--lime)}
-.ev-meet-tile.me video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
-.ev-meet-tile.me .ev-meet-name{left:6px;bottom:6px;padding:3px 7px;font-size:10px}
-.ev-meet-initial{width:42px;height:42px;border-radius:50%;background:#242a29;border:1px solid var(--line-dark);display:grid;place-items:center;font-size:15px;font-weight:700}
-.ev-meet-caption{position:absolute;left:50%;transform:translateX(-50%);bottom:52px;width:min(88%,720px);background:#090b0ce6;border:1px solid var(--line-dark);border-radius:5px;padding:9px 13px;font-size:14px;line-height:1.5;z-index:3;max-height:40%;overflow:auto}
-.ev-meet-caption .who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--kicker);margin-bottom:3px}
-.ev-meet-caption .who em{font-style:normal;background:var(--lime);color:var(--on-lime);border-radius:30px;padding:2px 8px;font-size:9px;letter-spacing:.04em}
-.ev-meet-caption .pending{color:#7f8682}
+.ev-meet-face .av-line{stroke:#2a2522}.ev-meet-face .av-nose{stroke:#b98c6a}.ev-meet-face .av-eye{fill:#2a2522}.ev-meet-face .av-mouth{fill:#7a3b33}
+.ev-tile-name{position:absolute;left:16px;bottom:14px;font-size:13px;font-weight:600;color:#fff;text-shadow:0 1px 3px #000a;max-width:calc(100% - 32px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-tile-name small{font-weight:500;color:var(--on-dark-muted);font-size:11px}
+.ev-tile-state{position:absolute;left:14px;top:14px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;background:#090b0cb3;border-radius:30px;padding:4px 10px;color:var(--on-dark-muted)}
+.ev-tile.avatar.speaking .ev-tile-state{color:var(--on-lime);background:var(--lime)}
+.ev-tile.me{position:absolute;right:16px;bottom:16px;width:clamp(150px,22%,280px);aspect-ratio:16/9;display:grid;place-items:center;background:var(--tile-2);z-index:2;box-shadow:0 3px 16px #00000066}
+.ev-tile.me video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.ev-tile.me .ev-room-initial{width:52px;height:52px;font-size:20px}
+.ev-tile.me .ev-tile-name{left:10px;bottom:8px;font-size:11px}
+.ev-tile-muted{position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:50%;background:#090b0cb3;display:grid;place-items:center}
+.ev-room-caption{position:absolute;left:24px;right:calc(clamp(150px,22%,280px) + 40px);bottom:48px;max-width:820px;margin:0 auto;background:#090b0cc7;border-radius:8px;padding:10px 16px;z-index:3;max-height:34%;overflow:auto}
+.ev-room-caption .who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;font-weight:700;color:var(--kicker);margin-bottom:2px}
+.ev-room-caption .who em{font-style:normal;background:var(--lime);color:var(--on-lime);border-radius:30px;padding:2px 8px;font-size:9px;letter-spacing:.04em}
+.ev-room-caption p{font-size:17px;line-height:1.5;color:#fff}
+.ev-room-caption .pending{color:#8a918d}
 
-.ev-meet-panel{background:#fff;color:var(--ink);display:flex;flex-direction:column;min-height:320px;max-height:520px;border-top:1px solid var(--line-dark)}
-@container (min-width:820px){.ev-meet-panel{border-top:0;border-left:1px solid var(--line-dark);max-height:none;min-height:0;contain:size}}
-.ev-meet-tabs{display:flex;align-items:stretch;border-bottom:1px solid var(--line)}
-.ev-meet .ev-meet-tabs button{border:0;border-bottom:2px solid transparent;background:transparent;padding:12px 12px 10px;font-size:11px;font-weight:700;color:var(--muted);border-radius:0}
-.ev-meet-tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--lime)}
-.ev-meet-tabs .ev-meet-close{margin-left:auto;display:grid;place-items:center;padding:0 12px;color:var(--ink)}
-.ev-meet-chat{display:flex;flex-direction:column;min-height:0;flex:1}
-.ev-meet-log{list-style:none;margin:0;padding:12px;overflow:auto;flex:1;min-height:180px;display:flex;flex-direction:column;gap:8px}
-.ev-meet-log li{font-size:12px;line-height:1.55;background:#f5f5f2;border:1px solid var(--line);border-radius:5px;padding:8px 10px;overflow-wrap:anywhere}
-.ev-meet-log li.me{background:#fff;border-color:#bfc6be;align-self:flex-end;max-width:92%}
-.ev-meet-log li.system{background:transparent;border-style:dashed;color:var(--muted)}
-.ev-meet-log li.end{padding:0;border:0;background:none}
-.ev-meet-log .who{display:block;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--lime-text);margin-bottom:2px}
-.ev-meet-log li.me .who{color:var(--muted)}
-.ev-meet-sources{padding:8px 12px;border-top:1px solid var(--line);font-size:10px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.ev-meet-input{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line)}
-.ev-meet-input input{flex:1;min-width:0;display:block;margin:0;padding:10px 12px;border:1px solid #bfc6be;border-radius:4px;font-size:13px;background:#fff;color:var(--ink)}
-.ev-meet-input .ev-button{min-height:40px;padding:0 13px}
-.ev-meet-info{padding:14px;overflow:auto;font-size:12px}
-.ev-meet-segments{list-style:none;margin:0 0 14px;padding:0;display:grid;gap:6px}
-.ev-meet-segments li{display:flex;gap:10px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:5px;font-size:11px}
-.ev-meet-segments li span{width:22px;height:22px;flex:none;border-radius:50%;border:1px solid #bfc6be;display:grid;place-items:center;font-size:10px;font-weight:700}
-.ev-meet-segments li.done{color:var(--muted)}.ev-meet-segments li.done span{background:#effacb;border-color:#b4d933}
-.ev-meet-segments li.current{border-color:#b4d933;background:#fafbf8;font-weight:700}.ev-meet-segments li.current span{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
-.ev-meet-coverage progress{width:100%;height:8px;accent-color:#b5ed37}
-.ev-meet-coverage strong{display:block;font-size:12px;margin:4px 0 8px}
-.ev-meet-coverage p{font-size:12px;color:var(--muted);margin:6px 0}
-.ev-meet-facts{margin:12px 0 0;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:6px}
-.ev-meet-facts div{display:grid;grid-template-columns:62px minmax(0,1fr);gap:8px}
-.ev-meet-facts dt{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#69716b}
-.ev-meet-facts dd{margin:0;font-size:11px;overflow-wrap:anywhere}
+.ev-room-panel{width:360px;flex:none;background:#fff;color:var(--ink);border-radius:8px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.ev-room-panel-head{display:flex;justify-content:space-between;align-items:center;padding:14px 12px 10px 20px}
+.ev-room-panel-head h2{font-size:16px;font-weight:700;letter-spacing:-.02em}
+.ev-room-panel .ev-icon{color:var(--ink)}
+.ev-room-panel .ev-icon:hover:not(:disabled){background:var(--paper)}
+.ev-room-chat{display:flex;flex-direction:column;min-height:0;flex:1}
+.ev-room-log{list-style:none;margin:0;padding:4px 16px 12px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:12px}
+.ev-room-log li{font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.ev-room-log .who{display:block;font-size:11px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.ev-room-log li.me{background:var(--paper);border-radius:8px;padding:8px 12px;align-self:flex-end;max-width:90%}
+.ev-room-log li.me .who{color:var(--muted)}
+.ev-room-log li.system{color:var(--muted);font-size:12px}
+.ev-room-log li.system .who{color:var(--muted)}
+.ev-room-log li.end{padding:0;background:none}
+.ev-room-sources{padding:8px 16px;font-size:10px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.ev-room-sources .ev-pill{border:1px solid #cbd0c7;background:#f3f4f1;color:#404640;border-radius:30px;font-size:10px;font-weight:700;padding:4px 9px}
+.ev-room-input{display:flex;gap:6px;align-items:center;margin:8px 12px 14px;background:var(--paper);border-radius:30px;padding:4px 4px 4px 16px}
+.ev-room-input input{flex:1;min-width:0;display:block;margin:0;padding:10px 0;border:0;background:transparent;font-size:13px;color:var(--ink)}
+.ev-room-input input:focus-visible{outline:none}
+.ev-room-input:focus-within{box-shadow:0 0 0 2px #accc32}
+.ev-room-input .send{width:40px;height:40px;color:var(--lime-text)}
+.ev-room-info{padding:4px 20px 20px;overflow:auto;font-size:12px}
+.ev-room-segments{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:4px}
+.ev-room-segments li{display:flex;gap:12px;align-items:center;padding:10px;border-radius:5px;font-size:12px}
+.ev-room-segments li span{width:24px;height:24px;flex:none;border-radius:50%;border:1px solid var(--line-strong);display:grid;place-items:center;font-size:10px;font-weight:700}
+.ev-room-segments li.done{color:var(--muted)}.ev-room-segments li.done span{background:#effacb;border-color:var(--lime-border)}
+.ev-room-segments li.current{background:#f6fde2;font-weight:700}.ev-room-segments li.current span{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
+.ev-room-coverage{display:grid;gap:8px}
+.ev-room-coverage progress{width:100%;height:8px;accent-color:#b5ed37}
+.ev-room-coverage p{font-size:12px;color:var(--muted)}
+.ev-room-coverage .ev-pill-button{min-height:40px;font-size:12px;justify-self:start}
+.ev-room-facts{margin:16px 0 0;border-top:1px solid var(--line);padding-top:12px;display:grid;gap:8px}
+.ev-room-facts div{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px}
+.ev-room-facts dt{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#69716b}
+.ev-room-facts dd{margin:0;font-size:11px;overflow-wrap:anywhere}
 
-.ev-meet-controls{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;padding:12px;border-top:1px solid var(--line-dark)}
-.ev-meet .ev-meet-ctl{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 14px;border:1px solid var(--line-dark);background:var(--tile);color:var(--on-dark);border-radius:5px;font-size:11px;font-weight:700}
-.ev-meet-ctl:hover:not(:disabled){background:#242a29}
-.ev-meet-ctl[aria-pressed=true]{border-color:#5d6b3a}
-.ev-meet-ctl.advance{background:var(--lime);border-color:var(--lime);color:var(--on-lime)}
-.ev-meet-ctl.rec[aria-pressed=true]{background:var(--error-bg);border-color:var(--error-border);color:var(--error-ink)}
-.ev-meet-ctl.leave{background:var(--error-ink);border-color:var(--error-ink);color:#fff}
-.ev-meet-ctl:disabled{opacity:.45;cursor:not-allowed}
-@container (max-width:620px){
-  .ev-meet-ctl span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  .ev-meet-ctl{padding:0 12px;min-width:44px;justify-content:center}
-  .ev-meet-ctl.advance span,.ev-meet-ctl.leave span{position:static;width:auto;height:auto;clip:auto}
-  .ev-meet-stage{aspect-ratio:4/5;padding:10px}
-  .ev-meet-tile.avatar{inset:10px}
-  .ev-meet-tile.me{right:18px;top:18px;width:34%}
-  .ev-meet-options{grid-template-columns:1fr}
-  .ev-meet-caption{bottom:44px;font-size:13px;width:92%;max-height:34%}
-  .ev-meet-tile.me{aspect-ratio:3/4;width:26%;right:16px;top:16px}
-  .ev-meet-tile.me .ev-meet-name{font-size:0;gap:0;padding:3px 5px}
-  .ev-meet-tile.me .ev-meet-name small{display:none}
-  .ev-meet-initial{width:30px;height:30px;font-size:12px}
-  .ev-meet-tile.avatar .ev-meet-name small{display:none}
+.ev-room-bar{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;padding:12px 20px 16px;min-height:80px}
+.ev-room-bar-left{display:flex;align-items:center;gap:10px;min-width:0;font-size:14px;font-weight:500}
+.ev-room-sep{color:var(--line-dark)}
+.ev-room-title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ev-room-clock{font-size:12px;color:var(--kicker);font-variant-numeric:tabular-nums;flex:none}
+.ev-room-bar-center{display:flex;align-items:center;gap:10px}
+.ev-room-bar-right{display:flex;justify-content:flex-end;gap:6px}
+
+@media(max-width:1000px){
+  .ev-room-panel{position:absolute;right:16px;top:0;bottom:0;z-index:5;width:min(360px,calc(100% - 32px))}
+}
+@media(max-width:860px){
+  .ev-lobby-main{grid-template-columns:1fr;gap:28px;padding:8px 16px 32px;align-items:start}
+  .ev-lobby-head{padding:14px 16px}
+  .ev-lobby-side h1,.ev-left-body h1{font-size:24px}
+}
+@media(max-width:720px){
+  .ev-room-head{padding:10px 12px}
+  .ev-room-chip{display:none}
+  .ev-room-main{padding:0 8px}
+  .ev-room-panel{right:0;left:0;width:auto}
+  .ev-tile.me{width:30%;aspect-ratio:3/4;right:10px;top:10px;bottom:auto}
+  .ev-tile.avatar>.ev-tile-name{display:none}
+  .ev-tile.me .ev-room-initial{width:38px;height:38px;font-size:15px}
+  .ev-tile.me .ev-tile-name{display:none}
+  .ev-tile-name{left:12px;bottom:10px;font-size:12px}
+  .ev-room-caption{bottom:10px;left:10px;right:10px;padding:8px 12px}
+  .ev-room-caption p{font-size:14px}
+  .ev-room-bar{grid-template-columns:1fr;justify-items:center;gap:8px;padding:10px 8px 14px}
+  .ev-room-bar-left{display:none}
+  .ev-room-bar-center{order:1;flex-wrap:wrap;justify-content:center;gap:8px}
+  .ev-room-bar-right{order:2}
+  .ev-meet .ev-round{width:44px;height:44px}
+  .ev-meet .ev-advance span{display:none}
+  .ev-meet .ev-advance{width:56px;padding:0}
 }
 
-.ev-meet-dialog{border:1px solid var(--line);border-radius:12px;padding:24px;width:min(460px,92vw);background:#fff;color:var(--ink);box-shadow:0 20px 80px #00000044}
+.ev-meet-dialog{border:1px solid var(--line);border-radius:12px;padding:24px;width:min(500px,92vw);max-height:88vh;overflow:auto;background:#fff;color:var(--ink);box-shadow:0 20px 80px #00000044;font-family:Montserrat,Arial,sans-serif}
 .ev-meet-dialog::backdrop{background:#090b0c99}
-.ev-meet-dialog h3{font-size:16px;font-weight:700;margin:0 0 8px}
+.ev-meet-dialog h3{font-size:18px;font-weight:700;letter-spacing:-.02em;margin:0 0 10px}
 .ev-meet-dialog p{font-size:13px;color:var(--muted);line-height:1.65;margin:0 0 18px}
+.ev-meet-dialog ul{margin:0 0 12px;padding-left:18px;display:grid;gap:8px;font-size:13px;line-height:1.55;color:var(--ink)}
+.ev-meet-dialog .ev-meet-dialog-note{font-size:12px;background:var(--paper);border-radius:5px;padding:8px 12px;margin:0 0 14px}
+.ev-meet .ev-meet-consent{font-size:13px;font-weight:600;margin:0 0 18px;align-items:flex-start;color:var(--ink)}
+.ev-meet .ev-meet-consent input{margin-top:3px}
 .ev-meet-dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.ev-meet-dialog .ev-pill-button{min-height:42px;padding:0 18px}
 
-/* Entrada da aula com o avatar dentro da tela R04 */
-.ev-meet-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border:1px solid var(--line,#e3e5e0);border-left:3px solid #d8fc63;border-radius:5px;padding:14px 16px;margin:-8px 0 22px;background:#fafbf8}
+/* Entradas dentro do portal (R04 e /admin) */
+.ev-meet-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;border:1px solid #e3e5e0;border-left:3px solid #d8fc63;border-radius:5px;padding:14px 16px;margin:-8px 0 22px;background:#fafbf8}
 .ev-meet-entry strong{display:block;font-size:13px}
 .ev-meet-entry span{display:block;font-size:11px;color:#6f746f}
+.ev-meet-card{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.ev-meet-card p{max-width:640px}
 @media(prefers-reduced-motion:reduce){.ev-meet *{transition:none!important;animation:none!important}}

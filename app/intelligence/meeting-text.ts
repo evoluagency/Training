@@ -39,3 +39,19 @@ export function formatClock(ms:number):string{
 export function coverageLabel(status:string|undefined):string{
   return ({OPEN:'Entrevista em andamento.',PAUSED_CRISIS:'Entrevista pausada.',CLOSED_DRAFT:'Entrevista encerrada. Saída em rascunho (DRAFT).'} as Record<string,string>)[status||'']||'Entrevista não iniciada.';
 }
+
+/**
+ * Política de imagem da aula online. RASCUNHO para revisão do proprietário (e jurídica) antes de valer.
+ * A versão entra no aceite guardado: mudar o texto exige nova versão e novo aceite.
+ */
+export const CAMERA_POLICY={
+  version:'rascunho-0.1',
+  title:'Política de imagem da aula online',
+  points:[
+    'Ligar a câmera é opcional. Você participa da aula do mesmo jeito sem ela e pode desligar a qualquer momento.',
+    'Com a câmera ligada, a EVOLU pode ver e registrar a sua imagem e o seu comportamento visual durante a aula, como numa aula online com professor.',
+    'Finalidade: melhorar as aulas e o avatar e entender como os participantes aprendem. A imagem não é usada para outro fim nem vendida.',
+    'Quem acessa, por quanto tempo a imagem fica guardada e como pedir a exclusão serão informados na versão final desta política.',
+  ],
+  testNote:'Versão de teste: nesta etapa a imagem aparece só na sua tela e ainda não é enviada nem guardada.',
+} as const;

@@ -3,13 +3,16 @@
 // Aula: o participante tira dúvida com o avatar. Entrevista: o avatar do proprietário entrevista o capacitador
 // e a saída é sempre um rascunho (DRAFT).
 //
-// Tudo o que é mídia fica no navegador: voz do avatar (síntese do navegador), reconhecimento de voz do navegador
-// (com aviso), câmera só local e gravação da entrevista só neste computador, com aceite explícito.
-// O participante nunca é gravado. A lógica do avatar roda no Intelligence, via /api/intelligence/*.
+// Layout inspirado nas videochamadas (sala de espera clara, sala escura em tela cheia, barra inferior com botões
+// redondos, painel lateral de chat e roteiro), com as cores, a fonte e o logotipo do Training.
+// Câmera do participante: opcional e real, ligada só com o aceite da política de imagem da aula online.
+// Nesta versão de teste a imagem ainda não é enviada (destino depende de decisão do proprietário).
+// Entrevista: gravação opcional, com aceite, só neste computador. A lógica roda no Intelligence (/api/intelligence/*).
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
-import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X} from 'lucide-react';
+import {createPortal} from 'react-dom';
+import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck} from 'lucide-react';
 import {IllustratedAvatar,type AvatarHandle} from './avatar';
-import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,type MeetingMode} from './meeting-text';
+import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,CAMERA_POLICY,type MeetingMode} from './meeting-text';
 import './meeting.css';
 
 // Respostas JSON do Intelligence (formato definido em src/digital-instructor/live-app.mjs).
@@ -37,10 +40,12 @@ function recognitionCtor():(new()=>SpeechRecognitionLike)|null{
   return w.SpeechRecognition??w.webkitSpeechRecognition??null;
 }
 const MIC_ACK_KEY='evolu-intelligence-mic-ack';
+const CAM_ACK_KEY='evolu-intelligence-camera-policy';
 
-export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMode;contextTitle?:string;onLeave?:()=>void}){
+/** Abre por cima da página (tela cheia). onClose devolve à tela de origem. */
+export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMode;contextTitle?:string;onClose:()=>void}){
   const lesson=mode==='lesson';
-  const [phase,setPhase]=useState<'lobby'|'call'>('lobby');
+  const [phase,setPhase]=useState<'lobby'|'call'|'left'>('lobby');
   const [app,setApp]=useState<R|null>(null);
   const [draft,setDraft]=useState<R|null>(null);
   const [log,setLog]=useState<LogEntry[]>([]);
@@ -56,8 +61,9 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
   const [recording,setRecording]=useState(false);
   const [elapsed,setElapsed]=useState(0);
   const [recElapsed,setRecElapsed]=useState(0);
-  const [panel,setPanel]=useState(true);
-  const [tab,setTab]=useState<'chat'|'info'>('chat');
+  const [panel,setPanel]=useState<'chat'|'info'|null>('chat');
+  const [consentChecked,setConsentChecked]=useState(false);
+  const [startedAt,setStartedAt]=useState(0);
   const [input,setInput]=useState('');
   const [joining,setJoining]=useState(false);
   const [lobbyMic,setLobbyMic]=useState(false);
@@ -69,7 +75,7 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
 
   const avatarRef=useRef<AvatarHandle>(null);
   const meVideo=useRef<HTMLVideoElement>(null),lobbyVideo=useRef<HTMLVideoElement>(null);
-  const micDialog=useRef<HTMLDialogElement>(null),recDialog=useRef<HTMLDialogElement>(null);
+  const micDialog=useRef<HTMLDialogElement>(null),recDialog=useRef<HTMLDialogElement>(null),camDialog=useRef<HTMLDialogElement>(null);
   const logEnd=useRef<HTMLLIElement>(null);
   const live=useRef({busy:false,speaking:false,micOpen:false,inCall:false,speakToken:0,seq:0,voiceOn:true,rate:1.05,
     recognizer:null as SpeechRecognitionLike|null,cam:null as MediaStream|null,rec:null as MediaStream|null,
@@ -84,11 +90,21 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
     const synth=typeof window!=='undefined'&&'speechSynthesis' in window?window.speechSynthesis:null;
     const pick=()=>{if(!synth)return;const v=synth.getVoices();live.current.voice=v.find(x=>x.lang==='pt-BR'&&/google|luciana|francisca|natural/i.test(x.name))??v.find(x=>x.lang==='pt-BR')??v.find(x=>x.lang?.startsWith('pt'))??null};
     pick();synth?.addEventListener?.('voiceschanged',pick);
-    const t=setTimeout(()=>{setHasSynth(Boolean(synth));if(!synth)setVoiceOn(false);setHasRecognition(Boolean(recognitionCtor()));if(window.matchMedia('(max-width: 760px)').matches)setPanel(false)},0);
+    const t=setTimeout(()=>{setHasSynth(Boolean(synth));if(!synth)setVoiceOn(false);setHasRecognition(Boolean(recognitionCtor()));if(window.matchMedia('(max-width: 760px)').matches)setPanel(null)},0);
     return()=>{clearTimeout(t);synth?.removeEventListener?.('voiceschanged',pick)};
   },[]);
 
+  // Tela cheia: trava a rolagem da página enquanto a reunião está aberta.
+  useEffect(()=>{const prev=document.body.style.overflow;document.body.style.overflow='hidden';return()=>{document.body.style.overflow=prev}},[]);
+
   const addLog=useCallback((who:string,text:string,me=false)=>{setLog(l=>[...l,{id:++live.current.seq,who,text,me}])},[]);
+
+  // ---------- diálogos de aceite ----------
+  const confirmDialog=useCallback((dlg:HTMLDialogElement|null)=>new Promise<boolean>(resolve=>{
+    if(!dlg||typeof dlg.showModal!=='function'){resolve(window.confirm(dlg?.querySelector('p')?.textContent||'Confirmar?'));return}
+    live.current.dialogResolve=resolve;dlg.showModal();
+  }),[]);
+  const closeDialog=(dlg:HTMLDialogElement|null,ok:boolean)=>{dlg?.close();const r=live.current.dialogResolve;live.current.dialogResolve=null;r?.(ok)};
 
   // ---------- câmera ----------
   const attachCam=useCallback(()=>{for(const v of [meVideo.current,lobbyVideo.current])if(v)v.srcObject=live.current.cam;setCamOn(Boolean(live.current.cam))},[]);
@@ -98,18 +114,15 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
       if(s.recorder){addLog('Sistema','Pare a gravação antes de desligar a câmera.');return}
       s.cam?.getTracks().forEach(t=>t.stop());s.cam=null;
     }else if(!s.cam){
+      if(lesson){
+        let accepted=false;try{accepted=localStorage.getItem(CAM_ACK_KEY)===CAMERA_POLICY.version}catch{/* sem armazenamento */}
+        if(!accepted){setConsentChecked(false);accepted=await confirmDialog(camDialog.current);if(!accepted)return;try{localStorage.setItem(CAM_ACK_KEY,CAMERA_POLICY.version)}catch{/* sem armazenamento */}}
+      }
       try{s.cam=await navigator.mediaDevices.getUserMedia({video:true})}catch{setLobbyNotice('Não consegui abrir a câmera. A reunião segue sem vídeo.');addLog('Sistema','Não consegui abrir a câmera. A reunião segue sem vídeo.')}
     }
     attachCam();
-  },[addLog,attachCam]);
+  },[addLog,attachCam,confirmDialog,lesson]);
   useEffect(()=>{attachCam()},[phase,attachCam]);
-
-  // ---------- diálogos de aceite ----------
-  const confirmDialog=useCallback((dlg:HTMLDialogElement|null)=>new Promise<boolean>(resolve=>{
-    if(!dlg||typeof dlg.showModal!=='function'){resolve(window.confirm(dlg?.querySelector('p')?.textContent||'Confirmar?'));return}
-    live.current.dialogResolve=resolve;dlg.showModal();
-  }),[]);
-  const closeDialog=(dlg:HTMLDialogElement|null,ok:boolean)=>{dlg?.close();const r=live.current.dialogResolve;live.current.dialogResolve=null;r?.(ok)};
 
   // ---------- ouvir: microfone aberto como numa chamada ----------
   const pauseListening=useCallback(()=>{
@@ -264,7 +277,7 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
 
   // ---------- entrar e sair ----------
   const join=async()=>{
-    setJoining(true);setLobbyNotice('');setLog([]);setSources([]);setDraft(null);setCaption(null);
+    setJoining(true);setLobbyNotice('');setStartedAt(Date.now());setElapsed(0);setLog([]);setSources([]);setDraft(null);setCaption(null);
     try{
       let state=await api('state');
       if(lesson){
@@ -288,9 +301,9 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
       if(lesson&&app?.lesson?.run_status==='LIVE')await api('lesson/end',{});
       if(!lesson&&app?.interview?.status==='OPEN'){const r=await api('interview/finish',{});if(r.draft)setDraft(r.draft)}
     }catch{/* Intelligence fora: sai assim mesmo */}
-    s.inCall=false;setCaption(null);setPhase('lobby');setElapsed(0);
-    onLeave?.();
+    s.inCall=false;setCaption(null);setPhase('left');setElapsed(0);
   };
+  const close=()=>{const s=live.current;s.cam?.getTracks().forEach(t=>t.stop());s.cam=null;setCamOn(false);onClose()};
   const downloadDraft=()=>{if(draft)download(new Blob([JSON.stringify(draft,null,2)],{type:'application/json'}),`rascunho-avatar-${draft.interviewee_id||'capacitador'}.json`)};
 
   // Encerrar a câmera, a gravação e a fala ao sair da tela.
@@ -311,83 +324,99 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
   const title=lesson?(l?.title||'Aula com o avatar'):'Entrevista do capacitador';
   const cov=interview?.coverage??{covered:0,total:13};
 
-  return <section className="ev-meet" aria-label={lesson?'Aula com o avatar':'Entrevista com o avatar'}>
-    {phase==='lobby'&&<div className="ev-meet-lobby">
-      <div className="ev-meet-lobby-preview">
-        <video ref={lobbyVideo} autoPlay muted playsInline hidden={!camOn}/>
-        {!camOn&&<div className="ev-meet-lobby-off"><VideoOff size={22}/><span>Câmera desligada</span></div>}
-        <span className="ev-meet-chip">{lesson?'Só você vê esta imagem':'Só você vê esta imagem até gravar'}</span>
-      </div>
-      <div className="ev-meet-lobby-body">
-        <span className="ev-eyebrow">{lesson?'SALA DA AULA / INTELLIGENCE':'ENTREVISTA / INTELLIGENCE'}</span>
-        <h2>{lesson?'Aula com o avatar do proprietário':'Entrevista do capacitador'}</h2>
-        <p>{lesson
-          ?'O avatar apresenta a aula piloto e responde às suas dúvidas por voz ou pelo chat. É uma versão digital feita com IA, com respostas baseadas no material da aula.'
-          :'O avatar do proprietário conduz uma conversa profissional para montar o avatar do capacitador. Tudo o que sair daqui vira um rascunho (DRAFT) revisado antes de qualquer uso.'}</p>
-        {contextTitle&&<p className="ev-meet-context">Aula aberta no Training: <strong>{contextTitle}</strong>. O avatar usa a aula piloto do Intelligence.</p>}
-        <div className="ev-meet-options">
-          <label><input type="checkbox" checked={camOn} onChange={e=>void setCam(e.target.checked)}/> Ligar a minha câmera</label>
-          <label><input type="checkbox" checked={lobbyMic} disabled={!hasRecognition} onChange={e=>setLobbyMic(e.target.checked)}/> Entrar com o microfone aberto</label>
-          <label><input type="checkbox" checked={voiceOn} disabled={!hasSynth} onChange={e=>setVoiceOn(e.target.checked)}/> Voz do avatar</label>
-          <label className="ev-meet-rate">Velocidade da voz <input type="range" min="0.8" max="1.4" step="0.05" value={rate} onChange={e=>setRate(Number(e.target.value))} aria-valuetext={rate.toFixed(2)+'x'}/></label>
+  const timeNow=startedAt?new Date(startedAt+elapsed).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+  const togglePanel=(p:'chat'|'info')=>setPanel(v=>v===p?null:p);
+  const brand=(dark:boolean)=><span className="ev-room-brand"><img src={dark?'/brand/evolu-white.png':'/brand/evolu-black.png'} alt="EVOLU"/><small>Training</small></span>;
+
+  const node=<div className={'ev-meet'+(phase==='call'?' is-call':' is-light')} role="dialog" aria-modal="true" aria-label={lesson?'Aula com o avatar':'Entrevista com o avatar'}>
+    {phase==='lobby'&&<div className="ev-lobby">
+      <header className="ev-lobby-head">{brand(false)}<button className="ev-lobby-x" onClick={close} aria-label="Fechar e voltar"><X size={20}/></button></header>
+      <div className="ev-lobby-main">
+        <div className="ev-lobby-preview">
+          <video ref={lobbyVideo} autoPlay muted playsInline hidden={!camOn}/>
+          {!camOn&&<div className="ev-lobby-off"><span className="ev-room-initial">{lesson?'P':'C'}</span><span>A câmera está desligada</span></div>}
+          <span className="ev-lobby-name">{lesson?'Você':'Você (capacitador)'}</span>
+          <div className="ev-lobby-toggles">
+            <button className={'ev-round'+(lobbyMic?'':' off')} onClick={()=>setLobbyMic(v=>!v)} disabled={!hasRecognition} aria-pressed={lobbyMic} aria-label={lobbyMic?'Entrar com o microfone fechado':'Entrar com o microfone aberto'} title="Microfone">{lobbyMic?<Mic size={20}/>:<MicOff size={20}/>}</button>
+            <button className={'ev-round'+(camOn?'':' off')} onClick={()=>void setCam(!camOn)} aria-pressed={camOn} aria-label={camOn?'Desligar a câmera':'Ligar a câmera'} title="Câmera">{camOn?<Video size={20}/>:<VideoOff size={20}/>}</button>
+          </div>
         </div>
-        <ul className="ev-meet-notes">
-          <li>{lesson?'A câmera aparece só para você. Nenhuma imagem vai ao servidor e o participante nunca é gravado.':'A câmera aparece só para você. Gravar é opcional, pede o seu aceite e o arquivo fica só neste computador.'}</li>
-          <li>{hasRecognition?'Microfone: reconhecimento de voz do navegador. No Chrome, o áudio vai para o Google. O chat funciona sempre.':'Este navegador não tem reconhecimento de voz. Use o chat.'}</li>
-        </ul>
-        {lobbyNotice&&<div className="ev-alert error" role="alert">{lobbyNotice}</div>}
-        {draft&&<div className="ev-alert" role="status">Entrevista encerrada. O rascunho (DRAFT) está pronto.<button className="ev-button outline" onClick={downloadDraft}><Download size={15}/> Baixar rascunho</button></div>}
-        <div className="ev-meet-lobby-actions">
-          <button className="ev-button lime" onClick={join} disabled={joining}>{joining?'Entrando…':lesson?'Entrar na aula':'Iniciar entrevista'}</button>
-          {onLeave&&<button className="ev-button outline" onClick={()=>{void setCam(false);onLeave()}}>Voltar à aula</button>}
+        <div className="ev-lobby-side">
+          <span className="ev-eyebrow">{lesson?'AULA COM O AVATAR':'ENTREVISTA DO CAPACITADOR'}</span>
+          <h1>Pronto para participar?</h1>
+          <div className="ev-lobby-who"><span className="ev-lobby-dot" aria-hidden="true"><IllustratedAvatar speaking={false} label=""/></span><span>{lesson?'O avatar do proprietário já está na sala.':'O avatar do proprietário vai conduzir a conversa.'}</span></div>
+          {contextTitle&&<p className="ev-lobby-context">{contextTitle}</p>}
+          <button className="ev-pill-button lime" onClick={join} disabled={joining}>{joining?'Entrando…':lesson?'Participar agora':'Iniciar entrevista'}</button>
+          {lobbyNotice&&<p className="ev-lobby-error" role="alert">{lobbyNotice}</p>}
+          <details className="ev-lobby-more"><summary>Voz e acessibilidade</summary>
+            <label><input type="checkbox" checked={voiceOn} disabled={!hasSynth} onChange={e=>setVoiceOn(e.target.checked)}/> Voz do avatar</label>
+            <label>Velocidade da voz <input type="range" min="0.8" max="1.4" step="0.05" value={rate} onChange={e=>setRate(Number(e.target.value))} aria-valuetext={rate.toFixed(2)+'x'}/></label>
+          </details>
+          <ul className="ev-lobby-notes">
+            <li>{lesson?'Câmera opcional. Ao ligar, você aceita a política de imagem da aula online.':'Câmera opcional. Gravar pede o seu aceite e o arquivo fica só neste computador.'}</li>
+            <li>{hasRecognition?'Microfone pelo reconhecimento de voz do navegador (no Chrome, o áudio vai para o Google). O chat funciona sempre.':'Este navegador não reconhece voz. Use o chat.'}</li>
+            <li>O avatar é uma versão digital feita com IA.</li>
+          </ul>
         </div>
       </div>
     </div>}
 
-    {phase==='call'&&<div className="ev-meet-call">
-      <header className="ev-meet-top">
-        <div className="ev-meet-title"><span className="ev-meet-live">{lesson?(l?.run_status==='LIVE'?'AO VIVO':'ENCERRADA'):(interview?.status==='OPEN'?'EM ANDAMENTO':'ENCERRADA')}</span><strong>{title}</strong></div>
-        <div className="ev-meet-meta">
-          {recording&&<span className="ev-meet-rec" role="status"><Circle size={9} fill="currentColor"/> Gravando {formatClock(recElapsed)}</span>}
-          <span className="ev-meet-clock" aria-label="Tempo de reunião">{formatClock(elapsed)}</span>
+    {phase==='left'&&<div className="ev-lobby ev-left">
+      <header className="ev-lobby-head">{brand(false)}</header>
+      <div className="ev-left-body">
+        <h1>{lesson?'Você saiu da aula':'Entrevista encerrada'}</h1>
+        {draft&&<p>O rascunho (DRAFT) do avatar do capacitador está pronto para revisão.</p>}
+        <div className="ev-left-actions">
+          <button className="ev-pill-button outline" onClick={()=>setPhase('lobby')}>Participar novamente</button>
+          {draft&&<button className="ev-pill-button outline" onClick={downloadDraft}><Download size={16}/> Baixar rascunho</button>}
+          <button className="ev-pill-button lime" onClick={close}>{lesson?'Voltar à aula':'Voltar ao painel'}</button>
+        </div>
+      </div>
+    </div>}
+
+    {phase==='call'&&<div className={'ev-room'+(panel?' with-panel':'')}>
+      <header className="ev-room-head">
+        {brand(true)}
+        <div className="ev-room-flags">
+          {recording&&<span className="ev-room-rec" role="status"><Circle size={9} fill="currentColor"/> Gravando {formatClock(recElapsed)}</span>}
+          {lesson&&camOn&&<span className="ev-room-chip"><ShieldCheck size={13}/> Câmera ligada · política aceita</span>}
+          <span className="ev-room-live">{lesson?(l?.run_status==='LIVE'?'AO VIVO':'ENCERRADA'):(interview?.status==='OPEN'?'EM ANDAMENTO':'ENCERRADA')}</span>
         </div>
       </header>
-      <div className={'ev-meet-body'+(panel?' with-panel':'')}>
-        <div className="ev-meet-stage">
-          <button type="button" className={'ev-meet-tile avatar'+(speech.speaking?' speaking':'')+(thinking?' thinking':'')} onClick={()=>{if(speech.speaking)stopSpeaking()}} aria-label={speech.speaking?'Interromper a fala do avatar':avatarLabel}>
+      <div className="ev-room-main">
+        <div className="ev-room-stage">
+          <button type="button" className={'ev-tile avatar'+(speech.speaking?' speaking':'')+(thinking?' thinking':'')} onClick={()=>{if(speech.speaking)stopSpeaking()}} aria-label={speech.speaking?'Interromper a fala do avatar':avatarLabel}>
             <IllustratedAvatar ref={avatarRef} speaking={speech.speaking} label={avatarLabel}/>
-            <span className="ev-meet-name">{avatarLabel}<small>{avatarState}</small></span>
+            <span className="ev-tile-name">{avatarLabel}</span>
+            <span className="ev-tile-state">{avatarState}</span>
           </button>
-          <div className={'ev-meet-tile me'+(userTalking?' speaking':'')}>
+          <div className={'ev-tile me'+(userTalking?' speaking':'')}>
             <video ref={meVideo} autoPlay muted playsInline hidden={!camOn}/>
-            {!camOn&&<span className="ev-meet-initial" aria-hidden="true">{lesson?'P':'C'}</span>}
-            <span className="ev-meet-name">{lesson?'Você':'Você (capacitador)'}{!micOpen&&<MicOff size={12} aria-label="microfone fechado"/>}{listening&&<small>ouvindo</small>}</span>
+            {!camOn&&<span className="ev-room-initial" aria-hidden="true">{lesson?'P':'C'}</span>}
+            <span className="ev-tile-name">Você{listening&&<small> · ouvindo</small>}</span>
+            {!micOpen&&<span className="ev-tile-muted" aria-label="microfone fechado"><MicOff size={13}/></span>}
           </div>
-          {ccOn&&caption&&caption.text&&<div className="ev-meet-caption" aria-live="polite">
+          {ccOn&&caption&&caption.text&&<div className="ev-room-caption" aria-live="polite">
             <span className="who">{caption.who}{caption.badge&&<em>{caption.badge}</em>}</span>
-            <span><span>{caption.text.slice(0,caption.upTo)}</span><span className="pending">{caption.text.slice(caption.upTo)}</span></span>
+            <p><span>{caption.text.slice(0,caption.upTo)}</span><span className="pending">{caption.text.slice(caption.upTo)}</span></p>
           </div>}
         </div>
-        {panel&&<aside className="ev-meet-panel">
-          <div className="ev-meet-tabs" role="tablist">
-            <button role="tab" aria-selected={tab==='chat'} onClick={()=>setTab('chat')}>Chat</button>
-            <button role="tab" aria-selected={tab==='info'} onClick={()=>setTab('info')}>{lesson?'Roteiro da aula':'Roteiro da entrevista'}</button>
-            <button className="ev-meet-close" onClick={()=>setPanel(false)} aria-label="Fechar painel"><X size={16}/></button>
-          </div>
-          {tab==='chat'&&<div className="ev-meet-chat">
-            <ol className="ev-meet-log" aria-live="polite">{log.map(m=><li key={m.id} className={m.me?'me':m.who==='Sistema'?'system':''}><span className="who">{m.who}</span>{m.text}</li>)}<li ref={logEnd} aria-hidden="true" className="end"/></ol>
-            {sources.length>0&&<div className="ev-meet-sources">Fontes da aula: {sources.map(s=><span className="ev-pill" key={s.id}>{s.title}</span>)}</div>}
-            <form className="ev-meet-input" onSubmit={submit}>
+        {panel&&<aside className="ev-room-panel" aria-label={panel==='chat'?'Chat':'Detalhes'}>
+          <div className="ev-room-panel-head"><h2>{panel==='chat'?'Mensagens':lesson?'Roteiro da aula':'Roteiro da entrevista'}</h2><button className="ev-icon" onClick={()=>setPanel(null)} aria-label="Fechar painel"><X size={18}/></button></div>
+          {panel==='chat'&&<div className="ev-room-chat">
+            <ol className="ev-room-log" aria-live="polite">{log.map(m=><li key={m.id} className={m.me?'me':m.who==='Sistema'?'system':''}><span className="who">{m.who}</span>{m.text}</li>)}<li ref={logEnd} aria-hidden="true" className="end"/></ol>
+            {sources.length>0&&<div className="ev-room-sources">Fontes da aula: {sources.map(s=><span className="ev-pill" key={s.id}>{s.title}</span>)}</div>}
+            <form className="ev-room-input" onSubmit={submit}>
               <input value={input} onChange={e=>setInput(e.target.value)} maxLength={1200} placeholder={lesson?'Escreva a sua dúvida':'Escreva a sua resposta'} aria-label={lesson?'Sua dúvida':'Sua resposta'} disabled={thinking}/>
-              <button className="ev-button lime" type="submit" disabled={thinking||!input.trim()} aria-label="Enviar"><Send size={15}/></button>
+              <button className="ev-icon send" type="submit" disabled={thinking||!input.trim()} aria-label="Enviar"><Send size={17}/></button>
             </form>
           </div>}
-          {tab==='info'&&<div className="ev-meet-info">
-            {lesson?<ol className="ev-meet-segments">{l?.segments?.map((s:R)=><li key={s.id} className={cur&&s.id===cur.id?'current':cur&&s.order<cur.order?'done':''}><span>{s.order}</span>{s.title}</li>)}</ol>
-              :<div className="ev-meet-coverage"><p>{coverageLabel(interview?.status)}</p><progress value={cov.covered} max={cov.total||1}/><strong>{cov.covered} de {cov.total} pontos</strong>
-                <p>Os pontos cobrem trajetória, método, personalidade, limites e materiais. Assuntos pessoais, contatos e dados sensíveis não são registrados.</p>
-                {draft&&<button className="ev-button outline" onClick={downloadDraft}><Download size={15}/> Baixar rascunho (DRAFT)</button>}</div>}
-            <dl className="ev-meet-facts">
+          {panel==='info'&&<div className="ev-room-info">
+            {lesson?<ol className="ev-room-segments">{l?.segments?.map((s:R)=><li key={s.id} className={cur&&s.id===cur.id?'current':cur&&s.order<cur.order?'done':''}><span>{s.order}</span>{s.title}</li>)}</ol>
+              :<div className="ev-room-coverage"><p>{coverageLabel(interview?.status)}</p><progress value={cov.covered} max={cov.total||1}/><strong>{cov.covered} de {cov.total} pontos</strong>
+                <p>Trajetória, método, personalidade, limites e materiais. Assuntos pessoais, contatos e dados sensíveis não são registrados.</p>
+                {draft&&<button className="ev-pill-button outline" onClick={downloadDraft}><Download size={15}/> Baixar rascunho (DRAFT)</button>}</div>}
+            <dl className="ev-room-facts">
               <div><dt>Perfil</dt><dd>{app?.avatar?.profile?`${app.avatar.profile.id} · ${app.avatar.profile.activation}`:'-'}</dd></div>
               <div><dt>Modelo</dt><dd>{app?.model?.label||'-'}</dd></div>
               <div><dt>Custo</dt><dd>{usage?`US$ ${Number(usage.cost_usd).toFixed(4)} de US$ ${usage.budget_usd}`:'zero (sem modelo real)'}</dd></div>
@@ -395,26 +424,40 @@ export function IntelligenceMeeting({mode,contextTitle,onLeave}:{mode:MeetingMod
           </div>}
         </aside>}
       </div>
-      <div className="ev-meet-controls" role="toolbar" aria-label="Controles da reunião">
-        <button className="ev-meet-ctl" aria-pressed={micOpen} onClick={()=>void setMic(!micOpen)} disabled={!hasRecognition} title={hasRecognition?'Microfone':'Sem reconhecimento de voz neste navegador'}>{micOpen?<Mic size={18}/>:<MicOff size={18}/>}<span>{micOpen?'Fechar microfone':'Abrir microfone'}</span></button>
-        <button className="ev-meet-ctl" aria-pressed={camOn} onClick={()=>void setCam(!camOn)}>{camOn?<Video size={18}/>:<VideoOff size={18}/>}<span>Câmera</span></button>
-        <button className="ev-meet-ctl" aria-pressed={ccOn} onClick={()=>setCcOn(v=>!v)}><Captions size={18}/><span>Legendas</span></button>
-        {!lesson&&<button className="ev-meet-ctl rec" aria-pressed={recording} onClick={()=>run(toggleRecording)}>{recording?<Square size={16}/>:<Circle size={16}/>}<span>{recording?'Parar gravação':'Gravar'}</span></button>}
-        <button className="ev-meet-ctl" aria-pressed={panel} onClick={()=>setPanel(v=>!v)}><MessageSquare size={18}/><span>Chat e roteiro</span></button>
-        <button className="ev-meet-ctl advance" onClick={()=>run(lesson?stepLesson:finishInterview)} disabled={stepDisabled}><SkipForward size={18}/><span>{stepLabel}</span></button>
-        <button className="ev-meet-ctl leave" onClick={()=>run(leave)}><PhoneOff size={18}/><span>Sair</span></button>
-      </div>
+      <footer className="ev-room-bar">
+        <div className="ev-room-bar-left"><span className="ev-room-time">{timeNow}</span><span className="ev-room-sep" aria-hidden="true">|</span><span className="ev-room-title" title={title}>{title}</span><span className="ev-room-clock" aria-label="Tempo de reunião">{formatClock(elapsed)}</span></div>
+        <div className="ev-room-bar-center" role="toolbar" aria-label="Controles da reunião">
+          <button className={'ev-round'+(micOpen?'':' off')} aria-pressed={micOpen} onClick={()=>void setMic(!micOpen)} disabled={!hasRecognition} aria-label={micOpen?'Fechar microfone':'Abrir microfone'} title={hasRecognition?'Microfone':'Sem reconhecimento de voz neste navegador'}>{micOpen?<Mic size={20}/>:<MicOff size={20}/>}</button>
+          <button className={'ev-round'+(camOn?'':' off')} aria-pressed={camOn} onClick={()=>void setCam(!camOn)} aria-label={camOn?'Desligar câmera':'Ligar câmera'} title="Câmera">{camOn?<Video size={20}/>:<VideoOff size={20}/>}</button>
+          <button className={'ev-round'+(ccOn?' active':'')} aria-pressed={ccOn} onClick={()=>setCcOn(v=>!v)} aria-label="Legendas" title="Legendas"><Captions size={20}/></button>
+          {!lesson&&<button className={'ev-round'+(recording?' rec':'')} aria-pressed={recording} onClick={()=>run(toggleRecording)} aria-label={recording?'Parar gravação':'Gravar'} title={recording?'Parar gravação':'Gravar'}>{recording?<Square size={18}/>:<Circle size={18}/>}</button>}
+          <button className="ev-pill-button lime ev-advance" onClick={()=>run(lesson?stepLesson:finishInterview)} disabled={stepDisabled}><SkipForward size={18}/><span>{stepLabel}</span></button>
+          <button className="ev-pill-button leave" onClick={()=>run(leave)} aria-label="Sair da reunião" title="Sair"><PhoneOff size={20}/></button>
+        </div>
+        <div className="ev-room-bar-right">
+          <button className={'ev-icon'+(panel==='info'?' active':'')} aria-pressed={panel==='info'} onClick={()=>togglePanel('info')} aria-label={lesson?'Roteiro da aula':'Roteiro da entrevista'} title="Roteiro"><Info size={20}/></button>
+          <button className={'ev-icon'+(panel==='chat'?' active':'')} aria-pressed={panel==='chat'} onClick={()=>togglePanel('chat')} aria-label="Chat" title="Chat"><MessageSquare size={20}/></button>
+        </div>
+      </footer>
     </div>}
 
+    <dialog ref={camDialog} className="ev-meet-dialog" onCancel={e=>{e.preventDefault();closeDialog(camDialog.current,false)}}>
+      <h3>{CAMERA_POLICY.title}</h3>
+      <ul>{CAMERA_POLICY.points.map(p=><li key={p}>{p}</li>)}</ul>
+      <p className="ev-meet-dialog-note">{CAMERA_POLICY.testNote}</p>
+      <label className="ev-meet-consent"><input type="checkbox" checked={consentChecked} onChange={e=>setConsentChecked(e.target.checked)}/> Li e aceito a política de imagem da aula online ({CAMERA_POLICY.version}).</label>
+      <div className="ev-meet-dialog-actions"><button className="ev-pill-button outline" onClick={()=>closeDialog(camDialog.current,false)}>Continuar sem câmera</button><button className="ev-pill-button lime" disabled={!consentChecked} onClick={()=>closeDialog(camDialog.current,true)}>Ligar a câmera</button></div>
+    </dialog>
     <dialog ref={micDialog} className="ev-meet-dialog" onCancel={e=>{e.preventDefault();closeDialog(micDialog.current,false)}}>
       <h3>Usar o microfone</h3>
       <p>O reconhecimento de voz é feito pelo navegador. No Chrome, o áudio vai para o Google para virar texto. O chat funciona sempre, sem enviar áudio.</p>
-      <div className="ev-meet-dialog-actions"><button className="ev-button outline" onClick={()=>closeDialog(micDialog.current,false)}>Usar só o chat</button><button className="ev-button lime" onClick={()=>closeDialog(micDialog.current,true)}>Abrir o microfone</button></div>
+      <div className="ev-meet-dialog-actions"><button className="ev-pill-button outline" onClick={()=>closeDialog(micDialog.current,false)}>Usar só o chat</button><button className="ev-pill-button lime" onClick={()=>closeDialog(micDialog.current,true)}>Abrir o microfone</button></div>
     </dialog>
     <dialog ref={recDialog} className="ev-meet-dialog" onCancel={e=>{e.preventDefault();closeDialog(recDialog.current,false)}}>
       <h3>Gravar a entrevista</h3>
       <p>A gravação inclui a sua câmera e a sua voz e fica salva só neste computador. Nada é enviado ao servidor. O indicador Gravando fica visível o tempo todo. Usar imagem ou voz para criar um avatar depende do termo de consentimento, assinado à parte.</p>
-      <div className="ev-meet-dialog-actions"><button className="ev-button outline" onClick={()=>closeDialog(recDialog.current,false)}>Não gravar</button><button className="ev-button lime" onClick={()=>closeDialog(recDialog.current,true)}>Aceito gravar</button></div>
+      <div className="ev-meet-dialog-actions"><button className="ev-pill-button outline" onClick={()=>closeDialog(recDialog.current,false)}>Não gravar</button><button className="ev-pill-button lime" onClick={()=>closeDialog(recDialog.current,true)}>Aceito gravar</button></div>
     </dialog>
-  </section>;
+  </div>;
+  return typeof document==='undefined'?null:createPortal(node,document.body);
 }
