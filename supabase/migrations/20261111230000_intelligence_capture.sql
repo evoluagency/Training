@@ -1,5 +1,4 @@
--- PROPOSTA (nao aplicada). Fica fora de supabase/migrations ate o aceite explicito do proprietario.
--- Captacao da entrevista do proprietario (D23, D25, D29) e registro do aceite da politica de imagem.
+-- Aplicada no Supabase do Training em 11/11/2026 com aceite do proprietario.
 -- Mesmo padrao do Training: tabelas no esquema training com RLS ligada e sem acesso de anon/authenticated.
 -- Leitura e escrita so pela funcao training-api (servidor), que confere sessao e papel.
 
