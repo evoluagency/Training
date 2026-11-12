@@ -198,3 +198,42 @@ test('intelligence: bypass da Vercel só do servidor, formato simples, nunca dev
   await forwardToIntelligence({route:resolveIntelligenceRoute('GET','state')!,base:new URL('https://svc.example.test/avatar'),body:'',fetchImpl,bypass:'ruim'});
   assert.equal(seen!.get('x-vercel-protection-bypass'),null);
 });
+
+// Modo de voz: o WAV montado no navegador passa no leitor do servidor, e os controles de nível batem com a proposta.
+import {encodeWav,measure,takeIssue,roomToneIssue,nextPending,voiceUploadQuery,formatSpeech,newVoiceSession,VOICE_LIMITS} from '../app/intelligence/voice-capture.ts';
+import {readWavHeader} from '../lib/training/wav.ts';
+import {voiceScript,voiceLineExists,CURRENT_VOICE_SCRIPT} from '../lib/intelligence/voice-script.ts';
+import {VOICE_POLICY} from '../app/intelligence/meeting-text.ts';
+const tone=(ms:number,amp:number,rate=48000)=>{const n=Math.round(rate*ms/1000),c=new Float32Array(n);for(let i=0;i<n;i++)c[i]=amp*Math.sin(2*Math.PI*220*i/rate);return c};
+test('voz: WAV do navegador é PCM 16 bits mono e o servidor lê duração e taxa do cabeçalho',()=>{
+  const a=tone(1200,0.5),b=tone(800,0.5);const wav=encodeWav([a,b],48000);
+  assert.equal(wav.byteLength,44+(a.length+b.length)*2);
+  assert.deepEqual(readWavHeader(wav),{sampleRate:48000,channels:1,bitsPerSample:16,dataBytes:(a.length+b.length)*2,durationMs:2000});
+  assert.equal(readWavHeader(encodeWav([tone(500,0.2,44100)],44100))?.sampleRate,44100);
+  const clipped=encodeWav([new Float32Array([2,-2])],48000);const v=new DataView(clipped.buffer);assert.equal(v.getInt16(44,true),32767);assert.equal(v.getInt16(46,true),-32768);
+  assert.equal(readWavHeader(new Uint8Array(10)),null);
+  const bad=encodeWav([tone(500,0.2)],48000);new DataView(bad.buffer).setUint16(22,2,true);assert.equal(readWavHeader(bad),null);
+  const cut=encodeWav([tone(500,0.2)],48000).slice(0,1000);assert.equal(readWavHeader(cut),null);
+});
+test('voz: controles de corte, volume baixo, duração e ruído da sala',()=>{
+  assert.equal(takeIssue(measure([tone(2000,0.5)],48000)),null);
+  assert.match(takeIssue(measure([tone(2000,1)],48000))!,/alto/);
+  assert.match(takeIssue(measure([tone(2000,0.05)],48000))!,/baixo/);
+  assert.match(takeIssue(measure([tone(200,0.5)],48000))!,/curta/);
+  assert.match(takeIssue({durationMs:VOICE_LIMITS.maxMs+1,peakDbfs:-6,rmsDbfs:-20})!,/40 segundos/);
+  assert.equal(roomToneIssue(measure([tone(5000,0.001)],48000)),null);
+  assert.match(roomToneIssue(measure([tone(5000,0.05)],48000))!,/ruído/);
+  assert.equal(measure([],48000).rmsDbfs,-120);
+});
+test('voz: roteiro-voz-0.1 como dado, próxima frase pendente e parâmetros do envio',()=>{
+  const s=voiceScript(CURRENT_VOICE_SCRIPT)!;assert.equal(s.frases.length,600);assert.equal(new Set(s.frases.map(f=>f.id)).size,600);
+  assert.ok(s.frases.every(f=>s.blocos[f.bloco]&&f.id.startsWith(f.bloco)&&f.frase.trim()));
+  assert.equal(voiceLineExists('roteiro-voz-0.1','A001'),true);assert.equal(voiceLineExists('roteiro-voz-0.1','toString'),false);assert.equal(voiceScript('constructor'),null);
+  const ids=['A001','A002','A003'];assert.equal(nextPending(ids,new Set(['A001'])),1);assert.equal(nextPending(ids,new Set(['A003']),2),0);assert.equal(nextPending(ids,new Set(ids)),-1);
+  assert.equal(voiceUploadQuery({consent:'c',session:'voz-1',moment:'room_tone',script:'roteiro-voz-0.1',line:'A001'}),'consent=c&session=voz-1&kind=voice&moment=room_tone&script=roteiro-voz-0.1');
+  assert.match(voiceUploadQuery({consent:'c',session:'voz-1',moment:'script_line',script:'roteiro-voz-0.1',line:'B007'}),/line=B007$/);
+  assert.match(newVoiceSession(Date.UTC(2026,10,12)),/^voz-2026-11-12-00-00-00-[0-9a-f]{8}$/);
+  assert.equal(formatSpeech(26*60000+5000),'26 min de fala');assert.equal(formatSpeech(42000),'42 s de fala');
+  assert.equal(VOICE_POLICY.version,'voz-rascunho-0.1');
+  assert.equal(isPortalRoute('/admin/voz-avatar','admin'),true);assert.equal(isPortalRoute('/area/voz-avatar','learner'),false);assert.equal(portalPageTitle('/admin/voz-avatar'),'Voz do avatar');
+});

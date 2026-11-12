@@ -72,3 +72,20 @@ export const CAPTURE_POLICY={
     'Usar a sua imagem ou a sua voz para criar um avatar depende do termo de consentimento, assinado à parte.',
   ],
 } as const;
+
+/**
+ * Gravação da voz para o avatar (modalidade B do termo de consentimento). RASCUNHO para revisão do proprietário (e jurídica).
+ * O aceite fica registrado no servidor com esta versão. Mudar o texto exige nova versão e novo aceite.
+ */
+export const VOICE_POLICY={
+  version:'voz-rascunho-0.1',
+  title:'Gravação de voz para o avatar',
+  points:[
+    'Com o seu aceite, a EVOLU grava a sua voz lendo as frases do roteiro para treinar uma voz sintética semelhante à sua, usada pelo seu avatar.',
+    'Só o microfone é usado. Não há câmera, foto nem vídeo neste modo.',
+    'O áudio é gravado sem compressão (WAV) e enviado frase a frase para um armazenamento privado da EVOLU. Só a administração da EVOLU acessa.',
+    'A voz treinada é dado biométrico seu. Não vai para serviços públicos e só é usada nos cursos autorizados no termo de consentimento.',
+    'Você pode parar e continuar outro dia, ou revogar este aceite a qualquer momento. Revogar interrompe a gravação. O que já foi enviado continua guardado nesta fase de teste.',
+    'Usar a voz treinada com alunos depende do termo de consentimento, assinado à parte, e da sua aprovação da voz.',
+  ],
+} as const;
