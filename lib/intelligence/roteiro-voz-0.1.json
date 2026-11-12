@@ -1,0 +1,3046 @@
+{
+ "versao": "roteiro-voz-0.1",
+ "idioma": "pt-BR",
+ "origem": "Texto próprio da EVOLU, escrito na sessão 1.11 (12/11/2026), sem texto de terceiros.",
+ "uso": "Gravação da voz do proprietário para o ajuste fino Piper. 'frase' é o que aparece na tela. 'leitura', quando existe, é a forma falada por extenso usada no metadata.csv do treino.",
+ "blocos": {
+  "A": "Foneticamente variadas",
+  "B": "Jeito de dar aula",
+  "C": "Perguntas",
+  "D": "Ênfase e emoção leve",
+  "E": "Números, datas, siglas",
+  "F": "Frases longas"
+ },
+ "frases": [
+  {
+   "id": "A001",
+   "bloco": "A",
+   "frase": "O irmão da Joana chegou cedo e trouxe pão quente para todos."
+  },
+  {
+   "id": "A002",
+   "bloco": "A",
+   "frase": "A filha do vizinho ganhou um carrinho vermelho no aniversário."
+  },
+  {
+   "id": "A003",
+   "bloco": "A",
+   "frase": "Na reunião de terça, a diretora explicou o plano com muita calma."
+  },
+  {
+   "id": "A004",
+   "bloco": "A",
+   "frase": "O chefe chamou a equipe para jantar num restaurante japonês."
+  },
+  {
+   "id": "A005",
+   "bloco": "A",
+   "frase": "Ninguém percebeu que o relógio da sala estava atrasado."
+  },
+  {
+   "id": "A006",
+   "bloco": "A",
+   "frase": "As crianças correram pela praia até o sol se pôr atrás das montanhas."
+  },
+  {
+   "id": "A007",
+   "bloco": "A",
+   "frase": "O sinal fechou e o motorista do táxi respirou fundo."
+  },
+  {
+   "id": "A008",
+   "bloco": "A",
+   "frase": "Tive dificuldade de dormir por causa do barulho da obra."
+  },
+  {
+   "id": "A009",
+   "bloco": "A",
+   "frase": "O zelador guardou as caixas no depósito ao lado da garagem."
+  },
+  {
+   "id": "A010",
+   "bloco": "A",
+   "frase": "Quem quer brincar precisa primeiro arrumar o quarto."
+  },
+  {
+   "id": "A011",
+   "bloco": "A",
+   "frase": "A mãe de Paulo prepara um bolo de milho todo domingo, logo depois da missa."
+  },
+  {
+   "id": "A012",
+   "bloco": "A",
+   "frase": "Os cães latiram sem parar quando o carteiro tocou a campainha do portão."
+  },
+  {
+   "id": "A013",
+   "bloco": "A",
+   "frase": "O trem atrasou vinte minutos por causa da chuva forte que caiu na serra."
+  },
+  {
+   "id": "A014",
+   "bloco": "A",
+   "frase": "Minha avó guarda as fotografias antigas numa caixa de madeira escura."
+  },
+  {
+   "id": "A015",
+   "bloco": "A",
+   "frase": "O pescador voltou do mar no fim da tarde com a rede cheia de peixes."
+  },
+  {
+   "id": "A016",
+   "bloco": "A",
+   "frase": "A professora pediu silêncio absoluto antes de começar a prova de geografia."
+  },
+  {
+   "id": "A017",
+   "bloco": "A",
+   "frase": "Encontrei um livro velho esquecido no alto da prateleira da cozinha."
+  },
+  {
+   "id": "A018",
+   "bloco": "A",
+   "frase": "O jardineiro plantou girassóis perto do muro amarelo da escola."
+  },
+  {
+   "id": "A019",
+   "bloco": "A",
+   "frase": "Depois do almoço, a gente costuma tomar um cafezinho na varanda dos fundos."
+  },
+  {
+   "id": "A020",
+   "bloco": "A",
+   "frase": "O ônibus passou lotado no ponto e ninguém conseguiu subir a tempo."
+  },
+  {
+   "id": "A021",
+   "bloco": "A",
+   "frase": "A geladeira velha fez um barulho estranho durante toda a madrugada."
+  },
+  {
+   "id": "A022",
+   "bloco": "A",
+   "frase": "O menino jogou a bola longe demais e quebrou a janela do vizinho."
+  },
+  {
+   "id": "A023",
+   "bloco": "A",
+   "frase": "Os dois irmãos dividiram o chocolate em pedaços exatamente iguais."
+  },
+  {
+   "id": "A024",
+   "bloco": "A",
+   "frase": "A loja de ferragens do senhor Antônio fica na esquina da rua principal."
+  },
+  {
+   "id": "A025",
+   "bloco": "A",
+   "frase": "Ele usou um lenço xadrez para limpar os óculos embaçados pela chuva."
+  },
+  {
+   "id": "A026",
+   "bloco": "A",
+   "frase": "Ouvi o barulho do trovão ao longe e fechei as janelas depressa."
+  },
+  {
+   "id": "A027",
+   "bloco": "A",
+   "frase": "A ponte de ferro atravessa o rio largo bem perto da entrada da cidade."
+  },
+  {
+   "id": "A028",
+   "bloco": "A",
+   "frase": "O garçom trouxe a conta junto com um copo de água gelada e limão."
+  },
+  {
+   "id": "A029",
+   "bloco": "A",
+   "frase": "Fiquei muito feliz quando recebi a carta do meu primo que mora distante."
+  },
+  {
+   "id": "A030",
+   "bloco": "A",
+   "frase": "A abelha pousou na flor do limoeiro e depois voou para o jardim."
+  },
+  {
+   "id": "A031",
+   "bloco": "A",
+   "frase": "O mecânico trocou o pneu furado e calibrou os outros três com cuidado."
+  },
+  {
+   "id": "A032",
+   "bloco": "A",
+   "frase": "Quando o galo cantou, o fazendeiro já estava no curral tirando leite."
+  },
+  {
+   "id": "A033",
+   "bloco": "A",
+   "frase": "A cozinheira temperou o feijão preto com alho, cebola e folha de louro."
+  },
+  {
+   "id": "A034",
+   "bloco": "A",
+   "frase": "O avião decolou no horário marcado e pousou antes do previsto."
+  },
+  {
+   "id": "A035",
+   "bloco": "A",
+   "frase": "A chave do armário sumiu de novo e ninguém sabe onde foi parar."
+  },
+  {
+   "id": "A036",
+   "bloco": "A",
+   "frase": "O mercado do bairro abre às sete e fecha às dez da noite."
+  },
+  {
+   "id": "A037",
+   "bloco": "A",
+   "frase": "A vizinha do lado regou as nossas plantas enquanto viajávamos."
+  },
+  {
+   "id": "A038",
+   "bloco": "A",
+   "frase": "O bombeiro subiu a escada comprida e resgatou o gato do telhado."
+  },
+  {
+   "id": "A039",
+   "bloco": "A",
+   "frase": "O sabor do suco de caju gelado lembra muito a minha infância no interior."
+  },
+  {
+   "id": "A040",
+   "bloco": "A",
+   "frase": "Meu tio sempre conta a mesma piada no Natal, e todo mundo ri."
+  },
+  {
+   "id": "A041",
+   "bloco": "A",
+   "frase": "A rua de baixo ficou toda alagada depois da tempestade de ontem."
+  },
+  {
+   "id": "A042",
+   "bloco": "A",
+   "frase": "O pintor misturou o azul com o branco até achar o tom certo da parede."
+  },
+  {
+   "id": "A043",
+   "bloco": "A",
+   "frase": "As mães dos alunos fizeram fila no pátio para buscar o boletim."
+  },
+  {
+   "id": "A044",
+   "bloco": "A",
+   "frase": "O cachorro velho dormiu a noite inteira no tapete perto da lareira."
+  },
+  {
+   "id": "A045",
+   "bloco": "A",
+   "frase": "A cidade inteira parou para ver passar o desfile de carnaval."
+  },
+  {
+   "id": "A046",
+   "bloco": "A",
+   "frase": "Um pássaro azul fez o ninho no galho mais alto da árvore do quintal."
+  },
+  {
+   "id": "A047",
+   "bloco": "A",
+   "frase": "O padeiro acorda às quatro horas da manhã para assar os pães."
+  },
+  {
+   "id": "A048",
+   "bloco": "A",
+   "frase": "Coloquei o guarda-chuva na bolsa porque o céu estava cinzento e pesado."
+  },
+  {
+   "id": "A049",
+   "bloco": "A",
+   "frase": "O recado ficou preso na porta da geladeira com um ímã em forma de flor."
+  },
+  {
+   "id": "A050",
+   "bloco": "A",
+   "frase": "As folhas secas cobriram a calçada inteira durante o outono."
+  },
+  {
+   "id": "A051",
+   "bloco": "A",
+   "frase": "O homem do caminhão descarregou os sacos de arroz na porta do armazém."
+  },
+  {
+   "id": "A052",
+   "bloco": "A",
+   "frase": "A torneira da pia da cozinha está pingando desde ontem à noite."
+  },
+  {
+   "id": "A053",
+   "bloco": "A",
+   "frase": "O time treinou bastante durante o ano e ganhou o campeonato regional."
+  },
+  {
+   "id": "A054",
+   "bloco": "A",
+   "frase": "Ela tricotou um cachecol de lã bem grosso para enfrentar o inverno."
+  },
+  {
+   "id": "A055",
+   "bloco": "A",
+   "frase": "O farol do carro iluminou a estrada escura e cheia de curvas."
+  },
+  {
+   "id": "A056",
+   "bloco": "A",
+   "frase": "A porta velha rangeu quando o vento soprou mais forte pela fresta."
+  },
+  {
+   "id": "A057",
+   "bloco": "A",
+   "frase": "Comprei limões, bananas, um abacaxi e dois mamões na feira de sábado."
+  },
+  {
+   "id": "A058",
+   "bloco": "A",
+   "frase": "O relâmpago clareou o céu inteiro por um segundo e sumiu."
+  },
+  {
+   "id": "A059",
+   "bloco": "A",
+   "frase": "O sapateiro do bairro consertou a sola da minha bota preta em uma hora."
+  },
+  {
+   "id": "A060",
+   "bloco": "A",
+   "frase": "A lua cheia apareceu redonda e brilhante sobre o lago tranquilo."
+  },
+  {
+   "id": "A061",
+   "bloco": "A",
+   "frase": "O irmão mais novo aprendeu a andar de bicicleta sem ajuda de ninguém."
+  },
+  {
+   "id": "A062",
+   "bloco": "A",
+   "frase": "Guardei os documentos importantes numa pasta transparente dentro da gaveta."
+  },
+  {
+   "id": "A063",
+   "bloco": "A",
+   "frase": "O porteiro do prédio avisou que a encomenda tinha chegado de manhã."
+  },
+  {
+   "id": "A064",
+   "bloco": "A",
+   "frase": "A gente se encontrou por acaso na fila do banco, depois de tantos anos."
+  },
+  {
+   "id": "A065",
+   "bloco": "A",
+   "frase": "O mel escorreu do pote aberto e sujou a toalha bordada da mesa."
+  },
+  {
+   "id": "A066",
+   "bloco": "A",
+   "frase": "As montanhas ao redor da cidade ficam cobertas de neblina pela manhã."
+  },
+  {
+   "id": "A067",
+   "bloco": "A",
+   "frase": "O jornal de hoje trouxe uma notícia surpreendente sobre o prefeito."
+  },
+  {
+   "id": "A068",
+   "bloco": "A",
+   "frase": "O balão colorido subiu devagar até sumir entre as nuvens."
+  },
+  {
+   "id": "A069",
+   "bloco": "A",
+   "frase": "Minha prima toca violão desde pequena e canta muito bem."
+  },
+  {
+   "id": "A070",
+   "bloco": "A",
+   "frase": "O cozinheiro cortou a cenoura em rodelas finas para a sopa do jantar."
+  },
+  {
+   "id": "A071",
+   "bloco": "A",
+   "frase": "A borboleta pousou de leve no ombro da menina distraída."
+  },
+  {
+   "id": "A072",
+   "bloco": "A",
+   "frase": "O carro novo do vizinho é prateado, econômico e muito silencioso."
+  },
+  {
+   "id": "A073",
+   "bloco": "A",
+   "frase": "O rapaz tropeçou no degrau da entrada e derrubou o café no chão."
+  },
+  {
+   "id": "A074",
+   "bloco": "A",
+   "frase": "Uma brisa leve e fresca entrou pela janela aberta do quarto."
+  },
+  {
+   "id": "A075",
+   "bloco": "A",
+   "frase": "O hospital municipal fica a duas quadras da estação de metrô."
+  },
+  {
+   "id": "A076",
+   "bloco": "A",
+   "frase": "Vovô plantou um pé de manga no quintal há mais de trinta anos."
+  },
+  {
+   "id": "A077",
+   "bloco": "A",
+   "frase": "A turma organizou uma festa surpresa para a coordenadora que se aposentou."
+  },
+  {
+   "id": "A078",
+   "bloco": "A",
+   "frase": "O carimbo do correio estava borrado no envelope que chegou ontem."
+  },
+  {
+   "id": "A079",
+   "bloco": "A",
+   "frase": "Os talheres de prata da avó brilhavam em cima da toalha branca."
+  },
+  {
+   "id": "A080",
+   "bloco": "A",
+   "frase": "O vendedor de pipoca estacionou o carrinho na praça, perto do coreto."
+  },
+  {
+   "id": "A081",
+   "bloco": "A",
+   "frase": "Ela trancou a porta da frente e escondeu a chave debaixo do vaso."
+  },
+  {
+   "id": "A082",
+   "bloco": "A",
+   "frase": "A estrada de terra que leva ao sítio fica escorregadia quando chove."
+  },
+  {
+   "id": "A083",
+   "bloco": "A",
+   "frase": "O girassol vira devagar para o lado do sol durante o dia todo."
+  },
+  {
+   "id": "A084",
+   "bloco": "A",
+   "frase": "O professor de química fez uma experiência colorida diante da turma."
+  },
+  {
+   "id": "A085",
+   "bloco": "A",
+   "frase": "O cheiro de café fresco tomou conta da casa logo cedo."
+  },
+  {
+   "id": "A086",
+   "bloco": "A",
+   "frase": "O sino da igreja matriz tocou ao meio-dia em ponto."
+  },
+  {
+   "id": "A087",
+   "bloco": "A",
+   "frase": "A senhora simpática do terceiro andar cuida de sete gatos."
+  },
+  {
+   "id": "A088",
+   "bloco": "A",
+   "frase": "Joguei fora as frutas que estavam passadas no fundo da fruteira."
+  },
+  {
+   "id": "A089",
+   "bloco": "A",
+   "frase": "O caminhoneiro dirigiu a noite toda até chegar ao porto de Santos."
+  },
+  {
+   "id": "A090",
+   "bloco": "A",
+   "frase": "Os peixinhos dourados do aquário nadam em círculos o dia inteiro."
+  },
+  {
+   "id": "A091",
+   "bloco": "A",
+   "frase": "O pedreiro levantou a parede do banheiro em apenas dois dias de trabalho."
+  },
+  {
+   "id": "A092",
+   "bloco": "A",
+   "frase": "A neta escreveu um bilhete carinhoso para a avó que estava no hospital."
+  },
+  {
+   "id": "A093",
+   "bloco": "A",
+   "frase": "O vento forte derrubou o varal e espalhou as roupas pelo quintal."
+  },
+  {
+   "id": "A094",
+   "bloco": "A",
+   "frase": "A ginasta treinou o mesmo salto várias vezes até acertar o movimento."
+  },
+  {
+   "id": "A095",
+   "bloco": "A",
+   "frase": "O queijo mineiro combina muito bem com goiabada e café coado."
+  },
+  {
+   "id": "A096",
+   "bloco": "A",
+   "frase": "O alarme do carro disparou no meio da noite sem motivo nenhum."
+  },
+  {
+   "id": "A097",
+   "bloco": "A",
+   "frase": "Ele dobrou a camisa com cuidado e guardou na primeira gaveta."
+  },
+  {
+   "id": "A098",
+   "bloco": "A",
+   "frase": "O rio transbordou depois da chuva e alagou as plantações da região."
+  },
+  {
+   "id": "A099",
+   "bloco": "A",
+   "frase": "As luzes da cidade acenderam todas ao mesmo tempo quando escureceu."
+  },
+  {
+   "id": "A100",
+   "bloco": "A",
+   "frase": "O homem calmo esperou a vez dele na fila sem reclamar de nada."
+  },
+  {
+   "id": "A101",
+   "bloco": "A",
+   "frase": "A criança desenhou um castelo enorme com torres coloridas e um dragão."
+  },
+  {
+   "id": "A102",
+   "bloco": "A",
+   "frase": "Os jovens do bairro organizaram um mutirão para limpar a praia no domingo."
+  },
+  {
+   "id": "A103",
+   "bloco": "A",
+   "frase": "O xarope tem gosto de hortelã e alivia a tosse durante a noite."
+  },
+  {
+   "id": "A104",
+   "bloco": "A",
+   "frase": "A fruteira da cozinha estava cheia de laranjas, peras e mexericas."
+  },
+  {
+   "id": "A105",
+   "bloco": "A",
+   "frase": "O fotógrafo pediu que todos sorrissem ao mesmo tempo para a foto."
+  },
+  {
+   "id": "A106",
+   "bloco": "A",
+   "frase": "O prédio antigo do centro foi reformado e virou uma biblioteca pública."
+  },
+  {
+   "id": "A107",
+   "bloco": "A",
+   "frase": "Caiu uma garoa fina e gelada durante toda a manhã de segunda."
+  },
+  {
+   "id": "A108",
+   "bloco": "A",
+   "frase": "O filhote de cachorro mordeu o chinelo do dono e escondeu no sofá."
+  },
+  {
+   "id": "A109",
+   "bloco": "A",
+   "frase": "A vendedora embrulhou o presente com papel dourado e um laço vermelho."
+  },
+  {
+   "id": "A110",
+   "bloco": "A",
+   "frase": "O ciclista subiu a ladeira inteira sem descer da bicicleta."
+  },
+  {
+   "id": "A111",
+   "bloco": "A",
+   "frase": "A bruxa da história infantil morava numa casa feita de chocolate."
+  },
+  {
+   "id": "A112",
+   "bloco": "A",
+   "frase": "O povo aplaudiu de pé quando a cantora entrou no palco."
+  },
+  {
+   "id": "A113",
+   "bloco": "A",
+   "frase": "O vidro da janela embaçou por causa do frio da noite."
+  },
+  {
+   "id": "A114",
+   "bloco": "A",
+   "frase": "Meu pai assobia baixinho sempre que está consertando alguma coisa em casa."
+  },
+  {
+   "id": "A115",
+   "bloco": "A",
+   "frase": "O crocodilo ficou parado na margem do rio, esperando o momento certo."
+  },
+  {
+   "id": "A116",
+   "bloco": "A",
+   "frase": "A tia Glória faz o melhor pudim de leite condensado da família."
+  },
+  {
+   "id": "A117",
+   "bloco": "A",
+   "frase": "O trator vermelho atravessou o campo levantando muita poeira."
+  },
+  {
+   "id": "A118",
+   "bloco": "A",
+   "frase": "A mochila da escola ficou pesada com tantos livros e cadernos."
+  },
+  {
+   "id": "A119",
+   "bloco": "A",
+   "frase": "O médico receitou repouso, alimentação leve e muito líquido."
+  },
+  {
+   "id": "A120",
+   "bloco": "A",
+   "frase": "Houve um engarrafamento enorme na saída da cidade no feriado."
+  },
+  {
+   "id": "A121",
+   "bloco": "A",
+   "frase": "O canário cantou a manhã inteira na gaiola pendurada na cozinha."
+  },
+  {
+   "id": "A122",
+   "bloco": "A",
+   "frase": "Os primos jogaram futebol no campinho de terra até escurecer."
+  },
+  {
+   "id": "A123",
+   "bloco": "A",
+   "frase": "A blusa listrada encolheu depois da primeira lavagem na máquina."
+  },
+  {
+   "id": "A124",
+   "bloco": "A",
+   "frase": "O guarda de trânsito apitou e mandou todos os carros pararem."
+  },
+  {
+   "id": "A125",
+   "bloco": "A",
+   "frase": "A coruja piscou devagar no galho mais baixo da figueira."
+  },
+  {
+   "id": "A126",
+   "bloco": "A",
+   "frase": "O açougueiro separou a melhor carne para o churrasco de sábado."
+  },
+  {
+   "id": "A127",
+   "bloco": "A",
+   "frase": "Ela sonhou que voava sobre um mar azul, cheio de ilhas pequenas."
+  },
+  {
+   "id": "A128",
+   "bloco": "A",
+   "frase": "O caderno novo tem capa dura, espiral de metal e folhas pautadas."
+  },
+  {
+   "id": "A129",
+   "bloco": "A",
+   "frase": "O moinho de vento gira sem parar no alto do morro."
+  },
+  {
+   "id": "A130",
+   "bloco": "A",
+   "frase": "A colher de pau ficou esquecida dentro da panela de pressão."
+  },
+  {
+   "id": "A131",
+   "bloco": "A",
+   "frase": "O barco a vela deslizou tranquilo pela baía no fim da tarde."
+  },
+  {
+   "id": "A132",
+   "bloco": "A",
+   "frase": "A geleia caseira de morango ficou pronta antes do jantar."
+  },
+  {
+   "id": "A133",
+   "bloco": "A",
+   "frase": "O soldado marchou firme e de cabeça erguida durante o desfile."
+  },
+  {
+   "id": "A134",
+   "bloco": "A",
+   "frase": "Passamos a tarde inteira jogando dominó na casa do avô."
+  },
+  {
+   "id": "A135",
+   "bloco": "A",
+   "frase": "A rainha da festa junina usava um vestido florido e um chapéu de palha."
+  },
+  {
+   "id": "A136",
+   "bloco": "A",
+   "frase": "O motor do barco falhou bem no meio do caminho para a ilha."
+  },
+  {
+   "id": "A137",
+   "bloco": "A",
+   "frase": "O sorvete de creme derreteu rápido por causa do calor do verão."
+  },
+  {
+   "id": "A138",
+   "bloco": "A",
+   "frase": "O fazendeiro ordenhou as vacas logo cedo, antes de o sol nascer."
+  },
+  {
+   "id": "A139",
+   "bloco": "A",
+   "frase": "A janela pequena do sótão dá para um jardim abandonado."
+  },
+  {
+   "id": "A140",
+   "bloco": "A",
+   "frase": "O carpinteiro mediu a tábua duas vezes antes de fazer o corte."
+  },
+  {
+   "id": "A141",
+   "bloco": "A",
+   "frase": "Os turistas tiraram muitas fotos em frente à catedral iluminada."
+  },
+  {
+   "id": "A142",
+   "bloco": "A",
+   "frase": "O gelo fino do lago trincou com o peso do pato."
+  },
+  {
+   "id": "A143",
+   "bloco": "A",
+   "frase": "A secretária anotou o recado do cliente num papel amarelo."
+  },
+  {
+   "id": "A144",
+   "bloco": "A",
+   "frase": "O palhaço fez a plateia inteira rir com uma trapalhada no picadeiro."
+  },
+  {
+   "id": "A145",
+   "bloco": "A",
+   "frase": "O frango assado saiu do forno dourado, crocante e cheiroso."
+  },
+  {
+   "id": "A146",
+   "bloco": "A",
+   "frase": "O jipe atolou na lama perto da cachoeira e precisou de ajuda."
+  },
+  {
+   "id": "A147",
+   "bloco": "A",
+   "frase": "A plateia ficou em silêncio absoluto quando o piano começou a tocar."
+  },
+  {
+   "id": "A148",
+   "bloco": "A",
+   "frase": "A lanterna apagou justo na hora em que faltou luz no bairro."
+  },
+  {
+   "id": "A149",
+   "bloco": "A",
+   "frase": "O pão de queijo saiu quentinho do forno e acabou em minutos."
+  },
+  {
+   "id": "A150",
+   "bloco": "A",
+   "frase": "O alfaiate ajustou as mangas do terno para o casamento do filho."
+  },
+  {
+   "id": "A151",
+   "bloco": "A",
+   "frase": "A girafa esticou o pescoço comprido para alcançar as folhas mais altas."
+  },
+  {
+   "id": "A152",
+   "bloco": "A",
+   "frase": "O ralo do banheiro de cima entupiu de novo nesta semana."
+  },
+  {
+   "id": "A153",
+   "bloco": "A",
+   "frase": "A família reuniu todo mundo no jardim para a foto do ano."
+  },
+  {
+   "id": "A154",
+   "bloco": "A",
+   "frase": "O general deu a ordem em voz alta e a tropa avançou."
+  },
+  {
+   "id": "A155",
+   "bloco": "A",
+   "frase": "Ela ganhou um anel de prata da madrinha no dia da formatura."
+  },
+  {
+   "id": "A156",
+   "bloco": "A",
+   "frase": "O brinquedo novo quebrou logo no primeiro dia de uso."
+  },
+  {
+   "id": "A157",
+   "bloco": "A",
+   "frase": "O motoqueiro freou de repente na curva molhada da avenida."
+  },
+  {
+   "id": "A158",
+   "bloco": "A",
+   "frase": "Os vizinhos do prédio reclamaram do som alto da festa de sexta."
+  },
+  {
+   "id": "A159",
+   "bloco": "A",
+   "frase": "A planta grande da sala precisa de mais sol e menos água."
+  },
+  {
+   "id": "A160",
+   "bloco": "A",
+   "frase": "O sapo pulou na lagoa e espirrou água em todo mundo."
+  },
+  {
+   "id": "A161",
+   "bloco": "A",
+   "frase": "O ventilador de teto fazia um zumbido constante durante a aula."
+  },
+  {
+   "id": "A162",
+   "bloco": "A",
+   "frase": "A corrida de rua começa às seis horas, na frente da prefeitura."
+  },
+  {
+   "id": "A163",
+   "bloco": "A",
+   "frase": "Achei uma moeda antiga enterrada no canteiro do jardim."
+  },
+  {
+   "id": "A164",
+   "bloco": "A",
+   "frase": "O azeite derramou da garrafa e manchou o chão da cozinha."
+  },
+  {
+   "id": "A165",
+   "bloco": "A",
+   "frase": "Minha irmã prefere tomar chá de camomila antes de dormir."
+  },
+  {
+   "id": "A166",
+   "bloco": "A",
+   "frase": "O cavalo branco galopou livre pela campina verde."
+  },
+  {
+   "id": "A167",
+   "bloco": "A",
+   "frase": "A lixeira fica atrás da porta da área de serviço, ao lado do tanque."
+  },
+  {
+   "id": "A168",
+   "bloco": "A",
+   "frase": "O dentista pediu para eu abrir bem a boca e respirar devagar."
+  },
+  {
+   "id": "A169",
+   "bloco": "A",
+   "frase": "O quintal da casa velha da fazenda tem um poço desativado."
+  },
+  {
+   "id": "A170",
+   "bloco": "A",
+   "frase": "A embalagem do bombom estava rasgada quando abri a caixa."
+  },
+  {
+   "id": "A171",
+   "bloco": "A",
+   "frase": "O zoológico da cidade recebeu um casal de leões africanos."
+  },
+  {
+   "id": "A172",
+   "bloco": "A",
+   "frase": "A goteira do telhado pingou a noite toda dentro do balde."
+  },
+  {
+   "id": "A173",
+   "bloco": "A",
+   "frase": "O ourives trabalhou durante horas no colar de esmeraldas."
+  },
+  {
+   "id": "A174",
+   "bloco": "A",
+   "frase": "Nunca vi um pôr do sol tão vermelho quanto aquele da praia."
+  },
+  {
+   "id": "A175",
+   "bloco": "A",
+   "frase": "O gramado do estádio foi trocado inteiro durante as férias."
+  },
+  {
+   "id": "A176",
+   "bloco": "A",
+   "frase": "A estrela cadente riscou o céu de repente e todo mundo fez um pedido."
+  },
+  {
+   "id": "A177",
+   "bloco": "A",
+   "frase": "O chaveiro abriu a fechadura emperrada em menos de um minuto."
+  },
+  {
+   "id": "A178",
+   "bloco": "A",
+   "frase": "Quatro andorinhas pousaram juntas no fio de luz da rua."
+  },
+  {
+   "id": "A179",
+   "bloco": "A",
+   "frase": "O vulcão adormecido fica bem no meio da ilha, coberto de mata."
+  },
+  {
+   "id": "A180",
+   "bloco": "A",
+   "frase": "A cesta de piquenique levava sanduíches, frutas e uma garrafa de suco."
+  },
+  {
+   "id": "A181",
+   "bloco": "A",
+   "frase": "O treinador gritou da beira do campo para o time voltar à defesa."
+  },
+  {
+   "id": "A182",
+   "bloco": "A",
+   "frase": "O poeta escreveu um verso bonito sobre a saudade de casa."
+  },
+  {
+   "id": "A183",
+   "bloco": "A",
+   "frase": "O tanque de lavar roupa fica no fundo do quintal, perto do muro."
+  },
+  {
+   "id": "A184",
+   "bloco": "A",
+   "frase": "Ela prendeu o cabelo comprido com uma fita vermelha de cetim."
+  },
+  {
+   "id": "A185",
+   "bloco": "A",
+   "frase": "O espelho do banheiro ficou embaçado com o vapor do chuveiro."
+  },
+  {
+   "id": "A186",
+   "bloco": "A",
+   "frase": "O cozinheiro provou o molho de tomate e acrescentou uma pitada de sal."
+  },
+  {
+   "id": "A187",
+   "bloco": "A",
+   "frase": "A nuvem escura trouxe granizo e vento forte para a cidade."
+  },
+  {
+   "id": "A188",
+   "bloco": "A",
+   "frase": "O gaúcho tomou chimarrão em silêncio, olhando o campo ao amanhecer."
+  },
+  {
+   "id": "A189",
+   "bloco": "A",
+   "frase": "As flores do ipê roxo cobriram a calçada de uma ponta à outra."
+  },
+  {
+   "id": "A190",
+   "bloco": "A",
+   "frase": "O pombo comeu as migalhas de pão debaixo do banco da praça."
+  },
+  {
+   "id": "A191",
+   "bloco": "A",
+   "frase": "O caixa do supermercado devolveu o troco errado sem perceber."
+  },
+  {
+   "id": "A192",
+   "bloco": "A",
+   "frase": "A orquestra afinou os instrumentos com calma antes do concerto."
+  },
+  {
+   "id": "A193",
+   "bloco": "A",
+   "frase": "O jacaré tomava sol tranquilo na beira do rio."
+  },
+  {
+   "id": "A194",
+   "bloco": "A",
+   "frase": "Achei graça no jeito atrapalhado e simpático do novo estagiário."
+  },
+  {
+   "id": "A195",
+   "bloco": "A",
+   "frase": "O sabonete escorregou da mão molhada e caiu no ralo."
+  },
+  {
+   "id": "A196",
+   "bloco": "A",
+   "frase": "Os sinos de vento tilintavam baixinho na varanda da casa de praia."
+  },
+  {
+   "id": "A197",
+   "bloco": "A",
+   "frase": "O tímido Rodrigo finalmente levantou a mão e pediu a palavra."
+  },
+  {
+   "id": "A198",
+   "bloco": "A",
+   "frase": "A diretora distribuiu os diplomas aos formandos sob muitos aplausos."
+  },
+  {
+   "id": "A199",
+   "bloco": "A",
+   "frase": "O bairro ganhou uma praça nova com brinquedos, bancos e árvores."
+  },
+  {
+   "id": "A200",
+   "bloco": "A",
+   "frase": "O artesão moldou o barro com as mãos até formar um vaso bonito."
+  },
+  {
+   "id": "B001",
+   "bloco": "B",
+   "frase": "Antes de responder, pense em quem vai receber essa mensagem."
+  },
+  {
+   "id": "B002",
+   "bloco": "B",
+   "frase": "Isso que você disse está quase certo, falta só um detalhe."
+  },
+  {
+   "id": "B003",
+   "bloco": "B",
+   "frase": "Vamos ver um exemplo prático para ficar mais claro."
+  },
+  {
+   "id": "B004",
+   "bloco": "B",
+   "frase": "Repare como a mesma frase muda de sentido com outro tom de voz."
+  },
+  {
+   "id": "B005",
+   "bloco": "B",
+   "frase": "Não existe resposta perfeita aqui, existe a resposta que funciona para o seu cliente."
+  },
+  {
+   "id": "B006",
+   "bloco": "B",
+   "frase": "Agora é a sua vez de tentar, sem pressa."
+  },
+  {
+   "id": "B007",
+   "bloco": "B",
+   "frase": "Muito bom. Você percebeu sozinho o ponto mais importante."
+  },
+  {
+   "id": "B008",
+   "bloco": "B",
+   "frase": "Quando o cliente reclama, a primeira coisa é ouvir até o fim."
+  },
+  {
+   "id": "B009",
+   "bloco": "B",
+   "frase": "Hoje a gente vai falar sobre como começar bem uma conversa com o cliente."
+  },
+  {
+   "id": "B010",
+   "bloco": "B",
+   "frase": "O primeiro contato define boa parte da impressão que fica depois do atendimento."
+  },
+  {
+   "id": "B011",
+   "bloco": "B",
+   "frase": "Agora vamos ver o que acontece quando o cliente chega com muita pressa."
+  },
+  {
+   "id": "B012",
+   "bloco": "B",
+   "frase": "Pense nisso como uma conversa entre duas pessoas, não como um roteiro decorado."
+  },
+  {
+   "id": "B013",
+   "bloco": "B",
+   "frase": "Ouvir com atenção é bem diferente de esperar a sua vez de falar."
+  },
+  {
+   "id": "B014",
+   "bloco": "B",
+   "frase": "Uma boa pergunta, feita na hora certa, vale mais do que um discurso longo."
+  },
+  {
+   "id": "B015",
+   "bloco": "B",
+   "frase": "Perceba que o cliente não pediu desconto, na verdade ele pediu segurança."
+  },
+  {
+   "id": "B016",
+   "bloco": "B",
+   "frase": "Vamos dividir esse assunto em três partes para facilitar o entendimento."
+  },
+  {
+   "id": "B017",
+   "bloco": "B",
+   "frase": "Primeiro a gente entende o problema com calma, depois apresenta a solução."
+  },
+  {
+   "id": "B018",
+   "bloco": "B",
+   "frase": "Se ficar em dúvida no meio da conversa, volte para a necessidade do cliente."
+  },
+  {
+   "id": "B019",
+   "bloco": "B",
+   "frase": "Esse é um erro muito comum entre quem está começando, e é fácil de corrigir."
+  },
+  {
+   "id": "B020",
+   "bloco": "B",
+   "frase": "Quase todo mundo passa por isso no começo, então não se cobre tanto."
+  },
+  {
+   "id": "B021",
+   "bloco": "B",
+   "frase": "A ideia aqui não é decorar as respostas, é entender o porquê de cada uma."
+  },
+  {
+   "id": "B022",
+   "bloco": "B",
+   "frase": "Agora tente reformular a sua resposta usando menos palavras e mais exemplos."
+  },
+  {
+   "id": "B023",
+   "bloco": "B",
+   "frase": "Note que você usou um termo técnico que o cliente talvez não conheça."
+  },
+  {
+   "id": "B024",
+   "bloco": "B",
+   "frase": "Vale a pena confirmar o que você entendeu antes de seguir para a proposta."
+  },
+  {
+   "id": "B025",
+   "bloco": "B",
+   "frase": "Uma forma simples de fazer isso é repetir o pedido com as suas palavras."
+  },
+  {
+   "id": "B026",
+   "bloco": "B",
+   "frase": "Esse detalhe parece pequeno, mas faz muita diferença no resultado final."
+  },
+  {
+   "id": "B027",
+   "bloco": "B",
+   "frase": "Vamos voltar um passo e olhar de novo para a situação com outros olhos."
+  },
+  {
+   "id": "B028",
+   "bloco": "B",
+   "frase": "Você foi direto ao ponto, e isso é algo que o cliente valoriza muito."
+  },
+  {
+   "id": "B029",
+   "bloco": "B",
+   "frase": "Cuidado para não prometer ao cliente o que não depende só de você."
+  },
+  {
+   "id": "B030",
+   "bloco": "B",
+   "frase": "É melhor dizer que vai verificar a informação do que inventar uma resposta."
+  },
+  {
+   "id": "B031",
+   "bloco": "B",
+   "frase": "Na próxima etapa, a gente vai praticar tudo isso com um caso real."
+  },
+  {
+   "id": "B032",
+   "bloco": "B",
+   "frase": "Imagine por um instante que você está do outro lado do balcão."
+  },
+  {
+   "id": "B033",
+   "bloco": "B",
+   "frase": "O que o cliente sente costuma pesar mais do que aquilo que ele ouve."
+  },
+  {
+   "id": "B034",
+   "bloco": "B",
+   "frase": "Ninguém gosta de se sentir apressado numa conversa, principalmente quando tem um problema."
+  },
+  {
+   "id": "B035",
+   "bloco": "B",
+   "frase": "Uma pausa curta, de dois ou três segundos, pode ajudar o cliente a pensar."
+  },
+  {
+   "id": "B036",
+   "bloco": "B",
+   "frase": "Repare que a objeção do cliente quase sempre esconde uma dúvida."
+  },
+  {
+   "id": "B037",
+   "bloco": "B",
+   "frase": "Quando você entende qual é a dúvida, a objeção perde boa parte da força."
+  },
+  {
+   "id": "B038",
+   "bloco": "B",
+   "frase": "Agora vamos treinar a mesma situação com um cliente bem mais exigente."
+  },
+  {
+   "id": "B039",
+   "bloco": "B",
+   "frase": "Respire fundo, organize a ideia na cabeça e só depois responda."
+  },
+  {
+   "id": "B040",
+   "bloco": "B",
+   "frase": "Você não precisa saber tudo, precisa saber onde buscar a informação certa."
+  },
+  {
+   "id": "B041",
+   "bloco": "B",
+   "frase": "Esse tipo de resposta transmite confiança sem soar arrogante para quem escuta."
+  },
+  {
+   "id": "B042",
+   "bloco": "B",
+   "frase": "Observe com atenção a diferença entre explicar e justificar."
+  },
+  {
+   "id": "B043",
+   "bloco": "B",
+   "frase": "Explicar ajuda o cliente a entender, justificar só protege a gente."
+  },
+  {
+   "id": "B044",
+   "bloco": "B",
+   "frase": "Vamos fazer um resumo rápido do que vimos até aqui na aula de hoje."
+  },
+  {
+   "id": "B045",
+   "bloco": "B",
+   "frase": "O ponto principal desta aula é uma habilidade chamada escuta ativa."
+  },
+  {
+   "id": "B046",
+   "bloco": "B",
+   "frase": "Escuta ativa é mostrar que você entendeu, e não só ouvir em silêncio."
+  },
+  {
+   "id": "B047",
+   "bloco": "B",
+   "frase": "Um sinal simples de escuta é fazer uma pergunta sobre o que o cliente acabou de falar."
+  },
+  {
+   "id": "B048",
+   "bloco": "B",
+   "frase": "Tente evitar a palavra mas logo depois de concordar com alguém."
+  },
+  {
+   "id": "B049",
+   "bloco": "B",
+   "frase": "Troque o mas pelo e, e veja como a frase fica muito mais leve."
+  },
+  {
+   "id": "B050",
+   "bloco": "B",
+   "frase": "Essa troca de palavra parece pequena, e mesmo assim muda o clima da conversa."
+  },
+  {
+   "id": "B051",
+   "bloco": "B",
+   "frase": "Agora pense em uma situação parecida que você já viveu no trabalho."
+  },
+  {
+   "id": "B052",
+   "bloco": "B",
+   "frase": "Você lembra como se sentiu da última vez que foi muito bem atendido?"
+  },
+  {
+   "id": "B053",
+   "bloco": "B",
+   "frase": "É exatamente esse sentimento que a gente quer provocar no cliente."
+  },
+  {
+   "id": "B054",
+   "bloco": "B",
+   "frase": "Não confunda simpatia com intimidade, são coisas bem diferentes no atendimento."
+  },
+  {
+   "id": "B055",
+   "bloco": "B",
+   "frase": "Ser cordial com o cliente não significa concordar com tudo o que ele diz."
+  },
+  {
+   "id": "B056",
+   "bloco": "B",
+   "frase": "Às vezes a melhor resposta possível é um não bem explicado."
+  },
+  {
+   "id": "B057",
+   "bloco": "B",
+   "frase": "Um não acompanhado de uma alternativa é muito melhor do que um não seco."
+  },
+  {
+   "id": "B058",
+   "bloco": "B",
+   "frase": "Vamos montar juntos, passo a passo, uma resposta para esse caso."
+  },
+  {
+   "id": "B059",
+   "bloco": "B",
+   "frase": "Comece sempre reconhecendo o que o cliente sentiu naquela situação."
+  },
+  {
+   "id": "B060",
+   "bloco": "B",
+   "frase": "Depois explique o que aconteceu de forma clara, sem buscar culpados."
+  },
+  {
+   "id": "B061",
+   "bloco": "B",
+   "frase": "E termine dizendo claramente qual é o próximo passo e quem vai cuidar dele."
+  },
+  {
+   "id": "B062",
+   "bloco": "B",
+   "frase": "Essa sequência simples funciona em quase todo tipo de reclamação."
+  },
+  {
+   "id": "B063",
+   "bloco": "B",
+   "frase": "Com a prática, você vai perceber que o tom de voz muda tudo."
+  },
+  {
+   "id": "B064",
+   "bloco": "B",
+   "frase": "Falar um pouco mais devagar passa ao cliente a sensação de controle."
+  },
+  {
+   "id": "B065",
+   "bloco": "B",
+   "frase": "Falar rápido demais pode soar como pressa, nervosismo ou falta de interesse."
+  },
+  {
+   "id": "B066",
+   "bloco": "B",
+   "frase": "Agora grave a sua resposta no celular e escute com calma depois."
+  },
+  {
+   "id": "B067",
+   "bloco": "B",
+   "frase": "Ouvir a própria voz gravada é estranho no começo, e isso é completamente normal."
+  },
+  {
+   "id": "B068",
+   "bloco": "B",
+   "frase": "Com o tempo você começa a notar os seus vícios de linguagem mais comuns."
+  },
+  {
+   "id": "B069",
+   "bloco": "B",
+   "frase": "Vício de linguagem não é crime, é só um hábito que dá para ajustar com treino."
+  },
+  {
+   "id": "B070",
+   "bloco": "B",
+   "frase": "Vamos olhar primeiro para o seu ponto forte, antes do que precisa melhorar."
+  },
+  {
+   "id": "B071",
+   "bloco": "B",
+   "frase": "O seu ponto forte nesta tentativa foi a clareza na explicação."
+  },
+  {
+   "id": "B072",
+   "bloco": "B",
+   "frase": "O que ainda pode melhorar é o fechamento da conversa com o cliente."
+  },
+  {
+   "id": "B073",
+   "bloco": "B",
+   "frase": "Fechar bem uma conversa significa deixar o próximo passo combinado entre os dois."
+  },
+  {
+   "id": "B074",
+   "bloco": "B",
+   "frase": "Sem um próximo passo definido, a conversa fica solta e o cliente esquece."
+  },
+  {
+   "id": "B075",
+   "bloco": "B",
+   "frase": "Experimente terminar o atendimento com uma pergunta de confirmação."
+  },
+  {
+   "id": "B076",
+   "bloco": "B",
+   "frase": "Isso ajuda o cliente a sentir que participou de verdade da decisão."
+  },
+  {
+   "id": "B077",
+   "bloco": "B",
+   "frase": "Nenhuma técnica, por melhor que seja, substitui o interesse genuíno pela pessoa."
+  },
+  {
+   "id": "B078",
+   "bloco": "B",
+   "frase": "Técnica sem empatia soa artificial, e o cliente percebe isso na hora."
+  },
+  {
+   "id": "B079",
+   "bloco": "B",
+   "frase": "Empatia sem técnica pode deixar a conversa simpática, porém sem rumo."
+  },
+  {
+   "id": "B080",
+   "bloco": "B",
+   "frase": "O equilíbrio entre as duas coisas é exatamente o que a gente busca aqui."
+  },
+  {
+   "id": "B081",
+   "bloco": "B",
+   "frase": "Muito bem, agora vamos para o próximo exercício do módulo."
+  },
+  {
+   "id": "B082",
+   "bloco": "B",
+   "frase": "Neste exercício, o cliente chega bastante irritado com um atraso na entrega."
+  },
+  {
+   "id": "B083",
+   "bloco": "B",
+   "frase": "A sua tarefa é acalmar a situação sem prometer um prazo que você não pode cumprir."
+  },
+  {
+   "id": "B084",
+   "bloco": "B",
+   "frase": "Leia a descrição da situação com atenção antes de começar a responder."
+  },
+  {
+   "id": "B085",
+   "bloco": "B",
+   "frase": "Se precisar, pode pedir para ouvir o caso de novo quantas vezes quiser."
+  },
+  {
+   "id": "B086",
+   "bloco": "B",
+   "frase": "Ótimo começo, você reconheceu o incômodo dele logo de cara."
+  },
+  {
+   "id": "B087",
+   "bloco": "B",
+   "frase": "Faltou só dizer ao cliente o que vai acontecer a partir de agora."
+  },
+  {
+   "id": "B088",
+   "bloco": "B",
+   "frase": "Lembre que o cliente quer saber, antes de tudo, quando o problema acaba."
+  },
+  {
+   "id": "B089",
+   "bloco": "B",
+   "frase": "Mesmo sem um prazo exato, dá para dizer quando você vai dar a próxima notícia."
+  },
+  {
+   "id": "B090",
+   "bloco": "B",
+   "frase": "Isso tem um nome, e se chama dar previsibilidade ao cliente."
+  },
+  {
+   "id": "B091",
+   "bloco": "B",
+   "frase": "A previsibilidade reduz muito a ansiedade de quem está esperando uma resposta."
+  },
+  {
+   "id": "B092",
+   "bloco": "B",
+   "frase": "Vamos tentar mais uma vez, agora com essa ideia bem clara na mente."
+  },
+  {
+   "id": "B093",
+   "bloco": "B",
+   "frase": "Bem melhor. Agora a sua resposta ficou completa e muito mais segura."
+  },
+  {
+   "id": "B094",
+   "bloco": "B",
+   "frase": "Percebeu como a conversa ficou mais natural na segunda tentativa?"
+  },
+  {
+   "id": "B095",
+   "bloco": "B",
+   "frase": "Treinar é exatamente isso, repetir a mesma situação com pequenos ajustes."
+  },
+  {
+   "id": "B096",
+   "bloco": "B",
+   "frase": "Não se preocupe com a perfeição agora, se preocupe com o progresso."
+  },
+  {
+   "id": "B097",
+   "bloco": "B",
+   "frase": "Cada nova tentativa mostra algo diferente sobre o seu jeito de falar."
+  },
+  {
+   "id": "B098",
+   "bloco": "B",
+   "frase": "Agora vamos mudar um pouco de assunto e falar sobre negociação."
+  },
+  {
+   "id": "B099",
+   "bloco": "B",
+   "frase": "Negociar não é vencer o outro, é chegar a um acordo bom para os dois."
+  },
+  {
+   "id": "B100",
+   "bloco": "B",
+   "frase": "Antes de começar qualquer negociação, saiba até onde você pode ir."
+  },
+  {
+   "id": "B101",
+   "bloco": "B",
+   "frase": "Conhecer bem o seu limite evita tomar decisões no impulso."
+  },
+  {
+   "id": "B102",
+   "bloco": "B",
+   "frase": "O cliente que pede desconto nem sempre está preocupado só com o preço."
+  },
+  {
+   "id": "B103",
+   "bloco": "B",
+   "frase": "Muitas vezes ele quer apenas ter certeza de que fez um bom negócio."
+  },
+  {
+   "id": "B104",
+   "bloco": "B",
+   "frase": "Mostrar o valor do que ele está levando costuma resolver a questão."
+  },
+  {
+   "id": "B105",
+   "bloco": "B",
+   "frase": "Valor é aquilo que o cliente percebe, não o número que está na etiqueta."
+  },
+  {
+   "id": "B106",
+   "bloco": "B",
+   "frase": "Por isso, fale primeiro do benefício e só depois fale do preço."
+  },
+  {
+   "id": "B107",
+   "bloco": "B",
+   "frase": "Benefício é aquilo que muda de verdade na vida do cliente."
+  },
+  {
+   "id": "B108",
+   "bloco": "B",
+   "frase": "Característica, por outro lado, é simplesmente o que o produto tem."
+  },
+  {
+   "id": "B109",
+   "bloco": "B",
+   "frase": "Vamos treinar agora como transformar características em benefícios claros."
+  },
+  {
+   "id": "B110",
+   "bloco": "B",
+   "frase": "Por exemplo, dizer que a bateria dura dois dias é falar de uma característica."
+  },
+  {
+   "id": "B111",
+   "bloco": "B",
+   "frase": "Já o benefício é você não precisar carregar o celular no meio do dia."
+  },
+  {
+   "id": "B112",
+   "bloco": "B",
+   "frase": "Viu como a segunda forma conversa direto com a vida da pessoa?"
+  },
+  {
+   "id": "B113",
+   "bloco": "B",
+   "frase": "Agora faça o mesmo exercício com o produto que você vende no dia a dia."
+  },
+  {
+   "id": "B114",
+   "bloco": "B",
+   "frase": "Não tenha medo de errar aqui, é justamente para isso que serve o treino."
+  },
+  {
+   "id": "B115",
+   "bloco": "B",
+   "frase": "Aqui ninguém está te avaliando, a ideia é aprender com tranquilidade."
+  },
+  {
+   "id": "B116",
+   "bloco": "B",
+   "frase": "Vamos combinar uma coisa, você tenta primeiro e eu comento logo depois."
+  },
+  {
+   "id": "B117",
+   "bloco": "B",
+   "frase": "Pode começar quando quiser, eu vou esperar o seu sinal."
+  },
+  {
+   "id": "B118",
+   "bloco": "B",
+   "frase": "Interessante, você escolheu um caminho diferente daquele que eu esperava."
+  },
+  {
+   "id": "B119",
+   "bloco": "B",
+   "frase": "Esse caminho também funciona muito bem, desde que o cliente consiga acompanhar."
+  },
+  {
+   "id": "B120",
+   "bloco": "B",
+   "frase": "Só tome cuidado para não se perder em detalhes que o cliente não pediu."
+  },
+  {
+   "id": "B121",
+   "bloco": "B",
+   "frase": "O cliente de hoje tem pouco tempo e muita informação ao redor."
+  },
+  {
+   "id": "B122",
+   "bloco": "B",
+   "frase": "Ser objetivo na conversa também é uma forma de mostrar respeito."
+  },
+  {
+   "id": "B123",
+   "bloco": "B",
+   "frase": "Ser objetivo, porém, não quer dizer ser frio ou distante."
+  },
+  {
+   "id": "B124",
+   "bloco": "B",
+   "frase": "Dá para ser breve e acolhedor ao mesmo tempo, com um pouco de prática."
+  },
+  {
+   "id": "B125",
+   "bloco": "B",
+   "frase": "Uma frase curta de acolhimento logo no começo já ajuda bastante."
+  },
+  {
+   "id": "B126",
+   "bloco": "B",
+   "frase": "Algo simples como, entendo, vamos resolver isso juntos."
+  },
+  {
+   "id": "B127",
+   "bloco": "B",
+   "frase": "Repare que a palavra juntos coloca vocês dois do mesmo lado da mesa."
+  },
+  {
+   "id": "B128",
+   "bloco": "B",
+   "frase": "Estar do mesmo lado do cliente muda completamente a dinâmica da conversa."
+  },
+  {
+   "id": "B129",
+   "bloco": "B",
+   "frase": "Vamos ver agora como lidar com um momento de silêncio na conversa."
+  },
+  {
+   "id": "B130",
+   "bloco": "B",
+   "frase": "Muita gente fica desconfortável quando o cliente fica quieto de repente."
+  },
+  {
+   "id": "B131",
+   "bloco": "B",
+   "frase": "Na maioria das vezes, o silêncio é só o cliente pensando no que você disse."
+  },
+  {
+   "id": "B132",
+   "bloco": "B",
+   "frase": "Dê alguns segundos ao cliente antes de tentar preencher o vazio."
+  },
+  {
+   "id": "B133",
+   "bloco": "B",
+   "frase": "Se o silêncio continuar por muito tempo, faça uma pergunta aberta."
+  },
+  {
+   "id": "B134",
+   "bloco": "B",
+   "frase": "Pergunta aberta é aquela que não se responde só com sim ou não."
+  },
+  {
+   "id": "B135",
+   "bloco": "B",
+   "frase": "Ela convida o cliente a contar mais sobre o que ele precisa."
+  },
+  {
+   "id": "B136",
+   "bloco": "B",
+   "frase": "Já a pergunta fechada serve para confirmar informações e fechar etapas."
+  },
+  {
+   "id": "B137",
+   "bloco": "B",
+   "frase": "As duas são úteis na conversa, cada uma no seu momento certo."
+  },
+  {
+   "id": "B138",
+   "bloco": "B",
+   "frase": "No começo da conversa, prefira usar perguntas abertas."
+  },
+  {
+   "id": "B139",
+   "bloco": "B",
+   "frase": "No final, use perguntas fechadas para confirmar tudo o que foi combinado."
+  },
+  {
+   "id": "B140",
+   "bloco": "B",
+   "frase": "Vamos praticar os dois tipos de pergunta com o mesmo cliente."
+  },
+  {
+   "id": "B141",
+   "bloco": "B",
+   "frase": "Muito bem, a sua pergunta aberta trouxe uma informação nova e importante."
+  },
+  {
+   "id": "B142",
+   "bloco": "B",
+   "frase": "Foi exatamente essa informação que mudou a sua proposta para melhor."
+  },
+  {
+   "id": "B143",
+   "bloco": "B",
+   "frase": "É assim que uma boa pergunta abre caminho para uma boa venda."
+  },
+  {
+   "id": "B144",
+   "bloco": "B",
+   "frase": "Agora vamos falar sobre um tema delicado, como dar uma notícia ruim."
+  },
+  {
+   "id": "B145",
+   "bloco": "B",
+   "frase": "Uma notícia ruim precisa ser dada com clareza e sem rodeios."
+  },
+  {
+   "id": "B146",
+   "bloco": "B",
+   "frase": "Enrolar antes de chegar ao assunto só aumenta a ansiedade de quem escuta."
+  },
+  {
+   "id": "B147",
+   "bloco": "B",
+   "frase": "Diga o que aconteceu, o que isso significa e o que vem depois."
+  },
+  {
+   "id": "B148",
+   "bloco": "B",
+   "frase": "Mantenha a voz calma e o ritmo tranquilo durante toda a conversa."
+  },
+  {
+   "id": "B149",
+   "bloco": "B",
+   "frase": "Se o cliente reagir mal à notícia, não leve isso para o lado pessoal."
+  },
+  {
+   "id": "B150",
+   "bloco": "B",
+   "frase": "A reação dele é com a situação que aconteceu, não com você."
+  },
+  {
+   "id": "B151",
+   "bloco": "B",
+   "frase": "Deixe o cliente falar tudo o que precisa e só depois retome a conversa."
+  },
+  {
+   "id": "B152",
+   "bloco": "B",
+   "frase": "Mostre com atitudes que você está ali para ajudar a resolver o problema."
+  },
+  {
+   "id": "B153",
+   "bloco": "B",
+   "frase": "Esse momento costuma definir se o cliente volta a comprar ou não."
+  },
+  {
+   "id": "B154",
+   "bloco": "B",
+   "frase": "Vamos treinar agora com um caso de produto que está em falta no estoque."
+  },
+  {
+   "id": "B155",
+   "bloco": "B",
+   "frase": "O cliente esperava receber o pedido hoje e infelizmente não vai receber."
+  },
+  {
+   "id": "B156",
+   "bloco": "B",
+   "frase": "Pense com calma em como você abriria essa conversa difícil."
+  },
+  {
+   "id": "B157",
+   "bloco": "B",
+   "frase": "Começar pedindo desculpas é um bom caminho, desde que sem exagero."
+  },
+  {
+   "id": "B158",
+   "bloco": "B",
+   "frase": "Uma única desculpa sincera vale mais do que dez desculpas repetidas."
+  },
+  {
+   "id": "B159",
+   "bloco": "B",
+   "frase": "Depois da desculpa, vá direto para a solução que você pode oferecer."
+  },
+  {
+   "id": "B160",
+   "bloco": "B",
+   "frase": "Ofereça opções ao cliente, quando houver, e deixe que ele escolha."
+  },
+  {
+   "id": "B161",
+   "bloco": "B",
+   "frase": "O ato de escolher devolve ao cliente a sensação de controle sobre a situação."
+  },
+  {
+   "id": "B162",
+   "bloco": "B",
+   "frase": "Excelente, você ofereceu duas opções claras e fáceis de entender."
+  },
+  {
+   "id": "B163",
+   "bloco": "B",
+   "frase": "E ainda deixou o cliente decidir com calma, sem nenhuma pressão."
+  },
+  {
+   "id": "B164",
+   "bloco": "B",
+   "frase": "Isso é exatamente o que a gente queria ver nesta simulação."
+  },
+  {
+   "id": "B165",
+   "bloco": "B",
+   "frase": "Vamos para um tema que sempre gera muita dúvida, o famoso follow-up."
+  },
+  {
+   "id": "B166",
+   "bloco": "B",
+   "frase": "Follow-up é o contato que você faz com o cliente depois da conversa."
+  },
+  {
+   "id": "B167",
+   "bloco": "B",
+   "frase": "Ele mostra ao cliente que você não esqueceu dele depois da venda."
+  },
+  {
+   "id": "B168",
+   "bloco": "B",
+   "frase": "Um bom follow-up é curto, útil e chega no momento certo."
+  },
+  {
+   "id": "B169",
+   "bloco": "B",
+   "frase": "Mandar mensagem demais para o cliente pode soar como insistência."
+  },
+  {
+   "id": "B170",
+   "bloco": "B",
+   "frase": "Mandar mensagem de menos, por outro lado, pode parecer descaso."
+  },
+  {
+   "id": "B171",
+   "bloco": "B",
+   "frase": "O ideal é combinar com o próprio cliente quando vocês vão falar de novo."
+  },
+  {
+   "id": "B172",
+   "bloco": "B",
+   "frase": "Assim, o próximo contato já é esperado e bem recebido."
+  },
+  {
+   "id": "B173",
+   "bloco": "B",
+   "frase": "Vamos escrever juntos, agora, uma mensagem curta de follow-up."
+  },
+  {
+   "id": "B174",
+   "bloco": "B",
+   "frase": "Comece a mensagem lembrando o que vocês conversaram da última vez."
+  },
+  {
+   "id": "B175",
+   "bloco": "B",
+   "frase": "Depois traga uma novidade ou uma informação que seja útil para ele."
+  },
+  {
+   "id": "B176",
+   "bloco": "B",
+   "frase": "E termine com uma pergunta simples, que seja fácil de responder."
+  },
+  {
+   "id": "B177",
+   "bloco": "B",
+   "frase": "Agora leia a mensagem que você escreveu em voz alta."
+  },
+  {
+   "id": "B178",
+   "bloco": "B",
+   "frase": "Se ela soar estranha falando, provavelmente vai soar estranha escrita também."
+  },
+  {
+   "id": "B179",
+   "bloco": "B",
+   "frase": "Ajuste o texto até ele parecer uma conversa normal entre duas pessoas."
+  },
+  {
+   "id": "B180",
+   "bloco": "B",
+   "frase": "Essa dica vale para qualquer texto que você mandar para um cliente."
+  },
+  {
+   "id": "B181",
+   "bloco": "B",
+   "frase": "Vamos fazer uma pausa curta agora e retomar logo em seguida."
+  },
+  {
+   "id": "B182",
+   "bloco": "B",
+   "frase": "Que bom ter você de volta, vamos continuar de onde paramos."
+  },
+  {
+   "id": "B183",
+   "bloco": "B",
+   "frase": "Antes da pausa, a gente estava falando sobre o follow-up."
+  },
+  {
+   "id": "B184",
+   "bloco": "B",
+   "frase": "Agora vamos juntar tudo o que vimos em uma conversa completa."
+  },
+  {
+   "id": "B185",
+   "bloco": "B",
+   "frase": "Você vai atender um cliente do começo ao fim, sem interrupções."
+  },
+  {
+   "id": "B186",
+   "bloco": "B",
+   "frase": "Use o que a gente viu até aqui, sem se preocupar em lembrar de tudo."
+  },
+  {
+   "id": "B187",
+   "bloco": "B",
+   "frase": "O mais importante nesta etapa é manter a conversa natural."
+  },
+  {
+   "id": "B188",
+   "bloco": "B",
+   "frase": "Pode começar assim que o cliente cumprimentar você."
+  },
+  {
+   "id": "B189",
+   "bloco": "B",
+   "frase": "Gostei muito da forma tranquila como você abriu a conversa."
+  },
+  {
+   "id": "B190",
+   "bloco": "B",
+   "frase": "Você chamou o cliente pelo nome logo no início, e isso aproxima as pessoas."
+  },
+  {
+   "id": "B191",
+   "bloco": "B",
+   "frase": "Na parte do meio da conversa, você fez perguntas muito boas."
+  },
+  {
+   "id": "B192",
+   "bloco": "B",
+   "frase": "Só faltou confirmar o seu entendimento antes de apresentar a proposta."
+  },
+  {
+   "id": "B193",
+   "bloco": "B",
+   "frase": "Essa confirmação rápida evita oferecer a coisa errada para o cliente."
+  },
+  {
+   "id": "B194",
+   "bloco": "B",
+   "frase": "No fechamento, você combinou o próximo passo com bastante clareza."
+  },
+  {
+   "id": "B195",
+   "bloco": "B",
+   "frase": "No geral, foi uma conversa muito bem conduzida do começo ao fim."
+  },
+  {
+   "id": "B196",
+   "bloco": "B",
+   "frase": "Vamos olhar agora para o que você pode levar desta aula para o dia a dia."
+  },
+  {
+   "id": "B197",
+   "bloco": "B",
+   "frase": "Escolha uma única coisa para praticar com atenção nesta semana."
+  },
+  {
+   "id": "B198",
+   "bloco": "B",
+   "frase": "Uma mudança pequena e constante vale mais do que muitas mudanças de uma vez."
+  },
+  {
+   "id": "B199",
+   "bloco": "B",
+   "frase": "Anote a sua escolha em algum lugar para não esquecer."
+  },
+  {
+   "id": "B200",
+   "bloco": "B",
+   "frase": "Na próxima aula, a gente começa justamente conversando sobre ela."
+  },
+  {
+   "id": "B201",
+   "bloco": "B",
+   "frase": "Vamos começar a aula de hoje com uma pergunta bem simples."
+  },
+  {
+   "id": "B202",
+   "bloco": "B",
+   "frase": "Pense no último atendimento que te deixou realmente satisfeito."
+  },
+  {
+   "id": "B203",
+   "bloco": "B",
+   "frase": "O que exatamente fez diferença para você naquele momento?"
+  },
+  {
+   "id": "B204",
+   "bloco": "B",
+   "frase": "Quase sempre a resposta envolve atenção, cuidado e respeito."
+  },
+  {
+   "id": "B205",
+   "bloco": "B",
+   "frase": "Hoje o nosso foco é transformar isso em atitudes práticas."
+  },
+  {
+   "id": "B206",
+   "bloco": "B",
+   "frase": "Uma atitude prática é algo que você consegue repetir já amanhã."
+  },
+  {
+   "id": "B207",
+   "bloco": "B",
+   "frase": "Por exemplo, olhar para o cliente enquanto ele estiver falando."
+  },
+  {
+   "id": "B208",
+   "bloco": "B",
+   "frase": "Ou então parar o que está fazendo para dar atenção total à pessoa."
+  },
+  {
+   "id": "B209",
+   "bloco": "B",
+   "frase": "São gestos simples, e mesmo assim o cliente percebe todos eles na hora."
+  },
+  {
+   "id": "B210",
+   "bloco": "B",
+   "frase": "Vamos ver como esses mesmos gestos aparecem numa conversa por telefone."
+  },
+  {
+   "id": "B211",
+   "bloco": "B",
+   "frase": "Por telefone, o cliente não consegue ver o seu rosto."
+  },
+  {
+   "id": "B212",
+   "bloco": "B",
+   "frase": "Então a sua voz precisa carregar sozinha toda a atenção."
+  },
+  {
+   "id": "B213",
+   "bloco": "B",
+   "frase": "Sorrir enquanto fala muda o som da sua voz do outro lado da linha."
+  },
+  {
+   "id": "B214",
+   "bloco": "B",
+   "frase": "Parece exagero, mas experimente fazer isso e escute a diferença."
+  },
+  {
+   "id": "B215",
+   "bloco": "B",
+   "frase": "Também ajuda falar o nome do cliente uma ou duas vezes durante a ligação."
+  },
+  {
+   "id": "B216",
+   "bloco": "B",
+   "frase": "Mais do que isso pode soar forçado e artificial."
+  },
+  {
+   "id": "B217",
+   "bloco": "B",
+   "frase": "Agora vamos simular uma ligação do começo ao fim."
+  },
+  {
+   "id": "B218",
+   "bloco": "B",
+   "frase": "Você atende o telefone e o cliente diz que quer cancelar o serviço."
+  },
+  {
+   "id": "B219",
+   "bloco": "B",
+   "frase": "Antes de tentar reverter o cancelamento, entenda bem o motivo."
+  },
+  {
+   "id": "B220",
+   "bloco": "B",
+   "frase": "Às vezes o motivo do cliente tem uma solução simples e rápida."
+  },
+  {
+   "id": "B221",
+   "bloco": "B",
+   "frase": "Outras vezes o melhor caminho é simplesmente facilitar o cancelamento."
+  },
+  {
+   "id": "B222",
+   "bloco": "B",
+   "frase": "Um cancelamento bem feito pode trazer o cliente de volta no futuro."
+  },
+  {
+   "id": "B223",
+   "bloco": "B",
+   "frase": "Um cancelamento difícil faz o cliente falar mal da empresa para os amigos."
+  },
+  {
+   "id": "B224",
+   "bloco": "B",
+   "frase": "Pense sempre no relacionamento de longo prazo com cada cliente."
+  },
+  {
+   "id": "B225",
+   "bloco": "B",
+   "frase": "Muito bem, você perguntou o motivo do cancelamento sem pressionar."
+  },
+  {
+   "id": "B226",
+   "bloco": "B",
+   "frase": "E ainda ofereceu uma alternativa interessante sem insistir."
+  },
+  {
+   "id": "B227",
+   "bloco": "B",
+   "frase": "Esse equilíbrio é bem difícil de alcançar, e você conseguiu."
+  },
+  {
+   "id": "B228",
+   "bloco": "B",
+   "frase": "Vamos ver agora um caso com um cliente que fala muito."
+  },
+  {
+   "id": "B229",
+   "bloco": "B",
+   "frase": "Com esse tipo de cliente, o desafio é conduzir sem interromper de forma brusca."
+  },
+  {
+   "id": "B230",
+   "bloco": "B",
+   "frase": "Uma técnica útil é resumir o que ele disse e fazer uma pergunta direcionada."
+  },
+  {
+   "id": "B231",
+   "bloco": "B",
+   "frase": "O resumo mostra que você ouviu com atenção e ajuda a retomar o rumo."
+  },
+  {
+   "id": "B232",
+   "bloco": "B",
+   "frase": "Tente usar essa técnica do resumo na próxima simulação."
+  },
+  {
+   "id": "B233",
+   "bloco": "B",
+   "frase": "Ficou ótimo, o resumo trouxe a conversa de volta ao assunto principal."
+  },
+  {
+   "id": "B234",
+   "bloco": "B",
+   "frase": "E o melhor de tudo é que o cliente nem percebeu que foi conduzido."
+  },
+  {
+   "id": "B235",
+   "bloco": "B",
+   "frase": "Conduzir bem uma conversa é exatamente isso."
+  },
+  {
+   "id": "B236",
+   "bloco": "B",
+   "frase": "Agora vamos falar sobre o caso oposto, o cliente que fala pouco."
+  },
+  {
+   "id": "B237",
+   "bloco": "B",
+   "frase": "Com ele, as perguntas abertas se tornam ainda mais importantes."
+  },
+  {
+   "id": "B238",
+   "bloco": "B",
+   "frase": "Evite fazer várias perguntas seguidas, uma atrás da outra."
+  },
+  {
+   "id": "B239",
+   "bloco": "B",
+   "frase": "Faça uma pergunta, espere a resposta com calma e só então siga."
+  },
+  {
+   "id": "B240",
+   "bloco": "B",
+   "frase": "Várias perguntas de uma vez confundem e cansam qualquer pessoa."
+  },
+  {
+   "id": "B241",
+   "bloco": "B",
+   "frase": "Vamos treinar a calma necessária para esperar a resposta do cliente."
+  },
+  {
+   "id": "B242",
+   "bloco": "B",
+   "frase": "Cada pessoa tem um ritmo diferente para falar, e está tudo bem."
+  },
+  {
+   "id": "B243",
+   "bloco": "B",
+   "frase": "Respeitar o ritmo do cliente também é uma forma de cuidado."
+  },
+  {
+   "id": "B244",
+   "bloco": "B",
+   "frase": "Estamos chegando ao fim de mais um módulo do curso."
+  },
+  {
+   "id": "B245",
+   "bloco": "B",
+   "frase": "Você evoluiu bastante desde a primeira aula, e isso aparece nas respostas."
+  },
+  {
+   "id": "B246",
+   "bloco": "B",
+   "frase": "Repare como as suas respostas ficaram mais curtas e muito mais claras."
+  },
+  {
+   "id": "B247",
+   "bloco": "B",
+   "frase": "Isso mostra que você já está internalizando o método no seu dia a dia."
+  },
+  {
+   "id": "B248",
+   "bloco": "B",
+   "frase": "No próximo módulo, a gente vai aprofundar o tema da negociação."
+  },
+  {
+   "id": "B249",
+   "bloco": "B",
+   "frase": "Até lá, continue praticando com os casos que aparecem no seu trabalho."
+  },
+  {
+   "id": "B250",
+   "bloco": "B",
+   "frase": "Obrigado pela dedicação de sempre, e nos vemos na próxima aula."
+  },
+  {
+   "id": "C001",
+   "bloco": "C",
+   "frase": "Você já passou por uma situação parecida no seu trabalho?"
+  },
+  {
+   "id": "C002",
+   "bloco": "C",
+   "frase": "Ficou claro até aqui ou quer que eu explique de outro jeito?"
+  },
+  {
+   "id": "C003",
+   "bloco": "C",
+   "frase": "O que você faria se o cliente pedisse um desconto maior?"
+  },
+  {
+   "id": "C004",
+   "bloco": "C",
+   "frase": "Qual foi, na sua opinião, a parte mais difícil desse exercício?"
+  },
+  {
+   "id": "C005",
+   "bloco": "C",
+   "frase": "Posso dar uma sugestão sobre a forma como você respondeu ao cliente?"
+  },
+  {
+   "id": "C006",
+   "bloco": "C",
+   "frase": "Você percebeu a diferença entre a primeira e a segunda versão da resposta?"
+  },
+  {
+   "id": "C007",
+   "bloco": "C",
+   "frase": "Como você acha que o cliente se sentiu exatamente nesse momento da conversa?"
+  },
+  {
+   "id": "C008",
+   "bloco": "C",
+   "frase": "Quer tentar de novo agora ou prefere seguir para o próximo caso?"
+  },
+  {
+   "id": "C009",
+   "bloco": "C",
+   "frase": "Por que você escolheu começar a conversa justamente por essa pergunta?"
+  },
+  {
+   "id": "C010",
+   "bloco": "C",
+   "frase": "Será que existe um jeito mais simples e mais curto de dizer isso?"
+  },
+  {
+   "id": "C011",
+   "bloco": "C",
+   "frase": "O que mudaria na sua resposta se o cliente estivesse com muita pressa?"
+  },
+  {
+   "id": "C012",
+   "bloco": "C",
+   "frase": "Você tem alguma dúvida sobre o exercício antes de começarmos?"
+  },
+  {
+   "id": "C013",
+   "bloco": "C",
+   "frase": "Faz sentido para você essa forma de pensar sobre o atendimento?"
+  },
+  {
+   "id": "C014",
+   "bloco": "C",
+   "frase": "Na sua opinião, qual seria o próximo passo depois dessa conversa?"
+  },
+  {
+   "id": "C015",
+   "bloco": "C",
+   "frase": "Você costuma confirmar com o cliente o que ele realmente pediu?"
+  },
+  {
+   "id": "C016",
+   "bloco": "C",
+   "frase": "E se ele disser que não tem nenhum interesse, o que você responde?"
+  },
+  {
+   "id": "C017",
+   "bloco": "C",
+   "frase": "Quanto tempo você acha que uma conversa como essa deveria durar?"
+  },
+  {
+   "id": "C018",
+   "bloco": "C",
+   "frase": "Tudo certo por aí para continuarmos com a aula?"
+  },
+  {
+   "id": "C019",
+   "bloco": "C",
+   "frase": "O que você aprendeu de mais útil na aula de hoje?"
+  },
+  {
+   "id": "C020",
+   "bloco": "C",
+   "frase": "Você se sentiu à vontade fazendo essa simulação com o cliente?"
+  },
+  {
+   "id": "C021",
+   "bloco": "C",
+   "frase": "Consegue me dar um exemplo concreto do seu dia a dia no trabalho?"
+  },
+  {
+   "id": "C022",
+   "bloco": "C",
+   "frase": "Como você explicaria isso para alguém que nunca ouviu falar do produto?"
+  },
+  {
+   "id": "C023",
+   "bloco": "C",
+   "frase": "O cliente pediu exatamente isso ou foi você que supôs o que ele queria?"
+  },
+  {
+   "id": "C024",
+   "bloco": "C",
+   "frase": "Que palavra você trocaria nessa frase para ela soar mais gentil?"
+  },
+  {
+   "id": "C025",
+   "bloco": "C",
+   "frase": "Você notou o momento exato em que o tom da conversa mudou?"
+  },
+  {
+   "id": "C026",
+   "bloco": "C",
+   "frase": "Onde você acha que a conversa poderia ter terminado de um jeito melhor?"
+  },
+  {
+   "id": "C027",
+   "bloco": "C",
+   "frase": "Vamos combinar assim, então, para a próxima semana?"
+  },
+  {
+   "id": "C028",
+   "bloco": "C",
+   "frase": "Prefere começar pelo caso mais fácil ou pelo caso mais difícil?"
+  },
+  {
+   "id": "C029",
+   "bloco": "C",
+   "frase": "É isso mesmo que você quis dizer ao cliente com essa frase?"
+  },
+  {
+   "id": "C030",
+   "bloco": "C",
+   "frase": "Qual é, afinal, a principal necessidade desse cliente?"
+  },
+  {
+   "id": "C031",
+   "bloco": "C",
+   "frase": "Quem toma a decisão de compra nessa empresa que você está atendendo?"
+  },
+  {
+   "id": "C032",
+   "bloco": "C",
+   "frase": "Você perguntaria isso logo no começo da conversa ou só mais tarde?"
+  },
+  {
+   "id": "C033",
+   "bloco": "C",
+   "frase": "De zero a dez, quanto você confia na sua preparação agora?"
+  },
+  {
+   "id": "C034",
+   "bloco": "C",
+   "frase": "O que precisaria acontecer para essa nota subir um pouco?"
+  },
+  {
+   "id": "C035",
+   "bloco": "C",
+   "frase": "Você lembra do que a gente combinou no final da última aula?"
+  },
+  {
+   "id": "C036",
+   "bloco": "C",
+   "frase": "Conseguiu praticar alguma coisa nova durante a semana que passou?"
+  },
+  {
+   "id": "C037",
+   "bloco": "C",
+   "frase": "Como foi a reação das pessoas quando você tentou fazer diferente?"
+  },
+  {
+   "id": "C038",
+   "bloco": "C",
+   "frase": "Teve algum momento em que você ficou sem saber o que dizer ao cliente?"
+  },
+  {
+   "id": "C039",
+   "bloco": "C",
+   "frase": "O que você diria hoje, olhando de novo para aquela situação?"
+  },
+  {
+   "id": "C040",
+   "bloco": "C",
+   "frase": "Você acha que o cliente confiaria de verdade nessa resposta?"
+  },
+  {
+   "id": "C041",
+   "bloco": "C",
+   "frase": "Por onde a gente começa a conversa de hoje?"
+  },
+  {
+   "id": "C042",
+   "bloco": "C",
+   "frase": "Está me ouvindo bem do seu lado, com o som claro?"
+  },
+  {
+   "id": "C043",
+   "bloco": "C",
+   "frase": "Posso continuar com a explicação ou quer fazer uma pergunta antes?"
+  },
+  {
+   "id": "C044",
+   "bloco": "C",
+   "frase": "Ficou alguma coisa sem resposta até aqui?"
+  },
+  {
+   "id": "C045",
+   "bloco": "C",
+   "frase": "Você quer que eu repita o caso desde o começo?"
+  },
+  {
+   "id": "C046",
+   "bloco": "C",
+   "frase": "Qual dessas três opções você escolheria no lugar do vendedor?"
+  },
+  {
+   "id": "C047",
+   "bloco": "C",
+   "frase": "Por que essa opção parece a melhor para você neste caso?"
+  },
+  {
+   "id": "C048",
+   "bloco": "C",
+   "frase": "Você mudaria alguma coisa no seu fechamento depois de ouvir a gravação?"
+  },
+  {
+   "id": "C049",
+   "bloco": "C",
+   "frase": "Já pensou em perguntar ao cliente como ele prefere ser contatado?"
+  },
+  {
+   "id": "C050",
+   "bloco": "C",
+   "frase": "O que acontece com a venda se você não fizer o follow-up?"
+  },
+  {
+   "id": "C051",
+   "bloco": "C",
+   "frase": "Como você reagiria se o cliente levantasse a voz no meio da conversa?"
+  },
+  {
+   "id": "C052",
+   "bloco": "C",
+   "frase": "Você acha justo oferecer a mesma condição para todos os clientes?"
+  },
+  {
+   "id": "C053",
+   "bloco": "C",
+   "frase": "Em que momento da conversa você apresentaria o preço do produto?"
+  },
+  {
+   "id": "C054",
+   "bloco": "C",
+   "frase": "Esse argumento convenceria você, se estivesse no lugar do cliente?"
+  },
+  {
+   "id": "C055",
+   "bloco": "C",
+   "frase": "Tem certeza de que o cliente entendeu todos os detalhes da proposta?"
+  },
+  {
+   "id": "C056",
+   "bloco": "C",
+   "frase": "Que tal tentarmos uma abordagem um pouco diferente desta vez?"
+  },
+  {
+   "id": "C057",
+   "bloco": "C",
+   "frase": "Você prefere receber o retorno agora mesmo ou só no fim da aula?"
+  },
+  {
+   "id": "C058",
+   "bloco": "C",
+   "frase": "Qual foi a sua maior conquista ao longo deste módulo?"
+  },
+  {
+   "id": "C059",
+   "bloco": "C",
+   "frase": "Você acha que já dá para atender um cliente real com segurança?"
+  },
+  {
+   "id": "C060",
+   "bloco": "C",
+   "frase": "Podemos encerrar por hoje e continuar na próxima aula?"
+  },
+  {
+   "id": "D001",
+   "bloco": "D",
+   "frase": "Que ótimo, essa foi a melhor resposta até agora!"
+  },
+  {
+   "id": "D002",
+   "bloco": "D",
+   "frase": "Calma, errar faz parte do treino."
+  },
+  {
+   "id": "D003",
+   "bloco": "D",
+   "frase": "Uau, essa saída criativa eu realmente não esperava!"
+  },
+  {
+   "id": "D004",
+   "bloco": "D",
+   "frase": "Parabéns, você acertou em cheio na escolha das palavras!"
+  },
+  {
+   "id": "D005",
+   "bloco": "D",
+   "frase": "Fico muito feliz em ver a sua evolução de uma aula para outra."
+  },
+  {
+   "id": "D006",
+   "bloco": "D",
+   "frase": "Nossa, que diferença enorme em relação à primeira tentativa!"
+  },
+  {
+   "id": "D007",
+   "bloco": "D",
+   "frase": "Tudo bem, respira fundo e tenta de novo com calma."
+  },
+  {
+   "id": "D008",
+   "bloco": "D",
+   "frase": "Que bom que você trouxe essa dúvida para a gente conversar."
+  },
+  {
+   "id": "D009",
+   "bloco": "D",
+   "frase": "Isso que você fez agora foi brilhante, de verdade."
+  },
+  {
+   "id": "D010",
+   "bloco": "D",
+   "frase": "Não desanime, você está no caminho certo e falta pouco."
+  },
+  {
+   "id": "D011",
+   "bloco": "D",
+   "frase": "Olha só, você resolveu o caso inteiro sem a minha ajuda!"
+  },
+  {
+   "id": "D012",
+   "bloco": "D",
+   "frase": "Eu sei que essa parte é difícil, e mesmo assim você está indo bem."
+  },
+  {
+   "id": "D013",
+   "bloco": "D",
+   "frase": "Excelente, o cliente sairia satisfeito e tranquilo dessa conversa."
+  },
+  {
+   "id": "D014",
+   "bloco": "D",
+   "frase": "Que surpresa boa, você lembrou de todos os passos!"
+  },
+  {
+   "id": "D015",
+   "bloco": "D",
+   "frase": "Tranquilidade, ninguém acerta tudo logo de primeira."
+  },
+  {
+   "id": "D016",
+   "bloco": "D",
+   "frase": "Gostei demais da sua sinceridade nessa resposta ao cliente."
+  },
+  {
+   "id": "D017",
+   "bloco": "D",
+   "frase": "Puxa, essa foi por pouco, ficou quase perfeita."
+  },
+  {
+   "id": "D018",
+   "bloco": "D",
+   "frase": "Sinto muito que o seu dia esteja difícil, vamos com calma hoje."
+  },
+  {
+   "id": "D019",
+   "bloco": "D",
+   "frase": "Isso merece um elogio especial, você teve muita paciência com o cliente."
+  },
+  {
+   "id": "D020",
+   "bloco": "D",
+   "frase": "Que alegria ver você conduzindo a conversa com tanta confiança!"
+  },
+  {
+   "id": "D021",
+   "bloco": "D",
+   "frase": "Atenção agora, porque esse ponto é muito importante."
+  },
+  {
+   "id": "D022",
+   "bloco": "D",
+   "frase": "Cuidado, aqui é bem fácil escorregar e prometer demais."
+  },
+  {
+   "id": "D023",
+   "bloco": "D",
+   "frase": "Incrível como você captou a ideia principal tão rápido!"
+  },
+  {
+   "id": "D024",
+   "bloco": "D",
+   "frase": "Não tem problema nenhum, a gente revê essa parte juntos."
+  },
+  {
+   "id": "D025",
+   "bloco": "D",
+   "frase": "Você pode se orgulhar desse resultado, ele foi construído com esforço."
+  },
+  {
+   "id": "D026",
+   "bloco": "D",
+   "frase": "Ah, agora sim, ficou muito claro para qualquer cliente!"
+  },
+  {
+   "id": "D027",
+   "bloco": "D",
+   "frase": "Que pena, faltou muito pouco para ficar perfeito."
+  },
+  {
+   "id": "D028",
+   "bloco": "D",
+   "frase": "O seu progresso nestas últimas semanas me impressiona de verdade."
+  },
+  {
+   "id": "D029",
+   "bloco": "D",
+   "frase": "Calma, vamos fazer uma coisa de cada vez."
+  },
+  {
+   "id": "D030",
+   "bloco": "D",
+   "frase": "Isso, exatamente isso que eu queria ouvir!"
+  },
+  {
+   "id": "D031",
+   "bloco": "D",
+   "frase": "Que resposta elegante e respeitosa, parabéns."
+  },
+  {
+   "id": "D032",
+   "bloco": "D",
+   "frase": "Me preocupa quando a gente promete demais, então vamos ajustar essa parte."
+  },
+  {
+   "id": "D033",
+   "bloco": "D",
+   "frase": "Bravo, essa resposta foi digna de mestre!"
+  },
+  {
+   "id": "D034",
+   "bloco": "D",
+   "frase": "Sem pressa nenhuma, estou aqui com você até o fim."
+  },
+  {
+   "id": "D035",
+   "bloco": "D",
+   "frase": "Adorei a forma carinhosa como você acolheu o cliente."
+  },
+  {
+   "id": "D036",
+   "bloco": "D",
+   "frase": "Muito bem, você não desistiu no meio do caminho e chegou lá."
+  },
+  {
+   "id": "D037",
+   "bloco": "D",
+   "frase": "Que bacana, você usou a técnica certa sem nem perceber."
+  },
+  {
+   "id": "D038",
+   "bloco": "D",
+   "frase": "Opa, acho que você acabou pulando uma etapa importante."
+  },
+  {
+   "id": "D039",
+   "bloco": "D",
+   "frase": "Está tudo bem sentir um pouco de nervosismo no começo."
+  },
+  {
+   "id": "D040",
+   "bloco": "D",
+   "frase": "Valeu demais pela participação, foi uma aula muito boa!"
+  },
+  {
+   "id": "E001",
+   "bloco": "E",
+   "frase": "O pedido custou R$ 1.250,00 e chegou em 3 dias.",
+   "leitura": "O pedido custou mil duzentos e cinquenta reais e chegou em três dias."
+  },
+  {
+   "id": "E002",
+   "bloco": "E",
+   "frase": "A aula começa às 9h30 do dia 12 de novembro.",
+   "leitura": "A aula começa às nove e meia do dia doze de novembro."
+  },
+  {
+   "id": "E003",
+   "bloco": "E",
+   "frase": "Segundo a LGPD, o cliente pode pedir a exclusão dos dados a qualquer momento.",
+   "leitura": "Segundo a éle gê pê dê, o cliente pode pedir a exclusão dos dados a qualquer momento."
+  },
+  {
+   "id": "E004",
+   "bloco": "E",
+   "frase": "A meta do trimestre é crescer 15% nas vendas.",
+   "leitura": "A meta do trimestre é crescer quinze por cento nas vendas."
+  },
+  {
+   "id": "E005",
+   "bloco": "E",
+   "frase": "O desconto máximo permitido é de 10% à vista.",
+   "leitura": "O desconto máximo permitido é de dez por cento à vista."
+  },
+  {
+   "id": "E006",
+   "bloco": "E",
+   "frase": "O telefone de atendimento é 0800 123 4567.",
+   "leitura": "O telefone de atendimento é zero oitocentos, um dois três, quatro cinco seis sete."
+  },
+  {
+   "id": "E007",
+   "bloco": "E",
+   "frase": "A entrega está prevista para 25 de dezembro.",
+   "leitura": "A entrega está prevista para vinte e cinco de dezembro."
+  },
+  {
+   "id": "E008",
+   "bloco": "E",
+   "frase": "O plano anual sai por R$ 89,90 por mês.",
+   "leitura": "O plano anual sai por oitenta e nove reais e noventa centavos por mês."
+  },
+  {
+   "id": "E009",
+   "bloco": "E",
+   "frase": "O CNPJ da empresa aparece no rodapé da nota fiscal.",
+   "leitura": "O cê ene pê jota da empresa aparece no rodapé da nota fiscal."
+  },
+  {
+   "id": "E010",
+   "bloco": "E",
+   "frase": "O curso tem 12 módulos e 48 aulas no total.",
+   "leitura": "O curso tem doze módulos e quarenta e oito aulas no total."
+  },
+  {
+   "id": "E011",
+   "bloco": "E",
+   "frase": "A reunião foi remarcada para 3 de março de 2027.",
+   "leitura": "A reunião foi remarcada para três de março de dois mil e vinte e sete."
+  },
+  {
+   "id": "E012",
+   "bloco": "E",
+   "frase": "Cerca de 80% dos clientes voltam a comprar em até 6 meses.",
+   "leitura": "Cerca de oitenta por cento dos clientes voltam a comprar em até seis meses."
+  },
+  {
+   "id": "E013",
+   "bloco": "E",
+   "frase": "O SAC funciona de segunda a sexta, das 8h às 18h.",
+   "leitura": "O sac funciona de segunda a sexta, das oito às dezoito horas."
+  },
+  {
+   "id": "E014",
+   "bloco": "E",
+   "frase": "O frete grátis vale para compras acima de R$ 199,00.",
+   "leitura": "O frete grátis vale para compras acima de cento e noventa e nove reais."
+  },
+  {
+   "id": "E015",
+   "bloco": "E",
+   "frase": "A taxa de juros é de 2,5% ao mês.",
+   "leitura": "A taxa de juros é de dois vírgula cinco por cento ao mês."
+  },
+  {
+   "id": "E016",
+   "bloco": "E",
+   "frase": "O produto tem garantia de 1 ano contra defeitos de fabricação.",
+   "leitura": "O produto tem garantia de um ano contra defeitos de fabricação."
+  },
+  {
+   "id": "E017",
+   "bloco": "E",
+   "frase": "Faltam 15 minutos para o fim da aula.",
+   "leitura": "Faltam quinze minutos para o fim da aula."
+  },
+  {
+   "id": "E018",
+   "bloco": "E",
+   "frase": "O CPF do cliente tem 11 dígitos.",
+   "leitura": "O cê pê éfe do cliente tem onze dígitos."
+  },
+  {
+   "id": "E019",
+   "bloco": "E",
+   "frase": "A loja fica na Avenida Paulista, número 1.578.",
+   "leitura": "A loja fica na Avenida Paulista, número mil quinhentos e setenta e oito."
+  },
+  {
+   "id": "E020",
+   "bloco": "E",
+   "frase": "Em 2026, a empresa completou 10 anos.",
+   "leitura": "Em dois mil e vinte e seis, a empresa completou dez anos."
+  },
+  {
+   "id": "E021",
+   "bloco": "E",
+   "frase": "O boleto vence no dia 5 de cada mês.",
+   "leitura": "O boleto vence no dia cinco de cada mês."
+  },
+  {
+   "id": "E022",
+   "bloco": "E",
+   "frase": "A nota da avaliação foi 9,5.",
+   "leitura": "A nota da avaliação foi nove e meio."
+  },
+  {
+   "id": "E023",
+   "bloco": "E",
+   "frase": "O pacote pesa 2,3 kg.",
+   "leitura": "O pacote pesa dois vírgula três quilos."
+  },
+  {
+   "id": "E024",
+   "bloco": "E",
+   "frase": "A equipe atendeu 1.342 chamados no mês passado.",
+   "leitura": "A equipe atendeu mil trezentos e quarenta e dois chamados no mês passado."
+  },
+  {
+   "id": "E025",
+   "bloco": "E",
+   "frase": "O prazo de troca é de 7 dias corridos.",
+   "leitura": "O prazo de troca é de sete dias corridos."
+  },
+  {
+   "id": "E026",
+   "bloco": "E",
+   "frase": "Use o código EVOLU10 para ganhar 10% de desconto.",
+   "leitura": "Use o código evolu dez para ganhar dez por cento de desconto."
+  },
+  {
+   "id": "E027",
+   "bloco": "E",
+   "frase": "O treinamento acontece no 2º andar, sala 204.",
+   "leitura": "O treinamento acontece no segundo andar, sala duzentos e quatro."
+  },
+  {
+   "id": "E028",
+   "bloco": "E",
+   "frase": "O PIX cai na conta em poucos segundos.",
+   "leitura": "O pix cai na conta em poucos segundos."
+  },
+  {
+   "id": "E029",
+   "bloco": "E",
+   "frase": "O preço subiu de R$ 45,00 para R$ 52,00.",
+   "leitura": "O preço subiu de quarenta e cinco reais para cinquenta e dois reais."
+  },
+  {
+   "id": "E030",
+   "bloco": "E",
+   "frase": "A pesquisa teve nota média de 4,8 de 5 estrelas.",
+   "leitura": "A pesquisa teve nota média de quatro vírgula oito de cinco estrelas."
+  },
+  {
+   "id": "F001",
+   "bloco": "F",
+   "frase": "Quando a gente entende o que o outro realmente precisa, a conversa fica mais leve, a venda acontece com naturalidade e o cliente volta."
+  },
+  {
+   "id": "F002",
+   "bloco": "F",
+   "frase": "Antes de apresentar qualquer proposta, vale a pena fazer duas ou três perguntas simples para entender o momento e as prioridades do cliente."
+  },
+  {
+   "id": "F003",
+   "bloco": "F",
+   "frase": "Um atendimento bem feito começa com um cumprimento atencioso, passa por uma escuta cuidadosa e termina com um próximo passo claro para os dois lados."
+  },
+  {
+   "id": "F004",
+   "bloco": "F",
+   "frase": "Se o cliente chegou irritado, deixe que ele fale tudo o que precisa antes de explicar o que aconteceu e o que você pode fazer."
+  },
+  {
+   "id": "F005",
+   "bloco": "F",
+   "frase": "Ao longo deste módulo, você vai praticar situações reais, receber comentários sobre cada resposta e perceber a sua evolução de uma aula para outra."
+  },
+  {
+   "id": "F006",
+   "bloco": "F",
+   "frase": "Negociar bem não significa ceder em tudo, significa entender o que é importante para cada lado e construir um acordo que os dois consigam cumprir."
+  },
+  {
+   "id": "F007",
+   "bloco": "F",
+   "frase": "Quando a notícia não é boa, fale com calma, explique o motivo sem rodeios e mostre logo em seguida quais são as alternativas possíveis."
+  },
+  {
+   "id": "F008",
+   "bloco": "F",
+   "frase": "A maior parte das objeções desaparece quando o cliente sente que foi ouvido de verdade e que a solução foi pensada para o caso dele."
+  },
+  {
+   "id": "F009",
+   "bloco": "F",
+   "frase": "Ouvir a própria gravação depois de cada simulação ajuda a perceber o ritmo, as pausas e as palavras que se repetem sem necessidade."
+  },
+  {
+   "id": "F010",
+   "bloco": "F",
+   "frase": "Um follow-up útil lembra o que foi conversado, traz uma informação nova e termina com uma pergunta fácil de responder em poucos segundos."
+  },
+  {
+   "id": "F011",
+   "bloco": "F",
+   "frase": "Ninguém nasce sabendo atender bem, é uma habilidade que se constrói com prática, atenção aos detalhes e vontade sincera de ajudar as pessoas."
+  },
+  {
+   "id": "F012",
+   "bloco": "F",
+   "frase": "Por telefone, o cliente não vê o seu rosto, então a atenção precisa aparecer no tom da voz, nas pausas e na escolha das palavras."
+  },
+  {
+   "id": "F013",
+   "bloco": "F",
+   "frase": "Antes de encerrar a conversa, confirme o que foi combinado, diga quando vai dar o próximo retorno e agradeça pelo tempo que o cliente dedicou."
+  },
+  {
+   "id": "F014",
+   "bloco": "F",
+   "frase": "Mostrar o valor do que o cliente leva costuma funcionar melhor do que baixar o preço, porque responde à dúvida real do pedido."
+  },
+  {
+   "id": "F015",
+   "bloco": "F",
+   "frase": "Quem conduz bem uma conversa sabe a hora de perguntar, a hora de explicar e, principalmente, a hora de ficar em silêncio e escutar."
+  },
+  {
+   "id": "F016",
+   "bloco": "F",
+   "frase": "Escolha uma única atitude para praticar nesta semana, anote em um lugar visível e observe como as conversas mudam a partir dela."
+  },
+  {
+   "id": "F017",
+   "bloco": "F",
+   "frase": "A empatia aparece nos pequenos gestos, como chamar o cliente pelo nome, olhar nos olhos e não interromper enquanto ele explica o problema."
+  },
+  {
+   "id": "F018",
+   "bloco": "F",
+   "frase": "Um cancelamento tratado com respeito pode trazer o cliente de volta no futuro, enquanto um processo difícil faz ele espalhar a experiência ruim."
+  },
+  {
+   "id": "F019",
+   "bloco": "F",
+   "frase": "Cada tentativa que você faz aqui mostra algo novo sobre o seu jeito de falar, e é justamente isso que torna o treino tão valioso."
+  },
+  {
+   "id": "F020",
+   "bloco": "F",
+   "frase": "No fim de cada aula, separe um momento para revisar o que funcionou, o que ainda trava e o que você quer testar depois."
+  }
+ ]
+}

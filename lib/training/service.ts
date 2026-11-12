@@ -2,9 +2,11 @@ import { AppError,check,field,whole,email,phone,grade,publicAttempt,assertSameOr
 import type {Database,FileBucket} from './types.ts';
 import {contentEditable,coverValue,COURSE_STATUSES} from './content.ts';
 import {lessonTitleFromFile} from './categories.ts';
+import {readWavHeader} from './wav.ts';
+import {voiceLineExists,voiceScript} from '../intelligence/voice-script.ts';
 type Identity={userId:string,email:string,displayName:string};
 export type Context={db:Database,bucket:FileBucket,captureBucket?:FileBucket,user:Identity|null,adminEmail:string,now?:()=>number};
-export const CAPTURE_LIMITS={photo:1024*1024,recording:4*1024*1024,itemsPerSession:2000} as const;
+export const CAPTURE_LIMITS={photo:1024*1024,recording:4*1024*1024,voice:4*1024*1024,itemsPerSession:2000} as const;
 const uuid=()=>crypto.randomUUID();
 const json=(v:any,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 export async function handle(req:Request,ctx:Context):Promise<Response>{try{return await execute(req,ctx)}catch(e){if(e instanceof AppError)return json({error:e.message},e.status);console.error('training_request_failed',e instanceof Error?e.message:'unknown');return json({error:'Não foi possível concluir a operação. Tente novamente.'},500)}}
@@ -27,6 +29,23 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  const normalizeCnpj=(raw:unknown)=>{const digits=String(raw||'').replace(/\D/g,'');if(!digits)return null;check(digits.length===14&&!/^(\d)\1{13}$/.test(digits),'CNPJ inválido.',400);const checksum=(length:number)=>{let sum=0,weight=length===12?5:6;for(let i=0;i<length;i++){sum+=(Number(digits[i])*weight);weight=weight===2?9:weight-1}const rest=sum%11;return rest<2?0:11-rest};check(checksum(12)===Number(digits[12])&&checksum(13)===Number(digits[13]),'Dígitos verificadores do CNPJ inválidos.',400);return digits};
  const contactValue=(v:unknown,limit=200)=>String(v||'').trim().slice(0,limit);
  const admin=()=>check(isAdmin,'Acesso exclusivo da administração.',403);
+ // Item de voz: o corpo inteiro (até 4 MB) é lido antes de gravar, para conferir o cabeçalho WAV no servidor.
+ const readBody=async(size:number)=>{check(req.body,'Arquivo vazio.');const out=new Uint8Array(size);let at=0;const reader=req.body.getReader();for(;;){const {value,done}=await reader.read();if(done)break;check(at+value.byteLength<=size,'Arquivo maior que o informado.');out.set(value,at);at+=value.byteLength}check(at===size,'Arquivo incompleto.');return out};
+ const voiceUpload=async(c:{id:string,mode:string,voice:unknown},session:string,moment:string,u:URL)=>{
+  const target=ctx.captureBucket!;check(c.mode==='voice'&&!!c.voice,'A gravação de voz não foi aceita.',403);
+  const version=String(u.searchParams.get('script')||'');check(voiceScript(version),'Roteiro desconhecido.');
+  const line=u.searchParams.get('line')||'';
+  if(moment==='script_line')check(voiceLineExists(version,line),'Frase fora do roteiro.');else check(!line,'O teste de sala não tem frase.');
+  const mime=(req.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();check(mime==='audio/wav','Formato não permitido. Use WAV.');
+  const size=whole(req.headers.get('content-length'),44,CAPTURE_LIMITS.voice);
+  check(Number((await one('SELECT count(*) n FROM capture_items WHERE consent_id=? AND session_id=?',c.id,session))?.n||0)<CAPTURE_LIMITS.itemsPerSession,'Limite de itens da sessão atingido.',429);
+  const bytes=await readBody(size),wav=readWavHeader(bytes);check(wav,'Áudio inválido. Use WAV PCM 16 bits mono.');
+  check(wav.sampleRate>=16000&&wav.sampleRate<=96000,'Taxa de amostragem fora do permitido.');check(wav.durationMs>=300&&wav.durationMs<=40000,'Duração fora de 0,3 a 40 s.');
+  const id=uuid(),key='capture/voice/'+user.userId+'/'+version+'/'+(moment==='room_tone'?'room_tone':line)+'/'+id+'.wav';
+  await target.put(key,new ReadableStream<Uint8Array>({start(ctrl){ctrl.enqueue(bytes);ctrl.close()}}),{httpMetadata:{contentType:mime}});
+  try{await run('INSERT INTO capture_items (id,consent_id,session_id,kind,moment,key,mime,size,created_at,script_version,line_id,duration_ms,sample_rate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',id,c.id,session,'voice',moment,key,mime,size,now(),version,moment==='room_tone'?null:line,wav.durationMs,wav.sampleRate)}catch(e){await target.delete(key);throw e}
+  return json({id,kind:'voice',moment,line:moment==='room_tone'?null:line,durationMs:wav.durationMs,sampleRate:wav.sampleRate,size},201);
+ };
  const learner=()=>{check(member,'Sua conta ainda não está vinculada a uma vaga ativa. Solicite a liberação ao responsável.',403);return member};
  const route=new URL(req.url).pathname.split('/api/training/')[1]||'';const parts=route.split('/');
  const body=async()=>{check(Number(req.headers.get('content-length')||0)<=150000,'Requisição muito grande.',413);const t=await req.text();check(t.length<=150000,'Requisição muito grande.',413);try{return JSON.parse(t)}catch{throw new AppError(400,'Dados inválidos.')}};
@@ -171,18 +190,21 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  if(route==='comments-summary'&&req.method==='GET'){admin();return json(await all('SELECT com.id,com.course_id,com.company_id,com.author,com.role,com.body,com.created_at,co.title course,c.name company FROM comments com JOIN companies c ON c.id=com.company_id JOIN courses co ON co.id=com.course_id ORDER BY com.created_at DESC,com.id DESC LIMIT 200'))}
  // Captacao da entrevista e da aula (D22, D23, D25): aceite versionado da politica de imagem, fotos JPEG e trechos de gravacao WebM no bucket privado intelligence-capture. Nada e apagado (retencao do primeiro teste).
  if(route==='capture-consent'&&req.method==='POST'){
-  const b=await body(),mode=b.mode==='interview'?'interview':b.mode==='lesson'?'lesson':'';check(mode,'Modo de captação inválido.');
-  if(mode==='interview')admin();else if(!isAdmin)learner();
+  const b=await body(),mode=b.mode==='interview'?'interview':b.mode==='lesson'?'lesson':b.mode==='voice'?'voice':'';check(mode,'Modo de captação inválido.');
+  if(mode==='interview'||mode==='voice')admin();else if(!isAdmin)learner();
   const version=String(b.policyVersion||'').trim();check(/^[a-zA-Z0-9._-]{1,40}$/.test(version),'Versão da política inválida.');
-  const camera=b.camera===true,photos=b.photos===true,recording=b.recording===true;check(camera||photos||recording,'Escolha ao menos um item para aceitar.');check(camera||!(photos||recording),'Fotos e gravação exigem a câmera.');
+  const camera=b.camera===true,photos=b.photos===true,recording=b.recording===true,voice=b.voice===true;
+  // Modo voz (termo voz-rascunho-0.1): só áudio, nunca câmera, fotos ou gravação de vídeo. O banco também garante.
+  if(mode==='voice'){check(voice,'Aceite a gravação da voz para continuar.');check(!camera&&!photos&&!recording,'O modo de voz não usa câmera, fotos nem gravação de vídeo.')}
+  else{check(!voice,'A gravação de voz tem termo próprio.');check(camera||photos||recording,'Escolha ao menos um item para aceitar.');check(camera||!(photos||recording),'Fotos e gravação exigem a câmera.')}
   const id=uuid(),at=now();
-  await run('INSERT INTO capture_consents (id,user_id,email,mode,policy_version,camera,photos,recording,accepted_at) VALUES (?,?,?,?,?,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,?)',id,user.userId,user.email.toLowerCase(),mode,version,camera?1:0,photos?1:0,recording?1:0,at);
-  return json({id,mode,policyVersion:version,camera,photos,recording,acceptedAt:at},201);
+  await run('INSERT INTO capture_consents (id,user_id,email,mode,policy_version,camera,photos,recording,voice,accepted_at) VALUES (?,?,?,?,?,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,?)',id,user.userId,user.email.toLowerCase(),mode,version,camera?1:0,photos?1:0,recording?1:0,voice?1:0,at);
+  return json({id,mode,policyVersion:version,camera,photos,recording,voice,acceptedAt:at},201);
  }
  if(route==='capture-consent'&&req.method==='GET'){
-  const mode=new URL(req.url).searchParams.get('mode')==='interview'?'interview':'lesson';
+  const q=new URL(req.url).searchParams.get('mode'),mode=q==='interview'||q==='voice'?q:'lesson';
   const c=await one('SELECT * FROM capture_consents WHERE user_id=? AND mode=? AND revoked_at IS NULL ORDER BY accepted_at DESC LIMIT 1',user.userId,mode);
-  return json({consent:c?{id:c.id,mode:c.mode,policyVersion:c.policy_version,camera:!!c.camera,photos:!!c.photos,recording:!!c.recording,acceptedAt:Number(c.accepted_at)}:null});
+  return json({consent:c?{id:c.id,mode:c.mode,policyVersion:c.policy_version,camera:!!c.camera,photos:!!c.photos,recording:!!c.recording,voice:!!c.voice,acceptedAt:Number(c.accepted_at)}:null});
  }
  if(parts[0]==='capture-consent'&&parts[1]&&parts[2]==='revoke'&&req.method==='POST'){
   const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',parts[1],user.userId);check(c,'Aceite não encontrado.',404);
@@ -190,11 +212,12 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  }
  if(route==='capture-upload'&&req.method==='POST'){
   const target=ctx.captureBucket;check(target,'Captação indisponível no momento.',503);
-  const u=new URL(req.url),kind=u.searchParams.get('kind')==='recording'?'recording':u.searchParams.get('kind')==='photo'?'photo':'';check(kind,'Tipo de captação inválido.');
-  const moment=String(u.searchParams.get('moment')||'');check(kind==='recording'?moment==='session':['answer_start','expression','interval'].includes(moment),'Momento de captação inválido.');
+  const u=new URL(req.url),k=u.searchParams.get('kind'),kind=k==='recording'||k==='photo'||k==='voice'?k:'';check(kind,'Tipo de captação inválido.');
+  const moment=String(u.searchParams.get('moment')||'');check(kind==='recording'?moment==='session':kind==='voice'?moment==='script_line'||moment==='room_tone':['answer_start','expression','interval'].includes(moment),'Momento de captação inválido.');
   const session=String(u.searchParams.get('session')||'');check(/^[a-zA-Z0-9-]{8,64}$/.test(session),'Sessão de captação inválida.');
   const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',u.searchParams.get('consent')||'',user.userId);check(c&&c.revoked_at==null,'Aceite da política de imagem ausente ou revogado.',403);
-  if(c.mode==='interview')admin();
+  if(c.mode==='interview'||c.mode==='voice')admin();
+  if(kind==='voice')return voiceUpload(c,session,moment,u);
   check(kind==='photo'?!!c.photos:!!c.recording,kind==='photo'?'As fotos não foram aceitas.':'A gravação não foi aceita.',403);
   const mime=(req.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();check(kind==='photo'?mime==='image/jpeg':mime==='video/webm'||mime==='video/mp4','Formato não permitido.');
   const size=whole(req.headers.get('content-length'),1,CAPTURE_LIMITS[kind]);
@@ -204,9 +227,19 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
   try{await run('INSERT INTO capture_items (id,consent_id,session_id,kind,moment,key,mime,size,created_at) VALUES (?,?,?,?,?,?,?,?,?)',id,c.id,session,kind,moment,key,mime,size,now())}catch(e){await target.delete(key);throw e}
   return json({id,kind,moment,size},201);
  }
+ if(route==='capture-voice-progress'&&req.method==='GET'){
+  // O próprio usuário vê o andamento do roteiro: ids, contagem e duração da gravação mais recente de cada frase. Sem chave nem URL de arquivo.
+  const version=String(new URL(req.url).searchParams.get('script')||'');const script=voiceScript(version);check(script,'Roteiro desconhecido.',404);
+  const rows=await all("SELECT i.line_id,i.moment,i.duration_ms,i.created_at FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id WHERE c.user_id=? AND c.mode='voice' AND i.kind='voice' AND i.script_version=? ORDER BY i.created_at,i.id",user.userId,version);
+  const lines=new Map<string,{takes:number,durationMs:number}>();let roomTones=0;
+  for(const r of rows){if(r.moment==='room_tone'){roomTones++;continue}const cur=lines.get(r.line_id);lines.set(r.line_id,{takes:(cur?.takes||0)+1,durationMs:Number(r.duration_ms)})}
+  const recorded=[...lines].map(([id,v])=>({id,takes:v.takes,durationMs:v.durationMs}));
+  return json({script:version,total:script.frases.length,recorded:recorded.length,speechMs:recorded.reduce((a,l)=>a+l.durationMs,0),roomTones,lines:recorded});
+ }
  if(route==='capture-items'&&req.method==='GET'){
   admin();const session=new URL(req.url).searchParams.get('session');
-  const rows=session?await all('SELECT i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,c.email,c.mode,c.policy_version FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id WHERE i.session_id=? ORDER BY i.created_at,i.id LIMIT 500',session):await all('SELECT i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,c.email,c.mode,c.policy_version FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id ORDER BY i.created_at DESC,i.id LIMIT 500');
+  const cols='i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,i.script_version,i.line_id,i.duration_ms,i.sample_rate,c.email,c.mode,c.policy_version';
+  const rows=session?await all('SELECT '+cols+' FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id WHERE i.session_id=? ORDER BY i.created_at,i.id LIMIT 500',session):await all('SELECT '+cols+' FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id ORDER BY i.created_at DESC,i.id LIMIT 500');
   return json(rows);
  }
  if(parts[0]==='capture-item'&&parts[1]&&req.method==='GET'){
