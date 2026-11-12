@@ -1,27 +1,29 @@
 'use client';
 // Casca estática da área do Training (classes ev-*) com dados fictícios, só para a prévia local.
 import {useState} from 'react';
-import {BookOpen,LayoutDashboard,MessageSquare,Video,Mic,ArrowLeft,CheckCircle2,ArrowRight} from 'lucide-react';
+import {BookOpen,LayoutDashboard,MessageSquare,Video,Mic,ScanFace,ArrowLeft,CheckCircle2,ArrowRight} from 'lucide-react';
 import '../../portal.css';
 import {LessonMeetingSlot,MeetingEntryCard} from '../lesson-slot';
 import {VoiceStudio} from '../voice-studio';
 import {fakeVoiceApi} from './fake-voice-api';
+import {MotionStudio} from '../motion-studio';
+import {fakeMotionApi} from './fake-motion-api';
 
 const MODULES=[{title:'Fundamentos',lessons:['Problema antes da solução','Hipóteses que dá para testar']},{title:'Validação',lessons:['Entrevistas com clientes','Evidência e margem']}];
 
 type NavItem={label:string;Icon:typeof BookOpen;active:boolean};
 const LEARNER_NAV:NavItem[]=[{label:'Visão geral',Icon:LayoutDashboard,active:false},{label:'Treinamentos',Icon:BookOpen,active:true},{label:'Comentários',Icon:MessageSquare,active:false}];
-const ADMIN_NAV:NavItem[]=[{label:'Visão geral',Icon:LayoutDashboard,active:false},{label:'Treinamentos',Icon:BookOpen,active:false},{label:'Entrevista do avatar',Icon:Video,active:true},{label:'Voz do avatar',Icon:Mic,active:false}];
+const ADMIN_NAV:NavItem[]=[{label:'Visão geral',Icon:LayoutDashboard,active:false},{label:'Treinamentos',Icon:BookOpen,active:false},{label:'Entrevista do avatar',Icon:Video,active:true},{label:'Voz do avatar',Icon:Mic,active:false},{label:'Captação do avatar',Icon:ScanFace,active:false}];
 
-export function PreviewShell({mode}:{mode:'lesson'|'interview'|'voice'}){
-  const lesson=mode==='lesson',voice=mode==='voice';
-  const [api]=useState(fakeVoiceApi);
-  const nav=lesson?LEARNER_NAV:ADMIN_NAV.map(n=>({...n,active:voice?n.label==='Voz do avatar':n.label==='Entrevista do avatar'}));
+export function PreviewShell({mode}:{mode:'lesson'|'interview'|'voice'|'motion'}){
+  const lesson=mode==='lesson',voice=mode==='voice',motion=mode==='motion';
+  const [api]=useState(fakeVoiceApi);const [motionApi]=useState(fakeMotionApi);
+  const nav=lesson?LEARNER_NAV:ADMIN_NAV.map(n=>({...n,active:motion?n.label==='Captação do avatar':voice?n.label==='Voz do avatar':n.label==='Entrevista do avatar'}));
   return <div className="ev-shell">
     <aside className="ev-sidebar">
       <div className="ev-sidebar-head"><span className="ev-brand"><img src="/brand/evolu-white.png" alt="EVOLU"/><small>Training</small></span></div>
       <p className="ev-sidebar-kicker">{lesson?'ÁREA DE APRENDIZAGEM':'GESTÃO DA PLATAFORMA'}</p>
-      <nav>{nav.map(({label,Icon,active})=><a key={label} className={'ev-nav-link '+(active?'active':'')} href={lesson?'?':label==='Voz do avatar'?'?modo=voz':'?modo=entrevista'}><Icon size={17}/><span>{label}</span></a>)}</nav>
+      <nav>{nav.map(({label,Icon,active})=><a key={label} className={'ev-nav-link '+(active?'active':'')} href={lesson?'?':label==='Voz do avatar'?'?modo=voz':label==='Captação do avatar'?'?modo=captacao':'?modo=entrevista'}><Icon size={17}/><span>{label}</span></a>)}</nav>
     </aside>
     <div className="ev-body">
       <header className="ev-topbar"><div className="ev-topbar-search"><span>EVOLU Training / {lesson?'Aprendizagem':'Administração'} / prévia local com dados fictícios</span></div></header>
@@ -37,6 +39,7 @@ export function PreviewShell({mode}:{mode:'lesson'|'interview'|'voice'}){
               <div className="ev-lesson-actions"><button className="ev-button lime" disabled><CheckCircle2 size={17}/>Marcar aula concluída</button><a className="ev-button outline" href="?">Próxima aula <ArrowRight size={16}/></a></div></section>
             <aside className="ev-lesson-right"><section className="ev-panel"><h2>Conteúdo do curso</h2><progress value={1} max={4}/>{MODULES.map(m=><details key={m.title} open><summary>{m.title}</summary>{m.lessons.map(l=><a key={l} href="?">○ {l}</a>)}</details>)}</section><section className="ev-panel"><h2>Ferramentas da aula</h2><p>Nenhum material na prévia.</p></section></aside>
           </div></>
+        :motion?<><div className="ev-heading"><div><span className="ev-eyebrow">INTELLIGENCE / CAPTAÇÃO</span><h1>Captação do avatar</h1><p>Prévia local: a extração roda de verdade neste navegador, as trilhas ficam na memória da página e nada é enviado.</p></div></div><MotionStudio api={motionApi}/></>
         :voice?<><div className="ev-heading"><div><span className="ev-eyebrow">INTELLIGENCE / VOZ</span><h1>Voz do avatar</h1><p>Prévia local: o áudio fica na memória da página, nada é enviado.</p></div></div><VoiceStudio api={api}/></>
         :<><div className="ev-heading"><div><span className="ev-eyebrow">INTELLIGENCE / CAPACITADORES</span><h1>Entrevista do avatar</h1><p>O avatar do proprietário entrevista o capacitador para montar o avatar dele. A saída é sempre um rascunho (DRAFT), revisado antes de qualquer uso.</p></div></div><MeetingEntryCard mode="interview" title="Sala de entrevista" description="Abra a sala junto com o capacitador. A conversa fica no profissional, o rascunho sai ao final e fotos e gravação, com o aceite do capacitador, vão para a EVOLU." action="Abrir a sala"/></>}
       </main>

@@ -258,3 +258,36 @@ test('expressões: ids do servidor iguais ao roteiro',()=>{
   const s=expressionScript(CURRENT_EXPRESSION_SCRIPT)!;assert.deepEqual([...EXPRESSION_SCRIPT_IDS[s.versao]],s.passos.map(p=>p.id));
   assert.equal(expressionScriptKnown('__proto__'),false);assert.equal(expressionScriptStage('roteiro-expressoes-0.1'),'face');assert.equal(expressionScriptStage('toString'),null);
 });
+
+import {TrackChunker,quantizeExpression,quantizeAngle,headAngles,frameIsBlack,faceColumns,faceScale,faceValues,TrackUploader,newCameraId,type MotionApi} from '../app/intelligence/motion-capture.ts';
+import {validateTrack} from '../lib/intelligence/motion-track.ts';
+import {MEDIAPIPE} from '../lib/intelligence/mediapipe-assets.ts';
+import {IMAGE_POLICY} from '../app/intelligence/meeting-text.ts';
+import {createHash} from 'node:crypto';
+import {readFileSync} from 'node:fs';
+test('captação do avatar: escalas, ângulos da cabeça, imagem preta e trechos de 60 s aceitos pelo servidor',()=>{
+  assert.equal(quantizeExpression(1),255);assert.equal(quantizeExpression(-0.2),0);assert.equal(quantizeExpression(Number.NaN),0);assert.equal(quantizeAngle(-12.346),-1235);
+  const rot=(deg:number)=>{const a=deg*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [c,0,-s,0, 0,1,0,0, s,0,c,0, 0,0,0,1]};
+  const h=headAngles(rot(30));assert.ok(Math.abs(h.yaw-30)<1e-9&&Math.abs(h.pitch)<1e-9&&Math.abs(h.roll)<1e-9,JSON.stringify(h));
+  assert.equal(frameIsBlack(new Uint8Array(32*18*4)),true);assert.equal(frameIsBlack(Uint8Array.from({length:32*18*4},(_,i)=>(i*37)%256)),false);
+  const names=['_neutral','jawOpen'];const c=new TrackChunker('face',{session:'mov-1',camera:'ref',extractor:{lib:MEDIAPIPE.lib,version:MEDIAPIPE.version,model:MEDIAPIPE.face.file,modelSha256:MEDIAPIPE.face.sha256},source:{kind:'browser'}},faceColumns(names),faceScale(names));
+  assert.equal(c.push(10,faceValues([0.1,0.5],rot(10))),null);assert.equal(c.push(59990,faceValues([0,1],null)),null);
+  const first=c.push(60010,faceValues([0,0],null))!;assert.equal(first.t0Ms,0);assert.equal(first.durationMs,60000);assert.deepEqual(first.frames[0],[10,26,128,1000,0,0]);
+  assert.equal(validateTrack(JSON.parse(JSON.stringify(first)),{track:'face',session:'mov-1',camera:'ref',t0Ms:0}).frames.length,2);
+  const last=c.flush()!;assert.equal(last.t0Ms,60000);assert.equal(last.durationMs,11);assert.equal(c.flush(),null);
+  assert.equal(newCameraId('reference'),'ref');assert.equal(newCameraId('close',2),'close_2');
+  assert.equal(IMAGE_POLICY.version,'imagem-rascunho-0.1');assert.ok(IMAGE_POLICY.points.some(p=>/nunca para criar voz/.test(p)));
+  assert.equal(isPortalRoute('/admin/captacao-avatar','admin'),true);assert.equal(isPortalRoute('/area/captacao-avatar','learner'),false);assert.equal(portalPageTitle('/admin/captacao-avatar'),'Captação do avatar');
+});
+test('captação do avatar: envio em série, nova tentativa e guarda do que falhar',async()=>{
+  let calls=0;const api={async uploadTrack(){calls++;if(calls<=3)throw new Error('fora')}} as unknown as MotionApi;
+  const up=new TrackUploader(api,'c-1');const t={schema:'evolu.motion-track',version:'0.1',track:'marks',session:'s',camera:'ref',t0Ms:0,durationMs:1,extractor:null,source:{},columns:['t'],scale:{},frames:[[0]]} as const;
+  up.add({...t,frames:[[0]],columns:['t']});up.add({...t,t0Ms:60000,frames:[[0]],columns:['t']});up.add(null);await up.idle();
+  assert.equal(calls,4);assert.equal(up.sent,1);assert.equal(up.failed.length,1);assert.equal(up.failed[0].t0Ms,0);
+});
+test('mediapipe: versão fixa, modelo servido pelo Training com SHA-256 e licença registrados',()=>{
+  const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));assert.equal(pkg.dependencies['@mediapipe/tasks-vision'],MEDIAPIPE.version);
+  const model=readFileSync(new URL('../public'+MEDIAPIPE.face.path,import.meta.url));assert.equal(model.byteLength,MEDIAPIPE.face.bytes);assert.equal(createHash('sha256').update(model).digest('hex'),MEDIAPIPE.face.sha256);
+  assert.equal(MEDIAPIPE.face.license,'Apache-2.0');assert.ok(readFileSync(new URL('../public/intelligence/mediapipe/LICENSE-Apache-2.0.txt',import.meta.url),'utf8').includes('Apache License'));
+  const wasm=readFileSync(new URL('../node_modules/@mediapipe/tasks-vision/wasm/vision_wasm_internal.wasm',import.meta.url));assert.equal(createHash('sha256').update(wasm).digest('hex'),MEDIAPIPE.wasm.files['vision_wasm_internal.wasm']);
+});

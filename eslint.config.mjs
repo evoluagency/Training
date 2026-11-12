@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     ".sites-runtime/**",
     "outputs/**",
     "work/**",
+    // WASM do MediaPipe copiado de node_modules (scripts/mediapipe-assets.mjs), código de terceiros.
+    "public/intelligence/mediapipe/wasm/**",
   ]),
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],

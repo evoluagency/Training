@@ -49,3 +49,6 @@ yarn-error.log*
 # Provider CLI local state
 /.vercel/
 /supabase/.temp/
+
+# WASM do MediaPipe copiado de node_modules por scripts/mediapipe-assets.mjs
+/public/intelligence/mediapipe/wasm/

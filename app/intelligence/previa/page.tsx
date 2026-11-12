@@ -8,5 +8,5 @@ export const metadata={title:'Prévia local do Intelligence',robots:{index:false
 export default async function IntelligencePreview({searchParams}:{searchParams:Promise<{modo?:string}>}){
   if(!localPreviewEnabled())notFound();
   const {modo}=await searchParams;
-  return <PreviewShell mode={modo==='entrevista'?'interview':modo==='voz'?'voice':'lesson'}/>;
+  return <PreviewShell mode={modo==='entrevista'?'interview':modo==='voz'?'voice':modo==='captacao'?'motion':'lesson'}/>;
 }

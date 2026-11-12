@@ -89,3 +89,17 @@ export const VOICE_POLICY={
     'Usar a voz treinada com alunos depende do termo de consentimento, assinado à parte, e da sua aprovação da voz.',
   ],
 } as const;
+
+// Termo da captação do avatar (sessão A rosto, B corpo, C aula). Rascunho para revisão jurídica.
+export const IMAGE_POLICY={
+  version:'imagem-rascunho-0.1',
+  title:'Captação de imagem e movimento para o avatar',
+  points:[
+    'Com o seu aceite, a EVOLU usa o vídeo do seu rosto e do seu corpo, em uma ou mais câmeras, para extrair as suas expressões e o seu jeito de se mover.',
+    'O vídeo gravado no celular fica com você, no seu disco. Para a EVOLU sobem só as trilhas extraídas (números das expressões e da rotação da cabeça), as marcas do roteiro e os dados do arquivo (nome, tamanho e SHA-256).',
+    'A extração roda no seu navegador. O áudio da gravação serve só para sincronizar as câmeras, nunca para criar voz sintética.',
+    'Nesta fase a sua aparência real não é usada no avatar. As trilhas servem para dar ao avatar o seu estilo de expressão e de movimento.',
+    'Só a administração da EVOLU acessa este modo e o que for enviado, em armazenamento privado.',
+    'Você pode parar e continuar outro dia, ou revogar este aceite a qualquer momento. Revogar interrompe a captação. O que já foi enviado continua guardado nesta fase de teste.',
+  ],
+} as const;

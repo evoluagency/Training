@@ -14,6 +14,8 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {createPortal} from 'react-dom';
 import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot} from 'lucide-react';
 import {Avatar3D,type Avatar3DHandle} from './avatar3d';
+import {listCameras,useBlackWatch,BLACK_WARNING} from './camera-picker';
+import './motion-studio.css';
 import {avatarMood} from './avatar-motion';
 import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,CAMERA_POLICY,CAPTURE_POLICY,type MeetingMode} from './meeting-text';
 import {PiperVoice,PIPER_DOWNLOAD_MB,chunkForSpeech} from './neural-voice';
@@ -90,6 +92,9 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
 
   const avatarRef=useRef<Avatar3DHandle>(null);
   const meVideo=useRef<HTMLVideoElement>(null),lobbyVideo=useRef<HTMLVideoElement>(null);
+  // Escolha da câmera (vale também para a gravação da entrevista) e aviso de imagem preta.
+  const [cams,setCams]=useState<MediaDeviceInfo[]>([]);const [camDevice,setCamDevice]=useState('');const camDeviceRef=useRef('');
+  const camVideo=()=>camDeviceRef.current?{deviceId:{exact:camDeviceRef.current}}:true;
   const micDialog=useRef<HTMLDialogElement>(null),capDialog=useRef<HTMLDialogElement>(null),camDialog=useRef<HTMLDialogElement>(null);
   const logEnd=useRef<HTMLLIElement>(null);
   const live=useRef({busy:false,speaking:false,micOpen:false,inCall:false,speakToken:0,seq:0,voiceOn:true,rate:1.05,
@@ -184,12 +189,15 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
         let accepted=false;try{accepted=localStorage.getItem(CAM_ACK_KEY)===CAMERA_POLICY.version}catch{/* sem armazenamento */}
         if(!accepted){setConsentChecked(false);accepted=await confirmDialog(camDialog.current);if(!accepted)return;try{localStorage.setItem(CAM_ACK_KEY,CAMERA_POLICY.version)}catch{/* sem armazenamento */}}
       }
-      try{s.cam=await navigator.mediaDevices.getUserMedia({video:true})}catch{setLobbyNotice('Não consegui abrir a câmera. A reunião segue sem vídeo.');addLog('Sistema','Não consegui abrir a câmera. A reunião segue sem vídeo.')}
+      try{s.cam=await navigator.mediaDevices.getUserMedia({video:camVideo()});const id=s.cam.getVideoTracks()[0]?.getSettings().deviceId||'';camDeviceRef.current=id;setCamDevice(id);void listCameras().then(setCams).catch(()=>{})}catch{setLobbyNotice('Não consegui abrir a câmera. A reunião segue sem vídeo.');addLog('Sistema','Não consegui abrir a câmera. A reunião segue sem vídeo.')}
     }
     attachCam();
     if(on&&s.cam&&!lesson)void ensureConsent(false);
   },[addLog,attachCam,confirmDialog,lesson,ensureConsent]);
   useEffect(()=>{attachCam()},[phase,attachCam]);
+  const switchCam=useCallback(async(id:string)=>{const s=live.current;if(s.recorder){addLog('Sistema','Pare a gravação antes de trocar a câmera.');return}
+    s.cam?.getTracks().forEach(t=>t.stop());s.cam=null;camDeviceRef.current=id;setCamDevice(id);await setCam(true)},[addLog,setCam]);
+  const blackLobby=useBlackWatch(lobbyVideo,phase==='lobby'&&camOn),blackCall=useBlackWatch(meVideo,phase==='call'&&camOn);
 
   // ---------- ouvir: microfone aberto como numa chamada ----------
   const pauseListening=useCallback(()=>{
@@ -302,7 +310,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     if(typeof MediaRecorder==='undefined'||!navigator.mediaDevices?.getUserMedia){addLog('Sistema','Este navegador não grava. A entrevista segue sem gravação.');return}
     const consent=await ensureConsent(true);
     if(!consent?.recording||!s.uploader){addLog('Sistema','Sem aceite de gravação registrado. Nada foi gravado.');return}
-    try{s.rec=await navigator.mediaDevices.getUserMedia({video:true,audio:true})}catch{addLog('Sistema','Não consegui acesso à câmera e ao microfone para gravar.');return}
+    try{s.rec=await navigator.mediaDevices.getUserMedia({video:camVideo(),audio:true})}catch{addLog('Sistema','Não consegui acesso à câmera e ao microfone para gravar.');return}
     s.cam?.getTracks().forEach(t=>t.stop());s.cam=new MediaStream(s.rec.getVideoTracks());attachCam();
     const uploader=s.uploader;
     const recorder=new SegmentRecorder(s.rec,blob=>uploader.enqueue(blob,'recording','session'));
@@ -446,6 +454,8 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
           {contextTitle&&<p className="ev-lobby-context">{contextTitle}</p>}
           <button className="ev-pill-button lime" onClick={join} disabled={joining}>{joining?'Entrando…':lesson?'Participar agora':'Iniciar entrevista'}</button>
           {lobbyNotice&&<p className="ev-lobby-error" role="alert">{lobbyNotice}</p>}
+          {camOn&&cams.length>1&&<label className="ev-lobby-cam">Câmera <select value={camDevice} onChange={e=>void switchCam(e.target.value)}>{cams.map((d,i)=><option key={d.deviceId||i} value={d.deviceId}>{d.label||'Câmera '+(i+1)}</option>)}</select></label>}
+          {blackLobby&&<p className="ev-lobby-error" role="alert">{BLACK_WARNING}</p>}
           <details className="ev-lobby-more"><summary>Voz e acessibilidade</summary>
             <label><input type="checkbox" checked={voiceOn} disabled={!hasSynth&&engine==='browser'} onChange={e=>setVoiceOn(e.target.checked)}/> Voz do avatar</label>
             <fieldset className="ev-lobby-engine"><legend>Tipo de voz</legend>
@@ -500,7 +510,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
           <div className={'ev-tile me'+(userTalking?' speaking':'')}>
             <video ref={meVideo} autoPlay muted playsInline hidden={!camOn}/>
             {!camOn&&<span className="ev-room-initial" aria-hidden="true">{lesson?'P':'C'}</span>}
-            <span className="ev-tile-name">Você{listening&&<small> · ouvindo</small>}</span>
+            <span className="ev-tile-name">Você{listening&&<small> · ouvindo</small>}{blackCall&&<small role="alert"> · imagem preta, confira a câmera</small>}</span>
             {!micOpen&&<span className="ev-tile-muted" aria-label="microfone fechado"><MicOff size={13}/></span>}
           </div>
           {ccOn&&caption&&caption.text&&<div className="ev-room-caption" aria-live="polite">

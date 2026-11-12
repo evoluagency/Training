@@ -1,0 +1,15 @@
+.ev-cam-picker{display:grid;gap:.6rem;margin:.8rem 0}
+.ev-cam-picker label{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-weight:600}
+.ev-cam-picker select{min-width:0;max-width:100%;flex:1 1 14rem;padding:.45rem .6rem;border-radius:.5rem;border:1px solid var(--ev-line,#d0d5dd);background:transparent;color:inherit}
+.ev-cam-preview,.ev-motion-cam video{width:100%;max-width:640px;aspect-ratio:16/9;background:#000;border-radius:.75rem;object-fit:cover;transform:scaleX(-1)}
+.ev-motion-prep{margin:.4rem 0 .8rem 1.2rem;display:grid;gap:.3rem}
+.ev-motion-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:1rem;margin:.8rem 0}
+.ev-motion-live ul{list-style:none;padding:0;margin:.3rem 0;display:grid;gap:.3rem}
+.ev-motion-live li{display:grid;grid-template-columns:minmax(0,1fr) 5rem;gap:.5rem;align-items:center;font-size:.85rem;overflow-wrap:anywhere}
+.ev-motion-live meter{width:100%}
+.ev-motion-file{display:grid;grid-template-columns:repeat(auto-fit,minmax(12rem,1fr));gap:.6rem;margin:.6rem 0}
+.ev-motion-file label{display:grid;gap:.25rem;font-size:.9rem}
+.ev-motion-file input{padding:.45rem .6rem;border-radius:.5rem;border:1px solid var(--ev-line,#d0d5dd);background:transparent;color:inherit;min-width:0}
+.ev-lobby-cam{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;font-size:.9rem}
+.ev-lobby-cam select{max-width:100%;min-width:0;padding:.35rem .5rem;border-radius:.5rem}
+@media (max-width:760px){.ev-motion-grid{grid-template-columns:1fr}}
