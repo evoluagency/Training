@@ -35,6 +35,6 @@ async function handler(request:Request){
   const length=Number(request.headers.get('content-length')||0);
   if(length>MAX_BODY_BYTES)return fail(413,'BODY_TOO_LARGE');
   const body=request.method==='POST'?await request.text():'';
-  return forwardToIntelligence({route,base,body});
+  return forwardToIntelligence({route,base,body,bypass:process.env.INTELLIGENCE_AVATAR_BYPASS});
 }
 export const GET=handler;export const POST=handler;

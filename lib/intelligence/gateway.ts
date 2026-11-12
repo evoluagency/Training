@@ -42,6 +42,11 @@ export function localPreviewEnabled(env: Record<string, string | undefined> = pr
   return env.NODE_ENV !== 'production' && env.INTELLIGENCE_LOCAL_PREVIEW === '1';
 }
 
+/** Segredo de bypass aceito só com formato simples (sem quebra de linha ou cabeçalho embutido). */
+export function bypassValue(raw: string | undefined): boolean {
+  return typeof raw === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(raw);
+}
+
 const json = (status: number, body: unknown) =>
   Response.json(body, { status, headers: { 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' } });
 
@@ -50,7 +55,7 @@ const json = (status: number, body: unknown) =>
  * Erros do serviço chegam como { error: CODIGO } (sem detalhe interno).
  */
 export async function forwardToIntelligence(
-  { route, base, body, fetchImpl = fetch }: { route: IntelligenceRoute; base: URL; body: string; fetchImpl?: typeof fetch },
+  { route, base, body, fetchImpl = fetch, bypass }: { route: IntelligenceRoute; base: URL; body: string; fetchImpl?: typeof fetch; bypass?: string },
 ): Promise<Response> {
   if (Buffer.byteLength(body, 'utf8') > MAX_BODY_BYTES) return json(413, { error: 'BODY_TOO_LARGE' });
   if (route.method === 'POST' && body) {
@@ -61,7 +66,8 @@ export async function forwardToIntelligence(
   try {
     upstream = await fetchImpl(target, {
       method: route.method,
-      headers: route.method === 'POST' ? { 'content-type': 'application/json' } : undefined,
+      // Bypass de automação da Vercel (variável só de servidor): o serviço do Intelligence fica atrás da proteção do projeto.
+      headers: { ...(route.method === 'POST' ? { 'content-type': 'application/json' } : {}), ...(bypassValue(bypass) ? { 'x-vercel-protection-bypass': bypass as string } : {}) },
       body: route.method === 'POST' ? body || '{}' : undefined,
       cache: 'no-store',
       redirect: 'error',

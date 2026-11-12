@@ -187,3 +187,14 @@ test('voz neural: fonemas no formato do Piper, frases curtas e arquivo fixado',a
   assert.match(PIPER_ASSETS.model,/\/resolve\/[0-9a-f]{40}\//,'revisão fixada');assert.match(PIPER_ASSETS.modelSha256,/^[0-9a-f]{64}$/);
   assert.match(PIPER_ASSETS.ortWasm,/onnxruntime-web@1\.22\.0\//,'wasm igual à versão do package.json');
 });
+import {bypassValue} from '../lib/intelligence/gateway.ts';
+test('intelligence: bypass da Vercel só do servidor, formato simples, nunca devolvido',async()=>{
+  assert.ok(bypassValue('a'.repeat(32)));assert.ok(!bypassValue(undefined));assert.ok(!bypassValue('curto'));assert.ok(!bypassValue('a'.repeat(30)+'\r\nX-Evil: 1'));
+  let seen:Headers|null=null;
+  const fetchImpl=(async(_u:URL,init:RequestInit)=>{seen=new Headers(init.headers);return Response.json({ok:true},{headers:{'x-vercel-protection-bypass':'eco','set-cookie':'x=1'}})}) as unknown as typeof fetch;
+  const r=await forwardToIntelligence({route:resolveIntelligenceRoute('GET','state')!,base:new URL('https://svc.example.test/avatar'),body:'',fetchImpl,bypass:'b'.repeat(32)});
+  assert.equal(seen!.get('x-vercel-protection-bypass'),'b'.repeat(32));
+  assert.equal(r.headers.get('x-vercel-protection-bypass'),null);assert.equal(r.headers.get('set-cookie'),null);
+  await forwardToIntelligence({route:resolveIntelligenceRoute('GET','state')!,base:new URL('https://svc.example.test/avatar'),body:'',fetchImpl,bypass:'ruim'});
+  assert.equal(seen!.get('x-vercel-protection-bypass'),null);
+});
