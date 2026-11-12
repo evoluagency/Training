@@ -78,3 +78,29 @@ test('connected portal routes select the current learning stage and reject unkno
  assert.equal(isPortalRoute('/area/qualquer-coisa','learner'),false);
  assert.equal(isPortalRoute('/area/treinamentos/'+id+'/nao-existe','learner'),false);
 });
+
+test('PostgreSQL capture migration stores consent and items with RLS on and no client grants',async()=>{
+ const pg=new PGlite();
+ await pg.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
+ for(const file of ['20261023110552_training_portable.sql','20261024153608_training_content_editor.sql','20261111230000_intelligence_capture.sql'])await pg.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ const db=postgresDatabase(async(q,p)=>{const r=await pg.query<Record<string,unknown>>(q,p);return {rows:r.rows,affectedRows:r.affectedRows};});
+ const keys:string[]=[];const captureBucket={put:async(key:string,data:ReadableStream<Uint8Array>)=>{await new Response(data).arrayBuffer();keys.push(key)},delete:async()=>{},get:async()=>({body:new ReadableStream({start(c){c.close()}}),size:0,redirectUrl:'https://storage.example.test/signed-capture'})};
+ const ctx=(user:typeof owner)=>({db,bucket:captureBucket,captureBucket,user,adminEmail:owner.email});
+ const api=async(path:string,body?:unknown,user=owner)=>{const r=await handle(new Request('https://training.test/api/training/'+path,{method:body===undefined?'GET':'POST',headers:{'content-type':'application/json',origin:'https://training.test'},body:body===undefined?undefined:JSON.stringify(body)}),ctx(user));return {status:r.status,body:await r.json() as Record<string,unknown>};};
+ try{
+  await api('me');
+  const consent=await api('capture-consent',{mode:'interview',policyVersion:'rascunho-0.1',camera:true,photos:true,recording:true});assert.equal(consent.status,201,JSON.stringify(consent));
+  assert.equal((await api('capture-consent',{mode:'interview',policyVersion:'rascunho-0.1',camera:true},student)).status,403);
+  const bytes=new Uint8Array([0xff,0xd8,0xff,0xe0,0,0x10]);
+  const up=await handle(new Request('https://training.test/api/training/capture-upload?consent='+consent.body.id+'&session=entrevista-0001&kind=photo&moment=answer_start',{method:'POST',headers:{origin:'https://training.test','content-type':'image/jpeg','content-length':String(bytes.byteLength)},body:bytes}),ctx(owner));assert.equal(up.status,201,await up.clone().text());
+  const current=await api('capture-consent?mode=interview');assert.equal(current.body.consent.photos,true);assert.equal(current.body.consent.recording,true);
+  const items=await api('capture-items?session=entrevista-0001');assert.equal(items.body.length,1);assert.equal(items.body[0].kind,'photo');
+  const file=await handle(new Request('https://training.test/api/training/capture-item/'+items.body[0].id),ctx(owner));assert.equal(file.status,302);
+  assert.equal((await api('capture-consent/'+consent.body.id+'/revoke',{})).status,200);
+  const row=(await pg.query("SELECT revoked_at,camera FROM training.capture_consents")).rows[0] as {revoked_at:string,camera:boolean};assert.ok(Number(row.revoked_at)>0);assert.equal(row.camera,true);
+  const bucketRow=(await pg.query("SELECT public,file_size_limit FROM storage.buckets WHERE id='intelligence-capture'")).rows[0] as {public:boolean};assert.equal(bucketRow.public,false);
+  const rls=await pg.query("SELECT count(*)::integer n FROM pg_tables WHERE schemaname='training' AND tablename LIKE 'capture_%' AND rowsecurity=true");assert.equal((rls.rows[0] as {n:number}).n,2);
+  const grants=await pg.query("SELECT count(*)::integer n FROM information_schema.role_table_grants WHERE table_schema='training' AND table_name LIKE 'capture_%' AND grantee IN ('anon','authenticated','PUBLIC')");assert.equal((grants.rows[0] as {n:number}).n,0);
+  assert.equal(keys.length,1);
+ }finally{await pg.close();}
+});

@@ -28,16 +28,18 @@ const manager={userId:'manager',email:'manager@example.test',displayName:'Manage
 function fixture(){
  const sql=new DatabaseSync(':memory:');sql.exec('PRAGMA foreign_keys=ON;');sql.exec(readFileSync(new URL('../drizzle/0000_lush_nighthawk.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0001_link_resources_to_lessons.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0002_public_course_showcase.sql',import.meta.url),'utf8'));sql.exec(readFileSync(new URL('../drizzle/0003_company_profile.sql',import.meta.url),'utf8').replaceAll('--> statement-breakpoint',''));sql.exec(readFileSync(new URL('../drizzle/0004_learner_notes.sql',import.meta.url),'utf8'));
  sql.exec(readFileSync(new URL('../drizzle/0005_content_editor.sql',import.meta.url),'utf8'));
+ sql.exec(readFileSync(new URL('../drizzle/0006_intelligence_capture.sql',import.meta.url),'utf8'));
  const db:any={prepare(query:string){let vals:any[]=[];return {bind(...v:any[]){vals=v;return this},async first(){return sql.prepare(query).get(...vals)??null},async all(){return {results:sql.prepare(query).all(...vals)}},async run(){return {meta:sql.prepare(query).run(...vals)}}}}};
  const objects=new Map<string,Uint8Array>();const bucket:any={async put(key:string,data:any){objects.set(key,new Uint8Array(await new Response(data).arrayBuffer()))},async delete(key:string){objects.delete(key)},async get(key:string){const v=objects.get(key);return v?{body:new Blob([new Uint8Array(v).buffer]).stream(),size:v.length}:null}};
  let clock=1700000000000;
- const ctx=(user:any)=>({db,bucket,user,adminEmail:admin.email,now:()=>clock});
+ const captured=new Map<string,Uint8Array>();const captureBucket={async put(key:string,data:ReadableStream<Uint8Array>){captured.set(key,new Uint8Array(await new Response(data).arrayBuffer()))},async delete(key:string){captured.delete(key)},async get(key:string){const v=captured.get(key);return v?{body:new Blob([new Uint8Array(v).buffer]).stream(),size:v.length}:null}};
+ const ctx=(user:any)=>({db,bucket,captureBucket,user,adminEmail:admin.email,now:()=>clock});
  async function request(path:string,user:any=admin,body?:any,method='POST',origin='https://training.test'){
   const r=await handle(new Request('https://training.test/api/training/'+path,{method:body===undefined?'GET':method,headers:{origin,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)}),ctx(user));return {status:r.status,body:await r.json() as any};
  }
  const post=async(path:string,body:any,user:any=admin)=>{const r=await request(path,user,body);assert.ok(r.status<300,JSON.stringify(r));return r.body};
  async function setup(){const ca=await post('companies',{name:'A',seats:2}),cb=await post('companies',{name:'B',seats:2});const ma=await post('members',{companyId:ca.id,name:'Alice Full',jobTitle:'Analista',whatsapp:'+55 11 99999-0000',email:alice.email,role:'learner'}),mb=await post('members',{companyId:cb.id,name:'Bob Full',jobTitle:'Gestor',email:bob.email,role:'learner'});const cat=await post('catalogs',{title:'Catálogo'}),course=await post('courses',{catalogId:cat.id,title:'Curso',description:'Teste',hours:2,minutes:1,passing:70,attemptLimit:2,certificate:true});const mod=await post('course/'+course.id+'/module',{title:'Módulo',position:1});const lesson=await post('course/'+course.id+'/lesson',{moduleId:mod.id,title:'Aula',body:'Conteúdo',position:1,mode:'equivalent'});const q1=await post('course/'+course.id+'/question',{prompt:'Questão 1',options:['Certa','Errada'],correct:0,position:1});const q2=await post('course/'+course.id+'/question',{prompt:'Questão 2',options:['Errada','Certa'],correct:1,position:2});await post('course/'+course.id+'/publish',{});await post('grants',{companyId:ca.id,courseId:course.id});return {ca,cb,ma,mb,course,lesson,q1,q2};}
- return {sql,db,ctx,request,post,setup,advance:(n:number)=>{clock+=n},close:()=>sql.close()};
+ return {sql,db,ctx,captured,request,post,setup,advance:(n:number)=>{clock+=n},close:()=>sql.close()};
 }
 test('public homepage never exposes closed corporate courses without explicit approval',async()=>{
  const f=fixture(),d=await f.setup();
@@ -175,3 +177,50 @@ test('lesson tools are scoped to an authorized company, lesson and participant',
  f.close();
 });
 test('suspension revokes login and existing course access',async()=>{const f=fixture(),d=await f.setup();await f.request('me',alice);await f.request('members/'+d.ma.id,admin,{active:false},'PATCH');assert.equal((await f.request('course/'+d.course.id,alice)).status,403);f.close()});
+
+const jpeg=(n=64)=>{const b=new Uint8Array(n);b[0]=0xff;b[1]=0xd8;b[2]=0xff;return b};
+type Fixture=ReturnType<typeof fixture>;type User=typeof admin|null;
+async function upload(f:Fixture,user:User,query:string,data:Uint8Array,mime:string,origin='https://training.test'){const r=await handle(new Request('https://training.test/api/training/capture-upload?'+query,{method:'POST',headers:{origin,'content-type':mime,'content-length':String(data.byteLength)},body:data}),f.ctx(user));return {status:r.status,body:await r.json() as Record<string,string>}}
+test('capture consent is versioned per user, interview mode is admin only and revocation keeps history',async()=>{const f=fixture();await f.setup();
+ assert.equal((await f.request('capture-consent',null,{mode:'interview',policyVersion:'rascunho-0.1',camera:true,photos:true,recording:true})).status,401);
+ assert.equal((await f.request('capture-consent',alice,{mode:'interview',policyVersion:'rascunho-0.1',camera:true,photos:true})).status,403);
+ assert.equal((await f.request('capture-consent',admin,{mode:'interview',policyVersion:'rascunho 0.1;drop',camera:true})).status,400);
+ assert.equal((await f.request('capture-consent',admin,{mode:'interview',policyVersion:'rascunho-0.1',photos:true})).status,400);
+ assert.equal((await f.request('capture-consent',admin,{mode:'interview',policyVersion:'rascunho-0.1',camera:true,photos:true,recording:true},'POST','https://evil.test')).status,403);
+ const c=await f.post('capture-consent',{mode:'interview',policyVersion:'rascunho-0.1',camera:true,photos:true,recording:true});assert.equal(c.policyVersion,'rascunho-0.1');
+ assert.equal((await f.request('capture-consent?mode=interview')).body.consent.id,c.id);
+ assert.equal((await f.request('capture-consent?mode=interview',alice)).body.consent,null);
+ const lesson=await f.post('capture-consent',{mode:'lesson',policyVersion:'rascunho-0.1',camera:true,photos:true},alice);assert.equal(lesson.recording,false);
+ assert.equal((await f.request('capture-consent?mode=lesson',bob)).body.consent,null);
+ assert.equal((await f.request('capture-consent',{userId:'stranger',email:'x@example.test',displayName:'X'},{mode:'lesson',policyVersion:'rascunho-0.1',camera:true})).status,403);
+ assert.equal((await f.request('capture-consent/'+c.id+'/revoke',alice,{})).status,404);
+ assert.equal((await f.request('capture-consent/'+c.id+'/revoke',admin,{})).status,200);
+ assert.equal((await f.request('capture-consent?mode=interview')).body.consent,null);
+ const row=f.sql.prepare('SELECT revoked_at FROM capture_consents WHERE id=?').get(c.id) as {revoked_at:number};assert.equal(row.revoked_at,1700000000000);f.close()});
+test('capture uploads go to the private capture bucket only with a valid consent, right format and size',async()=>{const f=fixture();await f.setup();
+ const c=await f.post('capture-consent',{mode:'interview',policyVersion:'rascunho-0.1',camera:true,photos:true,recording:true});
+ const q=(kind:string,moment:string,consent=c.id,session='sessao-teste-1')=>'consent='+consent+'&session='+session+'&kind='+kind+'&moment='+moment;
+ const photo=await upload(f,admin,q('photo','answer_start'),jpeg(),'image/jpeg');assert.equal(photo.status,201,JSON.stringify(photo));
+ assert.equal((await upload(f,admin,q('photo','interval'),jpeg(),'image/jpeg')).status,201);
+ const rec=await upload(f,admin,q('recording','session'),new Uint8Array([0x1a,0x45,0xdf,0xa3,1,2,3]),'video/webm;codecs=vp8,opus');assert.equal(rec.status,201,JSON.stringify(rec));
+ assert.equal(f.captured.size,3);for(const key of f.captured.keys())assert.match(key,/^capture\/interview\/owner\/sessao-teste-1\/[0-9a-f-]+\.(jpg|webm)$/);
+ assert.equal((await upload(f,admin,q('photo','session'),jpeg(),'image/jpeg')).status,400);
+ assert.equal((await upload(f,admin,q('recording','interval'),jpeg(),'video/webm')).status,400);
+ assert.equal((await upload(f,admin,q('photo','interval'),jpeg(),'image/png')).status,400);
+ assert.equal((await upload(f,admin,q('photo','interval',c.id,'../x'),jpeg(),'image/jpeg')).status,400);
+ assert.equal((await upload(f,admin,q('photo','interval'),jpeg(1024*1024+1),'image/jpeg')).status,400);
+ assert.equal((await upload(f,admin,q('photo','interval'),jpeg(),'image/jpeg','https://evil.test')).status,403);
+ assert.equal((await upload(f,alice,q('photo','interval'),jpeg(),'image/jpeg')).status,403);
+ const lesson=await f.post('capture-consent',{mode:'lesson',policyVersion:'rascunho-0.1',camera:true,photos:true},alice);
+ assert.equal((await upload(f,alice,q('photo','answer_start',lesson.id,'aula-alice-1'),jpeg(),'image/jpeg')).status,201);
+ assert.equal((await upload(f,alice,q('recording','session',lesson.id,'aula-alice-1'),jpeg(),'video/webm')).status,403);
+ assert.equal((await upload(f,bob,q('photo','interval',lesson.id,'aula-alice-1'),jpeg(),'image/jpeg')).status,403);
+ const items=await f.request('capture-items?session=sessao-teste-1');assert.equal(items.status,200);assert.equal(items.body.length,3);assert.equal(items.body[0].policy_version,'rascunho-0.1');
+ assert.equal((await f.request('capture-items',alice)).status,403);
+ const file=await handle(new Request('https://training.test/api/training/capture-item/'+photo.body.id),f.ctx(admin));assert.equal(file.status,200);assert.equal(file.headers.get('content-type'),'image/jpeg');assert.equal((await file.arrayBuffer()).byteLength,64);
+ assert.equal((await handle(new Request('https://training.test/api/training/capture-item/'+photo.body.id),f.ctx(alice))).status,403);
+ await f.post('capture-consent/'+c.id+'/revoke',{});
+ assert.equal((await upload(f,admin,q('photo','interval'),jpeg(),'image/jpeg')).status,403);
+ assert.equal(f.captured.size,4,'revogacao nao apaga nada');
+ const noBucket=await handle(new Request('https://training.test/api/training/capture-upload?'+q('photo','interval',lesson.id,'aula-alice-1'),{method:'POST',headers:{origin:'https://training.test','content-type':'image/jpeg','content-length':'64'},body:jpeg()}),{...f.ctx(alice),captureBucket:undefined});assert.equal(noBucket.status,503);
+ f.close()});

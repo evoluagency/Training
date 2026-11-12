@@ -1,0 +1,5 @@
+-- Espelho local (SQLite) de supabase/migrations/20261111230000_intelligence_capture.sql, usado pelos testes locais.
+CREATE TABLE `capture_consents` (`id` text PRIMARY KEY NOT NULL, `user_id` text NOT NULL, `email` text NOT NULL, `mode` text NOT NULL CHECK (`mode` IN ('lesson','interview')), `policy_version` text NOT NULL, `camera` integer NOT NULL DEFAULT 0, `photos` integer NOT NULL DEFAULT 0, `recording` integer NOT NULL DEFAULT 0, `accepted_at` integer NOT NULL, `revoked_at` integer);
+CREATE INDEX `capture_consents_user` ON `capture_consents` (`user_id`,`accepted_at`);
+CREATE TABLE `capture_items` (`id` text PRIMARY KEY NOT NULL, `consent_id` text NOT NULL, `session_id` text NOT NULL, `kind` text NOT NULL CHECK (`kind` IN ('photo','recording')), `moment` text NOT NULL CHECK (`moment` IN ('answer_start','expression','interval','session')), `key` text NOT NULL UNIQUE, `mime` text NOT NULL, `size` integer NOT NULL CHECK (`size` > 0), `created_at` integer NOT NULL, FOREIGN KEY (`consent_id`) REFERENCES `capture_consents`(`id`));
+CREATE INDEX `capture_items_session` ON `capture_items` (`session_id`,`created_at`);

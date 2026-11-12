@@ -3,14 +3,15 @@ import type {Database,FileBucket} from './types.ts';
 import {contentEditable,coverValue,COURSE_STATUSES} from './content.ts';
 import {lessonTitleFromFile} from './categories.ts';
 type Identity={userId:string,email:string,displayName:string};
-export type Context={db:Database,bucket:FileBucket,user:Identity|null,adminEmail:string,now?:()=>number};
+export type Context={db:Database,bucket:FileBucket,captureBucket?:FileBucket,user:Identity|null,adminEmail:string,now?:()=>number};
+export const CAPTURE_LIMITS={photo:1024*1024,recording:4*1024*1024,itemsPerSession:2000} as const;
 const uuid=()=>crypto.randomUUID();
 const json=(v:any,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 export async function handle(req:Request,ctx:Context):Promise<Response>{try{return await execute(req,ctx)}catch(e){if(e instanceof AppError)return json({error:e.message},e.status);console.error('training_request_failed',e instanceof Error?e.message:'unknown');return json({error:'Não foi possível concluir a operação. Tente novamente.'},500)}}
 async function execute(req:Request,ctx:Context):Promise<Response>{
  const {db,bucket,user}=ctx;check(user,'Entre na plataforma para continuar.',401);assertSameOrigin(req);
  const now=()=>ctx.now?.()??Date.now();
- const putUpload=async(key:string,mime:string,size:number)=>{check(req.body,'Arquivo vazio.');let bytes=0;const reader=req.body.getReader();const stream=new ReadableStream<Uint8Array>({async pull(controller){const {value,done}=await reader.read();if(done){if(bytes!==size){controller.error(new Error('Arquivo incompleto.'));return;}controller.close();return;}bytes+=value.byteLength;if(bytes>size){await reader.cancel();controller.error(new Error('Tamanho do arquivo excedido.'));return;}controller.enqueue(value);},cancel(reason){return reader.cancel(reason);}});await bucket.put(key,stream,{httpMetadata:{contentType:mime}});};
+ const putUpload=async(key:string,mime:string,size:number,target:FileBucket=bucket)=>{check(req.body,'Arquivo vazio.');let bytes=0;const reader=req.body.getReader();const stream=new ReadableStream<Uint8Array>({async pull(controller){const {value,done}=await reader.read();if(done){if(bytes!==size){controller.error(new Error('Arquivo incompleto.'));return;}controller.close();return;}bytes+=value.byteLength;if(bytes>size){await reader.cancel();controller.error(new Error('Tamanho do arquivo excedido.'));return;}controller.enqueue(value);},cancel(reason){return reader.cancel(reason);}});await target.put(key,stream,{httpMetadata:{contentType:mime}});};
  const stmt=(sql:string,...p:any[])=>db.prepare(sql).bind(...p);
  const one=async(sql:string,...p:any[])=>await stmt(sql,...p).first<any>();
  const all=async(sql:string,...p:any[])=>(await stmt(sql,...p).all<any>()).results;
@@ -168,6 +169,52 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
   const r=await one('SELECT * FROM resources WHERE id=?',parts[1]);check(r,'Material não encontrado.',404);if(!isAdmin){const m=learner();check(r.company_id===m.company_id&&(!r.member_id||r.member_id===m.id),'Material não autorizado.',403);if(r.lesson_id){const lesson=await one('SELECT course_id FROM lessons WHERE id=?',r.lesson_id);check(lesson,'Aula não encontrada.',404);await course(lesson.course_id)}}check(r.key,'Este material é um link.',400);const obj=await bucket.get(r.key,{downloadName:r.name});check(obj,'Arquivo indisponível.',404);if(obj.redirectUrl)return Response.redirect(obj.redirectUrl,302);return new Response(obj.body,{headers:{'Content-Type':r.mime,'Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(r.name)}`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
  }
  if(route==='comments-summary'&&req.method==='GET'){admin();return json(await all('SELECT com.id,com.course_id,com.company_id,com.author,com.role,com.body,com.created_at,co.title course,c.name company FROM comments com JOIN companies c ON c.id=com.company_id JOIN courses co ON co.id=com.course_id ORDER BY com.created_at DESC,com.id DESC LIMIT 200'))}
+ // Captacao da entrevista e da aula (D22, D23, D25): aceite versionado da politica de imagem, fotos JPEG e trechos de gravacao WebM no bucket privado intelligence-capture. Nada e apagado (retencao do primeiro teste).
+ if(route==='capture-consent'&&req.method==='POST'){
+  const b=await body(),mode=b.mode==='interview'?'interview':b.mode==='lesson'?'lesson':'';check(mode,'Modo de captação inválido.');
+  if(mode==='interview')admin();else if(!isAdmin)learner();
+  const version=String(b.policyVersion||'').trim();check(/^[a-zA-Z0-9._-]{1,40}$/.test(version),'Versão da política inválida.');
+  const camera=b.camera===true,photos=b.photos===true,recording=b.recording===true;check(camera||photos||recording,'Escolha ao menos um item para aceitar.');check(camera||!(photos||recording),'Fotos e gravação exigem a câmera.');
+  const id=uuid(),at=now();
+  await run('INSERT INTO capture_consents (id,user_id,email,mode,policy_version,camera,photos,recording,accepted_at) VALUES (?,?,?,?,?,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,?)',id,user.userId,user.email.toLowerCase(),mode,version,camera?1:0,photos?1:0,recording?1:0,at);
+  return json({id,mode,policyVersion:version,camera,photos,recording,acceptedAt:at},201);
+ }
+ if(route==='capture-consent'&&req.method==='GET'){
+  const mode=new URL(req.url).searchParams.get('mode')==='interview'?'interview':'lesson';
+  const c=await one('SELECT * FROM capture_consents WHERE user_id=? AND mode=? AND revoked_at IS NULL ORDER BY accepted_at DESC LIMIT 1',user.userId,mode);
+  return json({consent:c?{id:c.id,mode:c.mode,policyVersion:c.policy_version,camera:!!c.camera,photos:!!c.photos,recording:!!c.recording,acceptedAt:Number(c.accepted_at)}:null});
+ }
+ if(parts[0]==='capture-consent'&&parts[1]&&parts[2]==='revoke'&&req.method==='POST'){
+  const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',parts[1],user.userId);check(c,'Aceite não encontrado.',404);
+  if(c.revoked_at==null)await run('UPDATE capture_consents SET revoked_at=? WHERE id=? AND revoked_at IS NULL',now(),c.id);return json({ok:true});
+ }
+ if(route==='capture-upload'&&req.method==='POST'){
+  const target=ctx.captureBucket;check(target,'Captação indisponível no momento.',503);
+  const u=new URL(req.url),kind=u.searchParams.get('kind')==='recording'?'recording':u.searchParams.get('kind')==='photo'?'photo':'';check(kind,'Tipo de captação inválido.');
+  const moment=String(u.searchParams.get('moment')||'');check(kind==='recording'?moment==='session':['answer_start','expression','interval'].includes(moment),'Momento de captação inválido.');
+  const session=String(u.searchParams.get('session')||'');check(/^[a-zA-Z0-9-]{8,64}$/.test(session),'Sessão de captação inválida.');
+  const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',u.searchParams.get('consent')||'',user.userId);check(c&&c.revoked_at==null,'Aceite da política de imagem ausente ou revogado.',403);
+  if(c.mode==='interview')admin();
+  check(kind==='photo'?!!c.photos:!!c.recording,kind==='photo'?'As fotos não foram aceitas.':'A gravação não foi aceita.',403);
+  const mime=(req.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();check(kind==='photo'?mime==='image/jpeg':mime==='video/webm'||mime==='video/mp4','Formato não permitido.');
+  const size=whole(req.headers.get('content-length'),1,CAPTURE_LIMITS[kind]);
+  check(Number((await one('SELECT count(*) n FROM capture_items WHERE consent_id=? AND session_id=?',c.id,session))?.n||0)<CAPTURE_LIMITS.itemsPerSession,'Limite de itens da sessão atingido.',429);
+  const id=uuid(),key='capture/'+c.mode+'/'+user.userId+'/'+session+'/'+id+(kind==='photo'?'.jpg':mime==='video/mp4'?'.mp4':'.webm');
+  await putUpload(key,mime,size,target);
+  try{await run('INSERT INTO capture_items (id,consent_id,session_id,kind,moment,key,mime,size,created_at) VALUES (?,?,?,?,?,?,?,?,?)',id,c.id,session,kind,moment,key,mime,size,now())}catch(e){await target.delete(key);throw e}
+  return json({id,kind,moment,size},201);
+ }
+ if(route==='capture-items'&&req.method==='GET'){
+  admin();const session=new URL(req.url).searchParams.get('session');
+  const rows=session?await all('SELECT i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,c.email,c.mode,c.policy_version FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id WHERE i.session_id=? ORDER BY i.created_at,i.id LIMIT 500',session):await all('SELECT i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,c.email,c.mode,c.policy_version FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id ORDER BY i.created_at DESC,i.id LIMIT 500');
+  return json(rows);
+ }
+ if(parts[0]==='capture-item'&&parts[1]&&req.method==='GET'){
+  admin();const target=ctx.captureBucket;check(target,'Captação indisponível no momento.',503);
+  const item=await one('SELECT * FROM capture_items WHERE id=?',parts[1]);check(item,'Item não encontrado.',404);
+  const obj=await target.get(item.key);check(obj,'Arquivo indisponível.',404);if(obj.redirectUrl)return Response.redirect(obj.redirectUrl,302);
+  return new Response(obj.body,{headers:{'Content-Type':item.mime,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+ }
  if(route==='comments'){
   const u=new URL(req.url);const cId=u.searchParams.get('course')||'';await course(cId);const companyId=isAdmin?u.searchParams.get('company'):learner().company_id;check(companyId&&await one('SELECT company_id FROM grants WHERE company_id=? AND course_id=?',companyId,cId),'Selecione uma empresa com acesso ao treinamento.');
   if(req.method==='GET')return json(await all('SELECT id,author,role,body,created_at FROM comments WHERE company_id=? AND course_id=? ORDER BY created_at,id LIMIT 500',companyId,cId));

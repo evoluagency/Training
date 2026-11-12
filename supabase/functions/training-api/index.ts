@@ -21,13 +21,16 @@ async function body(request:Request){
  while(true){const {value,done}=await reader.read();if(done)break;bytes+=value.byteLength;if(bytes>150000){await reader.cancel();throw new Error('Requisição muito grande.');}text+=decoder.decode(value,{stream:true});}
  return JSON.parse(text+decoder.decode());
 }
-function bucket(uploaded:string[]):FileBucket{
- const objectUrl=(key:string)=>base+'/storage/v1/object/training-files/'+key.split('/').map(encodeURIComponent).join('/');
+type Undo=()=>Promise<unknown>;
+// Dois buckets privados: training-files (conteudo) e intelligence-capture (fotos e gravacoes da captacao, acesso so por esta funcao).
+function bucket(uploaded:Undo[],name:'training-files'|'intelligence-capture'='training-files'):FileBucket{
+ const objectUrl=(key:string)=>base+'/storage/v1/object/'+name+'/'+key.split('/').map(encodeURIComponent).join('/');
  const auth={apikey:secret,Authorization:'Bearer '+secret};
+ const remove=async(key:string)=>{const {error}=await admin.storage.from(name).remove([key]);if(error)throw error;};
  return {
-  async put(key,data,options){const response=await fetch(objectUrl(key),{method:'POST',headers:{...auth,'Content-Type':options.httpMetadata.contentType,'x-upsert':'false'},body:data,duplex:'half'} as RequestInit);if(!response.ok)throw new Error('Não foi possível armazenar o arquivo.');uploaded.push(key);},
-  async delete(key){const {error}=await admin.storage.from('training-files').remove([key]);if(error)throw error;},
-  async get(key,options){const {data,error}=await admin.storage.from('training-files').createSignedUrl(key,60,options?.downloadName?{download:options.downloadName}:undefined);if(error){if(['400','404'].includes(String((error as {statusCode?:number}).statusCode)))return null;throw error;}return {body:new ReadableStream<Uint8Array>({start(controller){controller.close();}}),size:0,redirectUrl:data.signedUrl};},
+  async put(key,data,options){const response=await fetch(objectUrl(key),{method:'POST',headers:{...auth,'Content-Type':options.httpMetadata.contentType,'x-upsert':'false'},body:data,duplex:'half'} as RequestInit);if(!response.ok)throw new Error('Não foi possível armazenar o arquivo.');uploaded.push(()=>remove(key));},
+  delete:remove,
+  async get(key,options){const {data,error}=await admin.storage.from(name).createSignedUrl(key,60,options?.downloadName?{download:options.downloadName}:undefined);if(error){if(['400','404'].includes(String((error as {statusCode?:number}).statusCode)))return null;throw error;}return {body:new ReadableStream<Uint8Array>({start(controller){controller.close();}}),size:0,redirectUrl:data.signedUrl};},
  };
 }
 
@@ -86,10 +89,10 @@ Deno.serve(async request=>{
    });
   }
   if(!/^[a-zA-Z0-9/-]+$/.test(path))return reply({error:'Endereço inválido.'},400);
-  const binary=['upload','resource-file','module-upload','cover-upload'].includes(path);
+  const binary=['upload','resource-file','module-upload','cover-upload','capture-upload'].includes(path);
   const original=binary?request:request.clone();
   for(let retry=0;retry<(binary?1:3);retry++){
-   const uploaded:string[]=[],storage=bucket(uploaded);
+   const uploaded:Undo[]=[],storage=bucket(uploaded),captureStorage=bucket(uploaded,'intelligence-capture');
    try{
     const response=await sql.begin('isolation level serializable',async tx=>{
      await tx.unsafe('SET LOCAL search_path TO training, public');
@@ -97,12 +100,12 @@ Deno.serve(async request=>{
      const db=postgresDatabase(async(q,p)=>{try{const result=await tx.unsafe(q,p as never[]);return {rows:[...result],affectedRows:result.count};}catch(e){databaseError=e;throw e;}});
      const headers=new Headers(request.headers);headers.set('origin','https://training.internal');
      const req=new Request('https://training.internal/api/training/'+path+url.search,{method:request.method,headers,body:['GET','HEAD'].includes(request.method)?undefined:binary?original.body:original.clone().body,duplex:'half'} as RequestInit);
-     const result=await handle(req,{db,bucket:storage,user:identity,adminEmail:''});
+     const result=await handle(req,{db,bucket:storage,captureBucket:captureStorage,user:identity,adminEmail:''});
      if(result.status>=500)throw databaseError||new Error('A operação não pôde ser concluída.');
      return result;
     });
     return secured(response);
-   }catch(e){for(const key of uploaded)await storage.delete(key).catch(()=>{});if((e as {code?:string}).code==='40001'&&retry<2)continue;throw e;}
+   }catch(e){for(const undo of uploaded)await undo().catch(()=>{});if((e as {code?:string}).code==='40001'&&retry<2)continue;throw e;}
   }
   return reply({error:'Tente novamente.'},503);
  }catch(e){console.error('training_api_error',e instanceof Error?e.message:'unknown');return reply({error:'Não foi possível concluir a operação. Tente novamente.'},500);}
