@@ -237,3 +237,9 @@ test('voz: roteiro-voz-0.1 como dado, próxima frase pendente e parâmetros do e
   assert.equal(VOICE_POLICY.version,'voz-rascunho-0.1');
   assert.equal(isPortalRoute('/admin/voz-avatar','admin'),true);assert.equal(isPortalRoute('/area/voz-avatar','learner'),false);assert.equal(portalPageTitle('/admin/voz-avatar'),'Voz do avatar');
 });
+
+import {VOICE_SCRIPT_IDS,voiceScriptKnown} from '../lib/intelligence/voice-script-ids.ts';
+test('voz: ids do servidor iguais ao roteiro',()=>{
+  const s=voiceScript(CURRENT_VOICE_SCRIPT)!;assert.deepEqual([...VOICE_SCRIPT_IDS[s.versao]],s.frases.map(f=>f.id));
+  assert.equal(voiceScriptKnown('constructor'),false);assert.equal(voiceScriptKnown('__proto__'),false);
+});

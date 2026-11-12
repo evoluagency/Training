@@ -3,7 +3,7 @@ import type {Database,FileBucket} from './types.ts';
 import {contentEditable,coverValue,COURSE_STATUSES} from './content.ts';
 import {lessonTitleFromFile} from './categories.ts';
 import {readWavHeader} from './wav.ts';
-import {voiceLineExists,voiceScript} from '../intelligence/voice-script.ts';
+import {voiceLineKnown,voiceScriptKnown,VOICE_SCRIPT_IDS} from '../intelligence/voice-script-ids.ts';
 type Identity={userId:string,email:string,displayName:string};
 export type Context={db:Database,bucket:FileBucket,captureBucket?:FileBucket,user:Identity|null,adminEmail:string,now?:()=>number};
 export const CAPTURE_LIMITS={photo:1024*1024,recording:4*1024*1024,voice:4*1024*1024,itemsPerSession:2000} as const;
@@ -33,9 +33,9 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  const readBody=async(size:number)=>{check(req.body,'Arquivo vazio.');const out=new Uint8Array(size);let at=0;const reader=req.body.getReader();for(;;){const {value,done}=await reader.read();if(done)break;check(at+value.byteLength<=size,'Arquivo maior que o informado.');out.set(value,at);at+=value.byteLength}check(at===size,'Arquivo incompleto.');return out};
  const voiceUpload=async(c:{id:string,mode:string,voice:unknown},session:string,moment:string,u:URL)=>{
   const target=ctx.captureBucket!;check(c.mode==='voice'&&!!c.voice,'A gravação de voz não foi aceita.',403);
-  const version=String(u.searchParams.get('script')||'');check(voiceScript(version),'Roteiro desconhecido.');
+  const version=String(u.searchParams.get('script')||'');check(voiceScriptKnown(version),'Roteiro desconhecido.');
   const line=u.searchParams.get('line')||'';
-  if(moment==='script_line')check(voiceLineExists(version,line),'Frase fora do roteiro.');else check(!line,'O teste de sala não tem frase.');
+  if(moment==='script_line')check(voiceLineKnown(version,line),'Frase fora do roteiro.');else check(!line,'O teste de sala não tem frase.');
   const mime=(req.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();check(mime==='audio/wav','Formato não permitido. Use WAV.');
   const size=whole(req.headers.get('content-length'),44,CAPTURE_LIMITS.voice);
   check(Number((await one('SELECT count(*) n FROM capture_items WHERE consent_id=? AND session_id=?',c.id,session))?.n||0)<CAPTURE_LIMITS.itemsPerSession,'Limite de itens da sessão atingido.',429);
@@ -229,12 +229,12 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  }
  if(route==='capture-voice-progress'&&req.method==='GET'){
   // O próprio usuário vê o andamento do roteiro: ids, contagem e duração da gravação mais recente de cada frase. Sem chave nem URL de arquivo.
-  const version=String(new URL(req.url).searchParams.get('script')||'');const script=voiceScript(version);check(script,'Roteiro desconhecido.',404);
+  const version=String(new URL(req.url).searchParams.get('script')||'');check(voiceScriptKnown(version),'Roteiro desconhecido.',404);
   const rows=await all("SELECT i.line_id,i.moment,i.duration_ms,i.created_at FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id WHERE c.user_id=? AND c.mode='voice' AND i.kind='voice' AND i.script_version=? ORDER BY i.created_at,i.id",user.userId,version);
   const lines=new Map<string,{takes:number,durationMs:number}>();let roomTones=0;
   for(const r of rows){if(r.moment==='room_tone'){roomTones++;continue}const cur=lines.get(r.line_id);lines.set(r.line_id,{takes:(cur?.takes||0)+1,durationMs:Number(r.duration_ms)})}
   const recorded=[...lines].map(([id,v])=>({id,takes:v.takes,durationMs:v.durationMs}));
-  return json({script:version,total:script.frases.length,recorded:recorded.length,speechMs:recorded.reduce((a,l)=>a+l.durationMs,0),roomTones,lines:recorded});
+  return json({script:version,total:VOICE_SCRIPT_IDS[version].length,recorded:recorded.length,speechMs:recorded.reduce((a,l)=>a+l.durationMs,0),roomTones,lines:recorded});
  }
  if(route==='capture-items'&&req.method==='GET'){
   admin();const session=new URL(req.url).searchParams.get('session');
