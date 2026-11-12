@@ -1,0 +1,434 @@
+{
+ "versao": "roteiro-expressoes-0.1",
+ "idioma": "pt-BR",
+ "etapa": "face",
+ "origem": "Texto próprio da EVOLU, sessão 1.14 (12/11/2026), a partir da proposta de captação (sessão A). Sem texto de terceiros.",
+ "uso": "Sessão A da captação: rosto. A página regente mostra um passo por vez e grava uma marca no início e no fim de cada passo. O áudio da gravação serve só para sincronia, não para voz sintética.",
+ "duracaoAlvoMin": 15,
+ "blocos": {
+  "P": "Preparo e sincronia",
+  "N": "Rosto neutro",
+  "G": "Giros de cabeça",
+  "O": "Olhar em 8 direções",
+  "X": "Expressões isoladas",
+  "S": "Sons e frases",
+  "R": "Reações de aula",
+  "L": "Fala livre",
+  "F": "Sincronia final"
+ },
+ "passos": [
+  {
+   "id": "P01",
+   "bloco": "P",
+   "instrucao": "Confira a luz no rosto, o enquadramento e se o celular está gravando. Olhe para a câmera próxima.",
+   "duracaoS": 30
+  },
+  {
+   "id": "P02",
+   "bloco": "P",
+   "instrucao": "Bata três palmas fortes, com 1 s entre elas, com as mãos visíveis para todas as câmeras.",
+   "duracaoS": 8,
+   "sincronia": true
+  },
+  {
+   "id": "N01",
+   "bloco": "N",
+   "instrucao": "Rosto neutro, olhar na câmera, respiração tranquila. Não fale.",
+   "duracaoS": 20
+  },
+  {
+   "id": "N02",
+   "bloco": "N",
+   "instrucao": "Rosto neutro com a boca levemente aberta.",
+   "duracaoS": 10
+  },
+  {
+   "id": "G01",
+   "bloco": "G",
+   "instrucao": "Gire a cabeça devagar para a esquerda e volte ao centro.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G02",
+   "bloco": "G",
+   "instrucao": "Gire a cabeça devagar para a direita e volte ao centro.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G03",
+   "bloco": "G",
+   "instrucao": "Incline a cabeça para cima e volte ao centro.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G04",
+   "bloco": "G",
+   "instrucao": "Incline a cabeça para baixo e volte ao centro.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G05",
+   "bloco": "G",
+   "instrucao": "Encoste a orelha esquerda em direção ao ombro e volte.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G06",
+   "bloco": "G",
+   "instrucao": "Encoste a orelha direita em direção ao ombro e volte.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G07",
+   "bloco": "G",
+   "instrucao": "Faça um círculo lento com a cabeça no sentido horário.",
+   "duracaoS": 5
+  },
+  {
+   "id": "G08",
+   "bloco": "G",
+   "instrucao": "Faça um círculo lento com a cabeça no sentido anti-horário.",
+   "duracaoS": 5
+  },
+  {
+   "id": "O01",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para cima e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O02",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para baixo e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O03",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para esquerda e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O04",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para direita e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O05",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para cima e à esquerda e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O06",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para cima e à direita e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O07",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para baixo e à esquerda e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "O08",
+   "bloco": "O",
+   "instrucao": "Sem mexer a cabeça, olhe para baixo e à direita e volte para a câmera.",
+   "duracaoS": 3
+  },
+  {
+   "id": "X01",
+   "bloco": "X",
+   "instrucao": "Levante as duas sobrancelhas. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X02",
+   "bloco": "X",
+   "instrucao": "Franza a testa, sobrancelhas juntas. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X03",
+   "bloco": "X",
+   "instrucao": "Levante só a sobrancelha esquerda (se conseguir). Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X04",
+   "bloco": "X",
+   "instrucao": "Feche os olhos com força. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X05",
+   "bloco": "X",
+   "instrucao": "Pisque devagar, uma vez. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X06",
+   "bloco": "X",
+   "instrucao": "Aperte os olhos como quem enxerga longe. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X07",
+   "bloco": "X",
+   "instrucao": "Sorriso fechado, sem mostrar os dentes. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X08",
+   "bloco": "X",
+   "instrucao": "Sorriso aberto, mostrando os dentes. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X09",
+   "bloco": "X",
+   "instrucao": "Abra bem a boca. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X10",
+   "bloco": "X",
+   "instrucao": "Faça bico. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X11",
+   "bloco": "X",
+   "instrucao": "Aperte os lábios. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X12",
+   "bloco": "X",
+   "instrucao": "Encha as bochechas de ar. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X13",
+   "bloco": "X",
+   "instrucao": "Franza o nariz. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X14",
+   "bloco": "X",
+   "instrucao": "Leve a mandíbula para a esquerda. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X15",
+   "bloco": "X",
+   "instrucao": "Leve a mandíbula para a direita. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "X16",
+   "bloco": "X",
+   "instrucao": "Cara de tristeza leve. Segure 2 s e relaxe.",
+   "duracaoS": 2,
+   "repeticoes": 3
+  },
+  {
+   "id": "S01",
+   "bloco": "S",
+   "instrucao": "A, É, Ê, I, Ó, Ô, U, bem articulado.",
+   "duracaoS": 4,
+   "repeticoes": 3
+  },
+  {
+   "id": "S02",
+   "bloco": "S",
+   "instrucao": "M, B, P: \"mamãe, bebê, papai\".",
+   "duracaoS": 4,
+   "repeticoes": 3
+  },
+  {
+   "id": "S03",
+   "bloco": "S",
+   "instrucao": "F e V: \"fé, vê, fofo, vovô\".",
+   "duracaoS": 4,
+   "repeticoes": 3
+  },
+  {
+   "id": "S04",
+   "bloco": "S",
+   "instrucao": "S, Z e X: \"sapo, zero, chave\".",
+   "duracaoS": 4,
+   "repeticoes": 3
+  },
+  {
+   "id": "S05",
+   "bloco": "S",
+   "instrucao": "L e R: \"lua, rato, caro, carro\".",
+   "duracaoS": 4,
+   "repeticoes": 3
+  },
+  {
+   "id": "S06",
+   "bloco": "S",
+   "instrucao": "Ã e ÃO: \"mãe, pão, coração\".",
+   "duracaoS": 4,
+   "repeticoes": 3
+  },
+  {
+   "id": "S07",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Bom dia, pessoal, vamos começar a aula de hoje.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S08",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Prestem atenção neste ponto, porque ele cai muito na prática.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S09",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Alguém tem alguma dúvida até aqui?\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S10",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Muito bem, essa resposta está correta.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S11",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Vamos ver um exemplo do dia a dia da empresa.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S12",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Calma, ninguém precisa decorar isso agora.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S13",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Agora é a vez de vocês tentarem sozinhos.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S14",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Esse erro é comum, e é fácil de corrigir.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S15",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Na próxima etapa, vamos juntar tudo o que vimos.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "S16",
+   "bloco": "S",
+   "instrucao": "Diga, olhando para a câmera: \"Obrigado pela participação, até o próximo encontro.\"",
+   "duracaoS": 6,
+   "fala": true
+  },
+  {
+   "id": "R01",
+   "bloco": "R",
+   "instrucao": "Concorde com a cabeça, como quem aprova a resposta de um aluno.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R02",
+   "bloco": "R",
+   "instrucao": "Discorde com a cabeça, com gentileza.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R03",
+   "bloco": "R",
+   "instrucao": "Reaja com surpresa a uma resposta inesperada.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R04",
+   "bloco": "R",
+   "instrucao": "Mostre que está pensando na pergunta de alguém.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R05",
+   "bloco": "R",
+   "instrucao": "Escute com atenção, como se um aluno estivesse falando.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R06",
+   "bloco": "R",
+   "instrucao": "Dê um sorriso de encorajamento.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R07",
+   "bloco": "R",
+   "instrucao": "Ria de leve de uma brincadeira.",
+   "duracaoS": 6
+  },
+  {
+   "id": "R08",
+   "bloco": "R",
+   "instrucao": "Faça a expressão de \"muito bem\" com um aceno.",
+   "duracaoS": 6
+  },
+  {
+   "id": "L01",
+   "bloco": "L",
+   "instrucao": "Fale livremente por 2 minutos sobre um tema que você ensina, como faria em aula.",
+   "duracaoS": 120,
+   "fala": true
+  },
+  {
+   "id": "F01",
+   "bloco": "F",
+   "instrucao": "Bata três palmas fortes de novo, com 1 s entre elas, com as mãos visíveis.",
+   "duracaoS": 8,
+   "sincronia": true
+  },
+  {
+   "id": "F02",
+   "bloco": "F",
+   "instrucao": "Fim. Pare a gravação do celular só depois desta tela.",
+   "duracaoS": 5
+  }
+ ]
+}

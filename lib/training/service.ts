@@ -4,9 +4,11 @@ import {contentEditable,coverValue,COURSE_STATUSES} from './content.ts';
 import {lessonTitleFromFile} from './categories.ts';
 import {readWavHeader} from './wav.ts';
 import {voiceLineKnown,voiceScriptKnown,VOICE_SCRIPT_IDS} from '../intelligence/voice-script-ids.ts';
+import {EXPRESSION_SCRIPT_IDS,expressionScriptStage} from '../intelligence/expression-script-ids.ts';
+import {readTrack,TrackError,TRACKS,TRACK_LIMITS,type TrackName} from '../intelligence/motion-track.ts';
 type Identity={userId:string,email:string,displayName:string};
 export type Context={db:Database,bucket:FileBucket,captureBucket?:FileBucket,user:Identity|null,adminEmail:string,now?:()=>number};
-export const CAPTURE_LIMITS={photo:1024*1024,recording:4*1024*1024,voice:4*1024*1024,itemsPerSession:2000} as const;
+export const CAPTURE_LIMITS={photo:1024*1024,recording:4*1024*1024,voice:4*1024*1024,track:TRACK_LIMITS.gzipBytes,itemsPerSession:2000,camerasPerSession:4} as const;
 const uuid=()=>crypto.randomUUID();
 const json=(v:any,status=200)=>Response.json(v,{status,headers:{'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
 export async function handle(req:Request,ctx:Context):Promise<Response>{try{return await execute(req,ctx)}catch(e){if(e instanceof AppError)return json({error:e.message},e.status);console.error('training_request_failed',e instanceof Error?e.message:'unknown');return json({error:'Não foi possível concluir a operação. Tente novamente.'},500)}}
@@ -45,6 +47,26 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
   await target.put(key,new ReadableStream<Uint8Array>({start(ctrl){ctrl.enqueue(bytes);ctrl.close()}}),{httpMetadata:{contentType:mime}});
   try{await run('INSERT INTO capture_items (id,consent_id,session_id,kind,moment,key,mime,size,created_at,script_version,line_id,duration_ms,sample_rate) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',id,c.id,session,'voice',moment,key,mime,size,now(),version,moment==='room_tone'?null:line,wav.durationMs,wav.sampleRate)}catch(e){await target.delete(key);throw e}
   return json({id,kind:'voice',moment,line:moment==='room_tone'?null:line,durationMs:wav.durationMs,sampleRate:wav.sampleRate,size},201);
+ };
+ // Sessão de captação de movimento do próprio usuário, com o aceite ativo de movimento.
+ const motionSession=async(id:string)=>{const s=await one("SELECT s.*,c.user_id,c.mode,c.motion,c.revoked_at FROM capture_sessions s JOIN capture_consents c ON c.id=s.consent_id WHERE s.id=?",id);check(s&&s.user_id===user.userId,'Sessão de captação não encontrada.',404);check(s.mode==='motion'&&!!s.motion&&s.revoked_at==null,'Aceite da captação de movimento ausente ou revogado.',403);return s};
+ // Trilha (trilha-0.1): gzip lido inteiro (até 4 MB), descompactado com limite e conferido antes de gravar. Reextrações ficam guardadas.
+ const trackUpload=async(c:{id:string,mode:string,motion:unknown},session:string,u:URL)=>{
+  const target=ctx.captureBucket!;check(c.mode==='motion'&&!!c.motion,'A captação de movimento não foi aceita.',403);
+  const s=await motionSession(session);check(s.consent_id===c.id,'A sessão pertence a outro aceite.',403);
+  const camera=String(u.searchParams.get('camera')||'');const cam=await one('SELECT camera_id FROM capture_cameras WHERE session_id=? AND camera_id=?',session,camera);check(cam,'Câmera não registrada nesta sessão.');
+  const t=String(u.searchParams.get('track')||'');check((TRACKS as readonly string[]).includes(t),'Trilha inválida.');const track=t as TrackName;
+  const t0Raw=String(u.searchParams.get('t0')||'');check(/^\d{1,8}$/.test(t0Raw),'Início do trecho inválido.');const t0Ms=Number(t0Raw);check(t0Ms<=14400000,'Início do trecho fora da sessão.');
+  const mime=(req.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();check(mime==='application/gzip','Formato não permitido. Use JSON compactado com gzip.');
+  const size=whole(req.headers.get('content-length'),18,CAPTURE_LIMITS.track);
+  check(Number((await one('SELECT count(*) n FROM capture_items WHERE consent_id=? AND session_id=?',c.id,session))?.n||0)<CAPTURE_LIMITS.itemsPerSession,'Limite de itens da sessão atingido.',429);
+  const bytes=await readBody(size);let parsed;
+  try{parsed=await readTrack(bytes,{track,session,camera,t0Ms})}catch(e){if(e instanceof TrackError)throw new AppError(400,e.message);throw e}
+  if(track==='marks'){const ids=EXPRESSION_SCRIPT_IDS[s.script_version]||[];const col=parsed.columns.indexOf('step');if(col>0)check(parsed.frames.every(f=>f[col]>=0&&f[col]<ids.length),'Marca com passo fora do roteiro.')}
+  const id=uuid(),key='capture/motion/'+user.userId+'/'+session+'/'+camera+'/'+track+'/'+t0Ms+'-'+id+'.json.gz';
+  await target.put(key,new ReadableStream<Uint8Array>({start(ctrl){ctrl.enqueue(bytes);ctrl.close()}}),{httpMetadata:{contentType:mime}});
+  try{await run('INSERT INTO capture_items (id,consent_id,session_id,kind,moment,key,mime,size,created_at,duration_ms,camera_id,track,t0_ms) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)',id,c.id,session,'track','track_chunk',key,mime,size,now(),parsed.durationMs,camera,track,t0Ms)}catch(e){await target.delete(key);throw e}
+  return json({id,kind:'track',track,camera,t0Ms,durationMs:parsed.durationMs,frames:parsed.frames.length,size},201);
  };
  const learner=()=>{check(member,'Sua conta ainda não está vinculada a uma vaga ativa. Solicite a liberação ao responsável.',403);return member};
  const route=new URL(req.url).pathname.split('/api/training/')[1]||'';const parts=route.split('/');
@@ -190,21 +212,23 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  if(route==='comments-summary'&&req.method==='GET'){admin();return json(await all('SELECT com.id,com.course_id,com.company_id,com.author,com.role,com.body,com.created_at,co.title course,c.name company FROM comments com JOIN companies c ON c.id=com.company_id JOIN courses co ON co.id=com.course_id ORDER BY com.created_at DESC,com.id DESC LIMIT 200'))}
  // Captacao da entrevista e da aula (D22, D23, D25): aceite versionado da politica de imagem, fotos JPEG e trechos de gravacao WebM no bucket privado intelligence-capture. Nada e apagado (retencao do primeiro teste).
  if(route==='capture-consent'&&req.method==='POST'){
-  const b=await body(),mode=b.mode==='interview'?'interview':b.mode==='lesson'?'lesson':b.mode==='voice'?'voice':'';check(mode,'Modo de captação inválido.');
-  if(mode==='interview'||mode==='voice')admin();else if(!isAdmin)learner();
+  const b=await body(),mode=['interview','lesson','voice','motion'].includes(b.mode)?String(b.mode):'';check(mode,'Modo de captação inválido.');
+  if(mode!=='lesson')admin();else if(!isAdmin)learner();
   const version=String(b.policyVersion||'').trim();check(/^[a-zA-Z0-9._-]{1,40}$/.test(version),'Versão da política inválida.');
-  const camera=b.camera===true,photos=b.photos===true,recording=b.recording===true,voice=b.voice===true;
+  const camera=b.camera===true,photos=b.photos===true,recording=b.recording===true,voice=b.voice===true,motion=b.motion===true;
   // Modo voz (termo voz-rascunho-0.1): só áudio, nunca câmera, fotos ou gravação de vídeo. O banco também garante.
-  if(mode==='voice'){check(voice,'Aceite a gravação da voz para continuar.');check(!camera&&!photos&&!recording,'O modo de voz não usa câmera, fotos nem gravação de vídeo.')}
-  else{check(!voice,'A gravação de voz tem termo próprio.');check(camera||photos||recording,'Escolha ao menos um item para aceitar.');check(camera||!(photos||recording),'Fotos e gravação exigem a câmera.')}
+  // Modo movimento (termo imagem-rascunho-0.1): câmera e extração de expressões e movimento. Sem voz. O vídeo fica com o capacitador e não sobe, por isso sem fotos nem gravação.
+  if(mode==='motion'){check(camera&&motion,'Aceite a câmera e a extração de expressões e movimento para continuar.');check(!voice,'A captação de movimento não usa a voz para síntese.');check(!photos&&!recording,'Na captação de movimento o vídeo fica com você e não é enviado.')}
+  else if(mode==='voice'){check(!motion,'A captação de movimento tem termo próprio.');check(voice,'Aceite a gravação da voz para continuar.');check(!camera&&!photos&&!recording,'O modo de voz não usa câmera, fotos nem gravação de vídeo.')}
+  else{check(!voice,'A gravação de voz tem termo próprio.');check(!motion,'A captação de movimento tem termo próprio.');check(camera||photos||recording,'Escolha ao menos um item para aceitar.');check(camera||!(photos||recording),'Fotos e gravação exigem a câmera.')}
   const id=uuid(),at=now();
-  await run('INSERT INTO capture_consents (id,user_id,email,mode,policy_version,camera,photos,recording,voice,accepted_at) VALUES (?,?,?,?,?,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,?)',id,user.userId,user.email.toLowerCase(),mode,version,camera?1:0,photos?1:0,recording?1:0,voice?1:0,at);
-  return json({id,mode,policyVersion:version,camera,photos,recording,voice,acceptedAt:at},201);
+  await run('INSERT INTO capture_consents (id,user_id,email,mode,policy_version,camera,photos,recording,voice,motion,accepted_at) VALUES (?,?,?,?,?,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,CAST(? AS integer)<>0,?)',id,user.userId,user.email.toLowerCase(),mode,version,camera?1:0,photos?1:0,recording?1:0,voice?1:0,motion?1:0,at);
+  return json({id,mode,policyVersion:version,camera,photos,recording,voice,motion,acceptedAt:at},201);
  }
  if(route==='capture-consent'&&req.method==='GET'){
-  const q=new URL(req.url).searchParams.get('mode'),mode=q==='interview'||q==='voice'?q:'lesson';
+  const q=new URL(req.url).searchParams.get('mode'),mode=q==='interview'||q==='voice'||q==='motion'?q:'lesson';
   const c=await one('SELECT * FROM capture_consents WHERE user_id=? AND mode=? AND revoked_at IS NULL ORDER BY accepted_at DESC LIMIT 1',user.userId,mode);
-  return json({consent:c?{id:c.id,mode:c.mode,policyVersion:c.policy_version,camera:!!c.camera,photos:!!c.photos,recording:!!c.recording,voice:!!c.voice,acceptedAt:Number(c.accepted_at)}:null});
+  return json({consent:c?{id:c.id,mode:c.mode,policyVersion:c.policy_version,camera:!!c.camera,photos:!!c.photos,recording:!!c.recording,voice:!!c.voice,motion:!!c.motion,acceptedAt:Number(c.accepted_at)}:null});
  }
  if(parts[0]==='capture-consent'&&parts[1]&&parts[2]==='revoke'&&req.method==='POST'){
   const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',parts[1],user.userId);check(c,'Aceite não encontrado.',404);
@@ -212,12 +236,14 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
  }
  if(route==='capture-upload'&&req.method==='POST'){
   const target=ctx.captureBucket;check(target,'Captação indisponível no momento.',503);
-  const u=new URL(req.url),k=u.searchParams.get('kind'),kind=k==='recording'||k==='photo'||k==='voice'?k:'';check(kind,'Tipo de captação inválido.');
-  const moment=String(u.searchParams.get('moment')||'');check(kind==='recording'?moment==='session':kind==='voice'?moment==='script_line'||moment==='room_tone':['answer_start','expression','interval'].includes(moment),'Momento de captação inválido.');
+  const u=new URL(req.url),k=u.searchParams.get('kind'),kind=k==='recording'||k==='photo'||k==='voice'||k==='track'?k:'';check(kind,'Tipo de captação inválido.');
+  const moment=String(u.searchParams.get('moment')||'');check(kind==='recording'?moment==='session':kind==='track'?moment==='track_chunk':kind==='voice'?moment==='script_line'||moment==='room_tone':['answer_start','expression','interval'].includes(moment),'Momento de captação inválido.');
   const session=String(u.searchParams.get('session')||'');check(/^[a-zA-Z0-9-]{8,64}$/.test(session),'Sessão de captação inválida.');
   const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',u.searchParams.get('consent')||'',user.userId);check(c&&c.revoked_at==null,'Aceite da política de imagem ausente ou revogado.',403);
-  if(c.mode==='interview'||c.mode==='voice')admin();
+  if(c.mode!=='lesson')admin();
   if(kind==='voice')return voiceUpload(c,session,moment,u);
+  if(kind==='track')return trackUpload(c,session,u);
+  check(c.mode!=='motion','Na captação de movimento só sobem as trilhas extraídas.',403);
   check(kind==='photo'?!!c.photos:!!c.recording,kind==='photo'?'As fotos não foram aceitas.':'A gravação não foi aceita.',403);
   const mime=(req.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();check(kind==='photo'?mime==='image/jpeg':mime==='video/webm'||mime==='video/mp4','Formato não permitido.');
   const size=whole(req.headers.get('content-length'),1,CAPTURE_LIMITS[kind]);
@@ -236,9 +262,48 @@ async function execute(req:Request,ctx:Context):Promise<Response>{
   const recorded=[...lines].map(([id,v])=>({id,takes:v.takes,durationMs:v.durationMs}));
   return json({script:version,total:VOICE_SCRIPT_IDS[version].length,recorded:recorded.length,speechMs:recorded.reduce((a,l)=>a+l.durationMs,0),roomTones,lines:recorded});
  }
+ // Sessão de captação de movimento (A rosto, B corpo, C aula). Só administração. O roteiro define a etapa.
+ if(route==='capture-session'&&req.method==='POST'){
+  admin();const b=await body();
+  const c=await one('SELECT * FROM capture_consents WHERE id=? AND user_id=?',String(b.consent||''),user.userId);check(c&&c.revoked_at==null&&c.mode==='motion'&&!!c.motion,'Aceite da captação de movimento ausente ou revogado.',403);
+  const script=String(b.script||''),stage=expressionScriptStage(script);check(stage,'Roteiro desconhecido.');check(b.stage===undefined||b.stage===stage,'Etapa diferente da do roteiro.');
+  const id='mov-'+uuid(),at=now();
+  await run('INSERT INTO capture_sessions (id,consent_id,stage,script_version,started_at) VALUES (?,?,?,?,?)',id,c.id,stage,script,at);
+  return json({id,consent:c.id,stage,script,startedAt:at,endedAt:null,cameras:[]},201);
+ }
+ if(parts[0]==='capture-session'&&parts[1]&&parts[2]==='end'&&req.method==='POST'){
+  admin();const s=await motionSession(parts[1]);if(s.ended_at==null)await run('UPDATE capture_sessions SET ended_at=? WHERE id=? AND ended_at IS NULL',Math.max(now(),Number(s.started_at)),s.id);return json({ok:true});
+ }
+ if(route==='capture-camera'&&req.method==='POST'){
+  admin();const b=await body();const s=await motionSession(String(b.session||''));
+  const cameraId=String(b.cameraId||'');check(/^[a-z0-9_]{1,16}$/.test(cameraId),'Identificador da câmera inválido (a-z, 0-9 e _, até 16).');
+  const role=['close','medium','wide','reference'].includes(b.role)?b.role:'';check(role,'Papel da câmera inválido.');
+  const source=b.source==='browser'||b.source==='device_file'?b.source:'';check(source,'Origem da câmera inválida.');
+  const opt=(v:unknown,min:number,max:number,label:string,int=true)=>{if(v==null||v==='')return null;const n=Number(v);check(Number.isFinite(n)&&(!int||Number.isInteger(n))&&n>=min&&n<=max,label+' fora do permitido.');return n};
+  const text=(v:unknown,max:number)=>{const t=String(v??'').trim();return t?t.slice(0,max):null};
+  let location=null,fileName=null,sha256=null,bytes=null;
+  if(source==='device_file'){location=b.location==='owner_disk'||b.location==='owner_drive'?b.location:'';check(location,'Informe onde o arquivo do celular fica guardado.');fileName=text(b.fileName,200);check(fileName&&!/[\\/\u0000-\u001f]/.test(fileName),'Nome do arquivo inválido.');sha256=String(b.sha256||'').toLowerCase();check(/^[0-9a-f]{64}$/.test(sha256),'SHA-256 do arquivo inválido.');bytes=opt(b.bytes,1,Number.MAX_SAFE_INTEGER,'Tamanho do arquivo');check(bytes,'Informe o tamanho do arquivo.')}
+  else check(b.fileName==null&&b.sha256==null&&b.bytes==null&&b.location==null,'Câmera do navegador não tem arquivo.');
+  const exists=await one('SELECT 1 FROM capture_cameras WHERE session_id=? AND camera_id=?',s.id,cameraId);
+  if(!exists)check(Number((await one('SELECT count(*) n FROM capture_cameras WHERE session_id=?',s.id))?.n||0)<CAPTURE_LIMITS.camerasPerSession,'Limite de câmeras da sessão atingido.',429);
+  const row=[s.id,cameraId,role,source,text(b.deviceLabel,120),location,fileName,sha256,bytes,opt(b.durationMs,1000,14400000,'Duração'),opt(b.width,320,7680,'Largura'),opt(b.height,240,7680,'Altura'),opt(b.fps,10,240,'Quadros por segundo',false),text(b.codec,40),opt(b.syncOffsetMs,-3600000,3600000,'Ajuste de sincronia'),opt(b.driftPpm,-10000,10000,'Deriva do relógio',false),now()];
+  await run('INSERT INTO capture_cameras (session_id,camera_id,role,source,device_label,location,file_name,sha256,bytes,duration_ms,width,height,fps,codec,sync_offset_ms,drift_ppm,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT (session_id,camera_id) DO UPDATE SET role=excluded.role,source=excluded.source,device_label=excluded.device_label,location=excluded.location,file_name=excluded.file_name,sha256=excluded.sha256,bytes=excluded.bytes,duration_ms=excluded.duration_ms,width=excluded.width,height=excluded.height,fps=excluded.fps,codec=excluded.codec,sync_offset_ms=excluded.sync_offset_ms,drift_ppm=excluded.drift_ppm',...row);
+  return json({session:s.id,cameraId,role,source},exists?200:201);
+ }
+ if(route==='capture-session-progress'&&req.method==='GET'){
+  // Andamento da sessão: câmeras e, por trilha, trechos (o mais recente de cada início), tempo coberto e reextrações. Sem chave nem URL.
+  admin();const s=await motionSession(String(new URL(req.url).searchParams.get('session')||''));
+  const cams=await all('SELECT camera_id,role,source,device_label,file_name,sha256,bytes,duration_ms,width,height,fps,sync_offset_ms,drift_ppm FROM capture_cameras WHERE session_id=? ORDER BY created_at,camera_id',s.id);
+  const items=await all("SELECT camera_id,track,t0_ms,duration_ms FROM capture_items WHERE session_id=? AND kind='track' ORDER BY created_at,id",s.id);
+  const map=new Map<string,Map<number,number>>();let takes=0;
+  for(const i of items){const k=i.camera_id+'/'+i.track;const m=map.get(k)??new Map();if(m.has(Number(i.t0_ms)))takes++;m.set(Number(i.t0_ms),Number(i.duration_ms));map.set(k,m)}
+  const cameras=cams.map(c=>({cameraId:c.camera_id,role:c.role,source:c.source,deviceLabel:c.device_label,fileName:c.file_name,sha256:c.sha256,bytes:c.bytes==null?null:Number(c.bytes),durationMs:c.duration_ms==null?null:Number(c.duration_ms),width:c.width,height:c.height,fps:c.fps==null?null:Number(c.fps),syncOffsetMs:c.sync_offset_ms==null?null:Number(c.sync_offset_ms),driftPpm:c.drift_ppm==null?null:Number(c.drift_ppm),
+   tracks:Object.fromEntries(TRACKS.filter(t=>map.has(c.camera_id+'/'+t)).map(t=>{const m=map.get(c.camera_id+'/'+t)!;return [t,{chunks:m.size,coveredMs:[...m.values()].reduce((a,b)=>a+b,0),lastT0Ms:Math.max(...m.keys())}]}))}));
+  return json({session:s.id,stage:s.stage,script:s.script_version,steps:(EXPRESSION_SCRIPT_IDS[s.script_version]||[]).length,startedAt:Number(s.started_at),endedAt:s.ended_at==null?null:Number(s.ended_at),reextractions:takes,cameras});
+ }
  if(route==='capture-items'&&req.method==='GET'){
   admin();const session=new URL(req.url).searchParams.get('session');
-  const cols='i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,i.script_version,i.line_id,i.duration_ms,i.sample_rate,c.email,c.mode,c.policy_version';
+  const cols='i.id,i.session_id,i.kind,i.moment,i.mime,i.size,i.created_at,i.script_version,i.line_id,i.duration_ms,i.sample_rate,i.camera_id,i.track,i.t0_ms,c.email,c.mode,c.policy_version';
   const rows=session?await all('SELECT '+cols+' FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id WHERE i.session_id=? ORDER BY i.created_at,i.id LIMIT 500',session):await all('SELECT '+cols+' FROM capture_items i JOIN capture_consents c ON c.id=i.consent_id ORDER BY i.created_at DESC,i.id LIMIT 500');
   return json(rows);
  }

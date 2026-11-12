@@ -82,7 +82,7 @@ test('connected portal routes select the current learning stage and reject unkno
 test('PostgreSQL capture migration stores consent and items with RLS on and no client grants',async()=>{
  const pg=new PGlite();
  await pg.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
- for(const file of ['20261023110552_training_portable.sql','20261024153608_training_content_editor.sql','20261111230000_intelligence_capture.sql','20261112121709_intelligence_voice_capture.sql'])await pg.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['20261023110552_training_portable.sql','20261024153608_training_content_editor.sql','20261111230000_intelligence_capture.sql','20261112121709_intelligence_voice_capture.sql','20261112175107_intelligence_motion_capture.sql'])await pg.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
  const db=postgresDatabase(async(q,p)=>{const r=await pg.query<Record<string,unknown>>(q,p);return {rows:r.rows,affectedRows:r.affectedRows};});
  const keys:string[]=[];const captureBucket={put:async(key:string,data:ReadableStream<Uint8Array>)=>{await new Response(data).arrayBuffer();keys.push(key)},delete:async()=>{},get:async()=>({body:new ReadableStream({start(c){c.close()}}),size:0,redirectUrl:'https://storage.example.test/signed-capture'})};
  const ctx=(user:typeof owner)=>({db,bucket:captureBucket,captureBucket,user,adminEmail:owner.email});
@@ -99,7 +99,7 @@ test('PostgreSQL capture migration stores consent and items with RLS on and no c
   assert.equal((await api('capture-consent/'+consent.body.id+'/revoke',{})).status,200);
   const row=(await pg.query("SELECT revoked_at,camera FROM training.capture_consents")).rows[0] as {revoked_at:string,camera:boolean};assert.ok(Number(row.revoked_at)>0);assert.equal(row.camera,true);
   const bucketRow=(await pg.query("SELECT public,file_size_limit FROM storage.buckets WHERE id='intelligence-capture'")).rows[0] as {public:boolean};assert.equal(bucketRow.public,false);
-  const rls=await pg.query("SELECT count(*)::integer n FROM pg_tables WHERE schemaname='training' AND tablename LIKE 'capture_%' AND rowsecurity=true");assert.equal((rls.rows[0] as {n:number}).n,2);
+  const rls=await pg.query("SELECT count(*)::integer n FROM pg_tables WHERE schemaname='training' AND tablename LIKE 'capture_%' AND rowsecurity=true");assert.equal((rls.rows[0] as {n:number}).n,4);
   const grants=await pg.query("SELECT count(*)::integer n FROM information_schema.role_table_grants WHERE table_schema='training' AND table_name LIKE 'capture_%' AND grantee IN ('anon','authenticated','PUBLIC')");assert.equal((grants.rows[0] as {n:number}).n,0);
   assert.equal(keys.length,1);
  }finally{await pg.close();}
@@ -108,7 +108,7 @@ test('PostgreSQL capture migration stores consent and items with RLS on and no c
 test('PostgreSQL voice migration keeps audio-only consents, WAV items per script line and no client grants',async()=>{
  const pg=new PGlite();
  await pg.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
- for(const file of ['20261023110552_training_portable.sql','20261024153608_training_content_editor.sql','20261111230000_intelligence_capture.sql','20261112121709_intelligence_voice_capture.sql'])await pg.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ for(const file of ['20261023110552_training_portable.sql','20261024153608_training_content_editor.sql','20261111230000_intelligence_capture.sql','20261112121709_intelligence_voice_capture.sql','20261112175107_intelligence_motion_capture.sql'])await pg.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
  const db=postgresDatabase(async(q,p)=>{const r=await pg.query<Record<string,unknown>>(q,p);return {rows:r.rows,affectedRows:r.affectedRows};});
  const keys:string[]=[];const captureBucket={put:async(key:string,data:ReadableStream<Uint8Array>)=>{await new Response(data).arrayBuffer();keys.push(key)},delete:async()=>{},get:async()=>null};
  const ctx=(user:typeof owner)=>({db,bucket:captureBucket,captureBucket,user,adminEmail:owner.email});
@@ -131,5 +131,46 @@ test('PostgreSQL voice migration keeps audio-only consents, WAV items per script
   const bucketRow=(await pg.query("SELECT public,allowed_mime_types FROM storage.buckets WHERE id='intelligence-capture'")).rows[0] as {public:boolean,allowed_mime_types:string[]};assert.equal(bucketRow.public,false);assert.ok(bucketRow.allowed_mime_types.includes('audio/wav'));
   const grants=await pg.query("SELECT count(*)::integer n FROM information_schema.role_table_grants WHERE table_schema='training' AND table_name LIKE 'capture_%' AND grantee IN ('anon','authenticated','PUBLIC')");assert.equal((grants.rows[0] as {n:number}).n,0);
   assert.equal(keys.length,2);
+ }finally{await pg.close();}
+});
+
+import {gzipTrack,type MotionTrack} from '../lib/intelligence/motion-track.ts';
+test('PostgreSQL motion migration with the 5 real migrations: motion consent, session, cameras, gzip tracks and no client grants',async()=>{
+ const pg=new PGlite();
+ await pg.exec('CREATE ROLE anon;CREATE ROLE authenticated;CREATE SCHEMA storage;CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);');
+ for(const file of ['20261023110552_training_portable.sql','20261024153608_training_content_editor.sql','20261111230000_intelligence_capture.sql','20261112121709_intelligence_voice_capture.sql','20261112175107_intelligence_motion_capture.sql'])await pg.exec(readFileSync(new URL('../supabase/migrations/'+file,import.meta.url),'utf8'));
+ const db=postgresDatabase(async(q,p)=>{const r=await pg.query<Record<string,unknown>>(q,p);return {rows:r.rows,affectedRows:r.affectedRows};});
+ const keys:string[]=[];const captureBucket={put:async(key:string,data:ReadableStream<Uint8Array>)=>{await new Response(data).arrayBuffer();keys.push(key)},delete:async()=>{},get:async()=>null};
+ const ctx=(user:typeof owner)=>({db,bucket:captureBucket,captureBucket,user,adminEmail:owner.email});
+ const api=async(path:string,body?:unknown,user=owner)=>{const r=await handle(new Request('https://training.test/api/training/'+path,{method:body===undefined?'GET':'POST',headers:{'content-type':'application/json',origin:'https://training.test'},body:body===undefined?undefined:JSON.stringify(body)}),ctx(user));return {status:r.status,body:await r.json() as Record<string,unknown> & {id:string,stage?:string,reextractions?:number,cameras?:{cameraId:string,syncOffsetMs:number,bytes:number,tracks:Record<string,unknown>}[]}};};
+ try{
+  await api('me');
+  const c=await api('capture-consent',{mode:'motion',policyVersion:'imagem-rascunho-0.1',camera:true,motion:true});assert.equal(c.status,201,JSON.stringify(c));
+  assert.equal((await api('capture-consent',{mode:'motion',policyVersion:'imagem-rascunho-0.1',camera:true,motion:true},student)).status,403);
+  const s=await api('capture-session',{consent:c.body.id,script:'roteiro-expressoes-0.1'});assert.equal(s.status,201,JSON.stringify(s));assert.equal(s.body.stage,'face');
+  assert.equal((await api('capture-camera',{session:s.body.id,cameraId:'ref',role:'reference',source:'browser',deviceLabel:'Webcam',width:1280,height:720,fps:30})).status,201);
+  assert.equal((await api('capture-camera',{session:s.body.id,cameraId:'close',role:'close',source:'device_file'})).status,400);
+  const file={session:s.body.id,cameraId:'close',role:'close',source:'device_file',location:'owner_disk',fileName:'IMG_0001.MOV',sha256:'a'.repeat(64),bytes:1500000000,durationMs:900000,width:3840,height:2160,fps:59.94,codec:'hevc'};
+  assert.equal((await api('capture-camera',file)).status,201);assert.equal((await api('capture-camera',{...file,syncOffsetMs:-420,driftPpm:12.5})).status,200);
+  const track:MotionTrack={schema:'evolu.motion-track',version:'0.1',track:'face',session:s.body.id,camera:'ref',t0Ms:0,durationMs:60000,extractor:{lib:'@mediapipe/tasks-vision',version:'0.10.x',model:'face_landmarker.task',modelSha256:'b'.repeat(64)},source:{kind:'browser'},columns:['t','jawOpen','yaw'],scale:{jawOpen:255,yaw:100},frames:[[0,10,-150],[33,12,-140],[60000,0,0]]};
+  const send=async(t:MotionTrack,camera=t.camera)=>{const g=await gzipTrack(t);const r=await handle(new Request('https://training.test/api/training/capture-upload?'+new URLSearchParams({consent:c.body.id,session:s.body.id,kind:'track',moment:'track_chunk',camera,track:t.track,t0:String(t.t0Ms)}),{method:'POST',headers:{origin:'https://training.test','content-type':'application/gzip','content-length':String(g.byteLength)},body:g}),ctx(owner));return {status:r.status,body:await r.json() as Record<string,unknown>}};
+  const first=await send(track);assert.equal(first.status,201,JSON.stringify(first));
+  assert.equal((await send({...track,t0Ms:60000})).status,201);assert.equal((await send(track)).status,201);
+  assert.equal((await send({...track,frames:[[60001,0,0]]})).status,400);
+  assert.equal((await send(track,'wide')).status,400);
+  const p=(await api('capture-session-progress?session='+s.body.id)).body;
+  assert.equal(p.reextractions,1);const ref=p.cameras!.find((x:{cameraId:string})=>x.cameraId==='ref');assert.deepEqual(ref!.tracks.face,{chunks:2,coveredMs:120000,lastT0Ms:60000});
+  const close=p.cameras!.find((x:{cameraId:string})=>x.cameraId==='close');assert.equal(close!.syncOffsetMs,-420);assert.equal(close!.bytes,1500000000);
+  assert.equal((await api('capture-session/'+s.body.id+'/end',{})).status,200);
+  const row=(await pg.query("SELECT mime,track,t0_ms,duration_ms,camera_id FROM training.capture_items WHERE kind='track' ORDER BY created_at LIMIT 1")).rows[0];assert.deepEqual(row,{mime:'application/gzip',track:'face',t0_ms:0,duration_ms:60000,camera_id:'ref'});
+  assert.ok(keys.every(k=>new RegExp('^capture/motion/qa-owner/'+s.body.id+'/ref/face/\\d+-[0-9a-f-]{36}\\.json\\.gz$').test(k)));
+  await assert.rejects(pg.query("UPDATE training.capture_consents SET voice=true WHERE mode='motion'"));
+  await assert.rejects(pg.query("UPDATE training.capture_items SET mime='application/json' WHERE kind='track'"));
+  await assert.rejects(pg.query("UPDATE training.capture_items SET camera_id='nao_existe' WHERE kind='track'"));
+  await assert.rejects(pg.query("UPDATE training.capture_cameras SET sha256=null WHERE camera_id='close'"));
+  const bucketRow=(await pg.query("SELECT allowed_mime_types FROM storage.buckets WHERE id='intelligence-capture'")).rows[0] as {allowed_mime_types:string[]};assert.ok(bucketRow.allowed_mime_types.includes('application/gzip'));
+  const rls=await pg.query("SELECT count(*)::integer n FROM pg_tables WHERE schemaname='training' AND tablename IN ('capture_sessions','capture_cameras','style_profiles') AND rowsecurity=true");assert.equal((rls.rows[0] as {n:number}).n,3);
+  const grants=await pg.query("SELECT count(*)::integer n FROM information_schema.role_table_grants WHERE table_schema='training' AND (table_name LIKE 'capture_%' OR table_name='style_profiles') AND grantee IN ('anon','authenticated','PUBLIC')");assert.equal((grants.rows[0] as {n:number}).n,0);
+  assert.equal(keys.length,3);
  }finally{await pg.close();}
 });

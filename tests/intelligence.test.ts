@@ -243,3 +243,18 @@ test('voz: ids do servidor iguais ao roteiro',()=>{
   const s=voiceScript(CURRENT_VOICE_SCRIPT)!;assert.deepEqual([...VOICE_SCRIPT_IDS[s.versao]],s.frases.map(f=>f.id));
   assert.equal(voiceScriptKnown('constructor'),false);assert.equal(voiceScriptKnown('__proto__'),false);
 });
+
+import {expressionScript,CURRENT_EXPRESSION_SCRIPT,scriptMs,stepMs} from '../lib/intelligence/expression-script.ts';
+import {EXPRESSION_SCRIPT_IDS,expressionScriptKnown,expressionScriptStage} from '../lib/intelligence/expression-script-ids.ts';
+test('expressões: roteiro-expressoes-0.1 como dado, cerca de 15 min, palmas no início e no fim',()=>{
+  const s=expressionScript(CURRENT_EXPRESSION_SCRIPT)!;assert.equal(s.etapa,'face');
+  assert.equal(new Set(s.passos.map(p=>p.id)).size,s.passos.length);assert.ok(s.passos.every(p=>s.blocos[p.bloco]&&p.id.startsWith(p.bloco)&&p.instrucao.trim()&&p.duracaoS>0));
+  assert.ok(s.passos[1].sincronia&&s.passos.at(-2)!.sincronia);
+  assert.equal(s.passos.filter(p=>p.bloco==='O').length,8);assert.equal(s.passos.filter(p=>p.bloco==='R').length,8);assert.equal(s.passos.filter(p=>p.fala&&p.bloco==='S').length,10);
+  assert.ok(s.passos.filter(p=>p.bloco==='X').every(p=>p.repeticoes===3&&p.duracaoS===2));assert.equal(stepMs({id:'X01',bloco:'X',instrucao:'a',duracaoS:2,repeticoes:3}),8000);
+  const min=scriptMs(s)/60000;assert.ok(min>8&&min<15,String(min));assert.equal(expressionScript('constructor'),null);
+});
+test('expressões: ids do servidor iguais ao roteiro',()=>{
+  const s=expressionScript(CURRENT_EXPRESSION_SCRIPT)!;assert.deepEqual([...EXPRESSION_SCRIPT_IDS[s.versao]],s.passos.map(p=>p.id));
+  assert.equal(expressionScriptKnown('__proto__'),false);assert.equal(expressionScriptStage('roteiro-expressoes-0.1'),'face');assert.equal(expressionScriptStage('toString'),null);
+});
