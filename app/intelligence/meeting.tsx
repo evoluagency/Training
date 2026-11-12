@@ -16,6 +16,7 @@ import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Ci
 import {Avatar3D,type Avatar3DHandle} from './avatar3d';
 import {avatarMood} from './avatar-motion';
 import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,CAMERA_POLICY,CAPTURE_POLICY,type MeetingMode} from './meeting-text';
+import {PiperVoice,PIPER_DOWNLOAD_MB,chunkForSpeech} from './neural-voice';
 import {CAPTURE_CLIENT,CaptureUploader,SegmentRecorder,acceptConsent,currentConsent,estimateMegabytesPerHour,newCaptureSession,revokeConsent,snapshotJpeg,type CaptureConsent,type CaptureMoment,type CaptureStats} from './capture';
 import './meeting.css';
 
@@ -79,6 +80,9 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const [joining,setJoining]=useState(false);
   const [lobbyMic,setLobbyMic]=useState(false);
   const [voiceOn,setVoiceOn]=useState(true);
+  const [engine,setEngine]=useState<'browser'|'neural'>('browser');
+  const [neuralState,setNeuralState]=useState<'off'|'loading'|'ready'|'error'>('off');
+  const [neuralMb,setNeuralMb]=useState(0);
   const [rate,setRate]=useState(1.05);
   const [lobbyNotice,setLobbyNotice]=useState('');
   const [hasSynth,setHasSynth]=useState(true);
@@ -91,10 +95,25 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const live=useRef({busy:false,speaking:false,micOpen:false,inCall:false,speakToken:0,seq:0,voiceOn:true,rate:1.05,
     recognizer:null as SpeechRecognitionLike|null,cam:null as MediaStream|null,rec:null as MediaStream|null,
     recorder:null as SegmentRecorder|null,recStart:0,voice:null as SpeechSynthesisVoice|null,
+    engine:'browser' as 'browser'|'neural',neural:null as PiperVoice|null,audioCtx:null as AudioContext|null,analyser:null as AnalyserNode|null,source:null as AudioBufferSourceNode|null,
     consent:null as CaptureConsent|null,uploader:null as CaptureUploader|null,answerShot:false,shoot:(_m:CaptureMoment)=>{void _m},
     dialogResolve:null as ((ok:boolean)=>void)|null,send:(_t:string)=>{void _t},resume:()=>{}});
 
-  useEffect(()=>{live.current.voiceOn=voiceOn;live.current.rate=rate},[voiceOn,rate]);
+  useEffect(()=>{live.current.voiceOn=voiceOn;live.current.rate=rate;live.current.engine=engine},[voiceOn,rate,engine]);
+  // Voz neural pt-BR (Piper no navegador): baixa uma vez quando escolhida, depois fica no cache do navegador.
+  const chooseEngine=useCallback((next:'browser'|'neural')=>{
+    setEngine(next);
+    if(next!=='neural'||live.current.neural||neuralState==='loading')return;
+    setNeuralState('loading');setNeuralMb(0);
+    PiperVoice.load(mb=>setNeuralMb(mb)).then(v=>{live.current.neural=v;setNeuralState('ready')})
+      .catch(()=>{setNeuralState('error');setEngine('browser');setLobbyNotice('Não consegui carregar a voz neural. Sigo com a voz do navegador.')});
+  },[neuralState]);
+  const audioGraph=useCallback(()=>{
+    const s=live.current;
+    if(!s.audioCtx){const Ctx=window.AudioContext??(window as unknown as {webkitAudioContext?:typeof AudioContext}).webkitAudioContext;if(!Ctx)return null;s.audioCtx=new Ctx()}
+    if(!s.analyser){s.analyser=s.audioCtx.createAnalyser();s.analyser.fftSize=1024;s.analyser.connect(s.audioCtx.destination)}
+    void s.audioCtx.resume();return {ctx:s.audioCtx,analyser:s.analyser};
+  },[]);
   useEffect(()=>{logEnd.current?.scrollIntoView({block:'nearest'})},[log]);
 
   // Recursos do navegador (só depois de montar: evita divergência com a renderização do servidor).
@@ -212,6 +231,28 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
         if(pos>=text.length){done();return resolve()}requestAnimationFrame(tick)};
       tick();
     });
+    const graph=s.voiceOn&&s.engine==='neural'&&s.neural?audioGraph():null;
+    if(graph&&s.neural){
+      const voice=s.neural,{ctx,analyser}=graph,chunks=chunkForSpeech(text);
+      avatarRef.current?.setAnalyser(analyser);
+      return (async()=>{
+        let offset=0,next:Promise<Float32Array>|null=chunks.length?voice.synthesize(chunks[0],s.rate):null;
+        try{
+          for(let i=0;i<chunks.length&&next;i++){
+            const pcm=await next;if(token!==s.speakToken)break;
+            next=i+1<chunks.length?voice.synthesize(chunks[i+1],s.rate):null;next?.catch(()=>{/* tratado no próximo laço */});
+            const found=text.indexOf(chunks[i],offset),base=found>=0?found:offset,len=chunks[i].length;
+            const buf=ctx.createBuffer(1,pcm.length,voice.sampleRate);buf.copyToChannel(new Float32Array(pcm),0);
+            const src=ctx.createBufferSource();src.buffer=buf;src.connect(analyser);s.source=src;avatarRef.current?.setAnalyser(analyser); // a sala pode ter montado depois do início da fala
+            await new Promise<void>(res=>{src.onended=()=>res();src.start();const t0=performance.now(),dur=buf.duration*1000;
+              const tick=()=>{if(token!==s.speakToken){try{src.stop()}catch{/* já parado */}return res()}
+                const f=Math.min(1,(performance.now()-t0)/dur);setCaption({who,text,upTo:base+Math.floor(len*f),badge});if(f<1)requestAnimationFrame(tick)};tick()});
+            offset=base+len;
+          }
+          s.source=null;avatarRef.current?.setAnalyser(null);done();
+        }catch{s.source=null;avatarRef.current?.setAnalyser(null);if(token===s.speakToken){addLog('Sistema','A voz neural falhou nesta fala. Sigo com a voz do navegador.');s.engine='browser';setEngine('browser');await timed(offset)}}
+      })();
+    }
     if(!synth||!s.voiceOn)return timed(0);
     const sentences=splitSentences(text);
     return new Promise<void>(resolve=>{
@@ -233,8 +274,8 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       };
       next();
     });
-  },[setSpeaking]);
-  const stopSpeaking=useCallback(()=>{const s=live.current;s.speakToken+=1;if('speechSynthesis' in window)window.speechSynthesis.cancel();if(s.speaking)setSpeaking(false)},[setSpeaking]);
+  },[addLog,audioGraph,setSpeaking]);
+  const stopSpeaking=useCallback(()=>{const s=live.current;s.speakToken+=1;try{s.source?.stop()}catch{/* já parado */}s.source=null;if('speechSynthesis' in window)window.speechSynthesis.cancel();if(s.speaking)setSpeaking(false)},[setSpeaking]);
 
   const setMic=useCallback(async(on:boolean)=>{
     const s=live.current;
@@ -330,6 +371,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
 
   // ---------- entrar e sair ----------
   const join=async()=>{
+    if(live.current.engine==='neural')audioGraph();
     setJoining(true);setLobbyNotice('');setStartedAt(Date.now());setElapsed(0);setLog([]);setSources([]);setDraft(null);setCaption(null);
     try{
       let state=await api('state');
@@ -405,7 +447,13 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
           <button className="ev-pill-button lime" onClick={join} disabled={joining}>{joining?'Entrando…':lesson?'Participar agora':'Iniciar entrevista'}</button>
           {lobbyNotice&&<p className="ev-lobby-error" role="alert">{lobbyNotice}</p>}
           <details className="ev-lobby-more"><summary>Voz e acessibilidade</summary>
-            <label><input type="checkbox" checked={voiceOn} disabled={!hasSynth} onChange={e=>setVoiceOn(e.target.checked)}/> Voz do avatar</label>
+            <label><input type="checkbox" checked={voiceOn} disabled={!hasSynth&&engine==='browser'} onChange={e=>setVoiceOn(e.target.checked)}/> Voz do avatar</label>
+            <fieldset className="ev-lobby-engine"><legend>Tipo de voz</legend>
+              <label><input type="radio" name="ev-engine" checked={engine==='browser'} onChange={()=>chooseEngine('browser')}/> Voz do navegador</label>
+              <label><input type="radio" name="ev-engine" checked={engine==='neural'} onChange={()=>{setVoiceOn(true);chooseEngine('neural')}}/> Voz neural pt-BR (teste, baixa cerca de {PIPER_DOWNLOAD_MB} MB na primeira vez)</label>
+              {neuralState==='loading'&&<small role="status">Baixando a voz neural: {neuralMb} MB…</small>}
+              {neuralState==='ready'&&<small role="status">Voz neural pronta.</small>}
+            </fieldset>
             <label>Velocidade da voz <input type="range" min="0.8" max="1.4" step="0.05" value={rate} onChange={e=>setRate(Number(e.target.value))} aria-valuetext={rate.toFixed(2)+'x'}/></label>
           </details>
           <ul className="ev-lobby-notes">

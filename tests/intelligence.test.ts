@@ -176,3 +176,14 @@ test('captação: política versionada separada da política de imagem da aula',
   assert.ok(CAPTURE_POLICY.points.some(p=>p.includes('10 segundos')));
   assert.ok(CAPTURE_POLICY.points.some(p=>/revogar/i.test(p)));
 });
+import {phonemesToIds,chunkForSpeech,sha256Hex,PIPER_ASSETS} from '../app/intelligence/neural-voice.ts';
+test('voz neural: fonemas no formato do Piper, frases curtas e arquivo fixado',async()=>{
+  const map={_:[0],'^':[1],$:[2],o:[27],l:[24],'ˈ':[120],a:[14],' ':[3]};
+  assert.deepEqual(phonemesToIds(['o','l','ˈ','a','?',' '],map),[1,0,27,0,24,0,120,0,14,0,3,0,2],'símbolo desconhecido é ignorado');
+  assert.deepEqual(chunkForSpeech('Olá!  Tudo bem? Vamos começar.'),['Olá!','Tudo bem?','Vamos começar.']);
+  const long='palavra '.repeat(60)+'fim.';const parts=chunkForSpeech(long,100);assert.ok(parts.length>3&&parts.every(p=>p.length<=100));assert.equal(parts.join(' ').split(' ').length,61);
+  assert.deepEqual(chunkForSpeech('   '),[]);
+  assert.equal(await sha256Hex(new TextEncoder().encode('abc').buffer as ArrayBuffer),'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+  assert.match(PIPER_ASSETS.model,/\/resolve\/[0-9a-f]{40}\//,'revisão fixada');assert.match(PIPER_ASSETS.modelSha256,/^[0-9a-f]{64}$/);
+  assert.match(PIPER_ASSETS.ortWasm,/onnxruntime-web@1\.22\.0\//,'wasm igual à versão do package.json');
+});
