@@ -131,3 +131,48 @@ test('avatar 3D: estados ouvindo, pensando, falando e encaminhando',()=>{
   assert.equal(approach(0,1,5,0),0);
   assert.ok(Math.abs(approach(0,1,5,10)-1)<1e-9);
 });
+import {CaptureUploader,uploadQuery,plainMime,sizeAllowed,newCaptureSession,estimateMegabytesPerHour,CAPTURE_CLIENT} from '../app/intelligence/capture.ts';
+import {CAPTURE_POLICY} from '../app/intelligence/meeting-text.ts';
+const consent={id:'c-1',mode:'interview' as const,policyVersion:CAPTURE_POLICY.version,camera:true,photos:true,recording:true,acceptedAt:1};
+
+test('captação: consulta, tipo sem codec, limites e sessão aceitos pelo servidor',()=>{
+  assert.equal(uploadQuery({consent:'c 1',session:'entrevista-x',kind:'photo',moment:'answer_start'}),'consent=c+1&session=entrevista-x&kind=photo&moment=answer_start');
+  assert.equal(plainMime('video/webm;codecs=vp8,opus','recording'),'video/webm');
+  assert.equal(plainMime('video/mp4','recording'),'video/mp4');
+  assert.equal(plainMime('','photo'),'image/jpeg');
+  assert.ok(sizeAllowed(1024*1024,'photo'));assert.ok(!sizeAllowed(1024*1024+1,'photo'));assert.ok(!sizeAllowed(0,'recording'));
+  assert.ok(sizeAllowed(4*1024*1024,'recording'));assert.ok(!sizeAllowed(4*1024*1024+1,'recording'));
+  const s=newCaptureSession(Date.UTC(2026,10,12,10,30,0));assert.match(s,/^[a-zA-Z0-9-]{8,64}$/);assert.ok(s.startsWith('entrevista-2026-11-12-10-30-00-'));
+  // Trecho de 60 s no bitrate configurado fica abaixo do limite de envio (4 MB).
+  assert.ok((CAPTURE_CLIENT.videoBitsPerSecond+CAPTURE_CLIENT.audioBitsPerSecond)*CAPTURE_CLIENT.segmentMs/1000/8<CAPTURE_CLIENT.segmentBytes);
+  assert.equal(estimateMegabytesPerHour(true,false),11);assert.equal(estimateMegabytesPerHour(false,false),0);assert.ok(estimateMegabytesPerHour(true,true)>100);
+});
+
+test('captação: envia em série, tenta de novo uma vez e guarda o que falhar',async()=>{
+  const calls:{url:string;type:string;size:number}[]=[];let failNext=1;
+  const fetcher=(async(url:string,init:RequestInit)=>{const b=init.body as Blob;calls.push({url,type:String((init.headers as Record<string,string>)['Content-Type']),size:b.size});
+    if(url.includes('kind=recording')&&failNext-->0)return new Response('{}',{status:503});
+    if(url.includes('moment=expression'))return Response.json({error:'Aceite da política de imagem ausente ou revogado.'},{status:403});
+    return Response.json({id:'x'},{status:201});}) as unknown as typeof fetch;
+  const changes:string[]=[];
+  const up=new CaptureUploader(consent,'entrevista-teste-1',(_s,err)=>{if(err)changes.push(err)},fetcher);
+  up.enqueue(new Blob([new Uint8Array(100)],{type:'image/jpeg'}),'photo','answer_start');
+  up.enqueue(new Blob([new Uint8Array(200)],{type:'video/webm;codecs=vp8,opus'}),'recording','session');
+  up.enqueue(new Blob([new Uint8Array(50)],{type:'image/jpeg'}),'photo','expression');
+  up.enqueue(new Blob([new Uint8Array(CAPTURE_CLIENT.photoBytes+1)]),'photo','interval');
+  await up.flush(2000);
+  assert.equal(up.stats.photos,1);assert.equal(up.stats.segments,1);assert.equal(up.stats.failed,2);assert.equal(up.stats.bytes,300);
+  assert.equal(up.failedItems.length,2);
+  assert.equal(calls.length,4,'503 tenta de novo, 403 não, acima do limite nem envia');
+  assert.equal(calls[1].type,'video/webm');
+  assert.ok(calls.every(c=>c.url.startsWith('/api/training/capture-upload?consent=c-1&session=entrevista-teste-1&')));
+  assert.equal(changes[0],'Foto acima de 1 MB.');
+  const noPhotos=new CaptureUploader({...consent,photos:false},'entrevista-teste-2',()=>{},fetcher);
+  noPhotos.enqueue(new Blob([new Uint8Array(10)]),'photo','interval');await noPhotos.flush(500);assert.equal(calls.length,4,'sem aceite de fotos nada é enviado');
+});
+
+test('captação: política versionada separada da política de imagem da aula',()=>{
+  assert.match(CAPTURE_POLICY.version,/^[a-zA-Z0-9._-]{1,40}$/);
+  assert.ok(CAPTURE_POLICY.points.some(p=>p.includes('10 segundos')));
+  assert.ok(CAPTURE_POLICY.points.some(p=>/revogar/i.test(p)));
+});

@@ -6,14 +6,17 @@
 // Layout inspirado nas videochamadas (sala de espera clara, sala escura em tela cheia, barra inferior com botões
 // redondos, painel lateral de chat e roteiro), com as cores, a fonte e o logotipo do Training.
 // Câmera do participante: opcional e real, ligada só com o aceite da política de imagem da aula online.
-// Nesta versão de teste a imagem ainda não é enviada (destino depende de decisão do proprietário).
-// Entrevista: gravação opcional, com aceite, só neste computador. A lógica roda no Intelligence (/api/intelligence/*).
+// Aula: nesta versão de teste a imagem do participante ainda não é enviada.
+// Entrevista: captação com aceite registrado no servidor (fotos no início de cada resposta e a cada 10 s, gravação
+// em trechos enviada à EVOLU pelo /api/training, bucket privado intelligence-capture). Indicador visível o tempo todo.
+// A lógica da conversa roda no Intelligence (/api/intelligence/*).
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {createPortal} from 'react-dom';
 import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot} from 'lucide-react';
 import {Avatar3D,type Avatar3DHandle} from './avatar3d';
 import {avatarMood} from './avatar-motion';
-import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,CAMERA_POLICY,type MeetingMode} from './meeting-text';
+import {ERROR_TEXT,ROUTE_BADGE,interviewBadge,splitSentences,formatClock,coverageLabel,CAMERA_POLICY,CAPTURE_POLICY,type MeetingMode} from './meeting-text';
+import {CAPTURE_CLIENT,CaptureUploader,SegmentRecorder,acceptConsent,currentConsent,estimateMegabytesPerHour,newCaptureSession,revokeConsent,snapshotJpeg,type CaptureConsent,type CaptureMoment,type CaptureStats} from './capture';
 import './meeting.css';
 
 // Respostas JSON do Intelligence (formato definido em src/digital-instructor/live-app.mjs).
@@ -40,6 +43,7 @@ function recognitionCtor():(new()=>SpeechRecognitionLike)|null{
   const w=window as unknown as {SpeechRecognition?:new()=>SpeechRecognitionLike;webkitSpeechRecognition?:new()=>SpeechRecognitionLike};
   return w.SpeechRecognition??w.webkitSpeechRecognition??null;
 }
+const plural=(n:number,one:string,many:string)=>`${n} ${n===1?one:many}`;
 const MIC_ACK_KEY='evolu-intelligence-mic-ack';
 const CAM_ACK_KEY='evolu-intelligence-camera-policy';
 
@@ -64,6 +68,12 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const [recElapsed,setRecElapsed]=useState(0);
   const [panel,setPanel]=useState<'chat'|'info'|null>('chat');
   const [consentChecked,setConsentChecked]=useState(false);
+  const [capConsent,setCapConsent]=useState<CaptureConsent|null>(null);
+  const [capStats,setCapStats]=useState<CaptureStats>({photos:0,segments:0,failed:0,bytes:0});
+  const [capPhotos,setCapPhotos]=useState(true);
+  const [capRecording,setCapRecording]=useState(true);
+  const [capChecked,setCapChecked]=useState(false);
+  const [capFailedCount,setCapFailedCount]=useState(0);
   const [startedAt,setStartedAt]=useState(0);
   const [input,setInput]=useState('');
   const [joining,setJoining]=useState(false);
@@ -76,11 +86,12 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
 
   const avatarRef=useRef<Avatar3DHandle>(null);
   const meVideo=useRef<HTMLVideoElement>(null),lobbyVideo=useRef<HTMLVideoElement>(null);
-  const micDialog=useRef<HTMLDialogElement>(null),recDialog=useRef<HTMLDialogElement>(null),camDialog=useRef<HTMLDialogElement>(null);
+  const micDialog=useRef<HTMLDialogElement>(null),capDialog=useRef<HTMLDialogElement>(null),camDialog=useRef<HTMLDialogElement>(null);
   const logEnd=useRef<HTMLLIElement>(null);
   const live=useRef({busy:false,speaking:false,micOpen:false,inCall:false,speakToken:0,seq:0,voiceOn:true,rate:1.05,
     recognizer:null as SpeechRecognitionLike|null,cam:null as MediaStream|null,rec:null as MediaStream|null,
-    recorder:null as MediaRecorder|null,chunks:[] as Blob[],recStart:0,voice:null as SpeechSynthesisVoice|null,
+    recorder:null as SegmentRecorder|null,recStart:0,voice:null as SpeechSynthesisVoice|null,
+    consent:null as CaptureConsent|null,uploader:null as CaptureUploader|null,answerShot:false,shoot:(_m:CaptureMoment)=>{void _m},
     dialogResolve:null as ((ok:boolean)=>void)|null,send:(_t:string)=>{void _t},resume:()=>{}});
 
   useEffect(()=>{live.current.voiceOn=voiceOn;live.current.rate=rate},[voiceOn,rate]);
@@ -107,6 +118,41 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   }),[]);
   const closeDialog=(dlg:HTMLDialogElement|null,ok:boolean)=>{dlg?.close();const r=live.current.dialogResolve;live.current.dialogResolve=null;r?.(ok)};
 
+  // ---------- captação da entrevista (aceite no servidor, fotos e gravação enviadas) ----------
+  const capPhotosRef=useRef(capPhotos),capRecordingRef=useRef(capRecording);
+  useEffect(()=>{capPhotosRef.current=capPhotos;capRecordingRef.current=capRecording},[capPhotos,capRecording]);
+  const applyConsent=useCallback((c:CaptureConsent|null)=>{
+    const s=live.current;s.consent=c;setCapConsent(c);
+    if(c&&(!s.uploader||s.uploader.consentId!==c.id)){
+      const session=s.uploader?.session??newCaptureSession();
+      s.uploader=new CaptureUploader(c,session,(st,err)=>{setCapStats(st);setCapFailedCount(live.current.uploader?.failedItems.length??0);if(err)addLog('Sistema','Captação: '+err+' O arquivo fica guardado para baixar no fim.')});
+    }
+  },[addLog]);
+  /** Devolve o aceite vigente (servidor) ou pede um novo. needRecording exige a gravação no aceite. */
+  const ensureConsent=useCallback(async(needRecording:boolean):Promise<CaptureConsent|null>=>{
+    const s=live.current;if(lesson)return null;
+    let c=s.consent;
+    if(!c){try{c=await currentConsent('interview')}catch(e){addLog('Sistema','Captação indisponível ('+((e as Error).message||'sem conexão')+'). A entrevista segue sem enviar imagem.');return null}}
+    if(c&&c.policyVersion===CAPTURE_POLICY.version&&(!needRecording||c.recording)){applyConsent(c);return c}
+    setCapChecked(false);setCapPhotos(c?.photos??true);setCapRecording(needRecording||(c?.recording??true));
+    if(!(await confirmDialog(capDialog.current))){addLog('Sistema','Captação não aceita. Nada da sua imagem é enviado.');return s.consent}
+    try{
+      const accepted=await acceptConsent({mode:'interview',policyVersion:CAPTURE_POLICY.version,camera:true,photos:capPhotosRef.current,recording:capRecordingRef.current});
+      applyConsent(accepted);addLog('Sistema',`Aceite registrado (${CAPTURE_POLICY.version}).${accepted.photos?' Fotos ligadas.':''}${accepted.recording?' Gravação liberada.':''}`);return accepted;
+    }catch(e){addLog('Sistema','Não consegui registrar o aceite: '+((e as Error).message||'sem conexão')+' Nada é enviado.');return null}
+  },[addLog,confirmDialog,lesson,applyConsent]);
+  const shoot=useCallback(async(moment:CaptureMoment)=>{
+    const s=live.current;if(lesson||!s.consent?.photos||!s.uploader||!s.cam||!s.inCall)return;
+    const blob=await snapshotJpeg(meVideo.current);if(blob&&s.inCall)s.uploader?.enqueue(blob,'photo',moment);
+  },[lesson]);
+  useEffect(()=>{live.current.shoot=m=>{void shoot(m)}},[shoot]);
+  // Piso: uma foto a cada 10 s com a câmera ligada e o aceite de fotos.
+  useEffect(()=>{
+    if(lesson||phase!=='call'||!camOn||!capConsent?.photos)return;
+    const id=setInterval(()=>live.current.shoot('interval'),CAPTURE_CLIENT.photoEveryMs);
+    return()=>clearInterval(id);
+  },[lesson,phase,camOn,capConsent]);
+
   // ---------- câmera ----------
   const attachCam=useCallback(()=>{for(const v of [meVideo.current,lobbyVideo.current])if(v)v.srcObject=live.current.cam;setCamOn(Boolean(live.current.cam))},[]);
   const setCam=useCallback(async(on:boolean)=>{
@@ -122,7 +168,8 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       try{s.cam=await navigator.mediaDevices.getUserMedia({video:true})}catch{setLobbyNotice('Não consegui abrir a câmera. A reunião segue sem vídeo.');addLog('Sistema','Não consegui abrir a câmera. A reunião segue sem vídeo.')}
     }
     attachCam();
-  },[addLog,attachCam,confirmDialog,lesson]);
+    if(on&&s.cam&&!lesson)void ensureConsent(false);
+  },[addLog,attachCam,confirmDialog,lesson,ensureConsent]);
   useEffect(()=>{attachCam()},[phase,attachCam]);
 
   // ---------- ouvir: microfone aberto como numa chamada ----------
@@ -137,7 +184,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     const r=new Ctor();s.recognizer=r;r.lang='pt-BR';r.interimResults=true;r.continuous=false;
     let finalText='';
     r.onresult=ev=>{let interim='';for(let k=ev.resultIndex;k<ev.results.length;k++){const res=ev.results[k];if(res.isFinal)finalText+=res[0].transcript;else interim+=res[0].transcript}
-      const said=(finalText+interim).trim();setUserTalking(Boolean(said));if(said)setCaption({who:'Você',text:said,upTo:said.length,badge:null})};
+      const said=(finalText+interim).trim();setUserTalking(Boolean(said));if(said){setCaption({who:'Você',text:said,upTo:said.length,badge:null});if(!s.answerShot){s.answerShot=true;s.shoot('answer_start')}}};
     r.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed'){addLog('Sistema','Microfone bloqueado pelo navegador. Use o chat.');s.micOpen=false;setMicOpenState(false)}};
     r.onend=()=>{s.recognizer=null;setListening(false);setUserTalking(false);const said=finalText.trim();if(said)s.send(said);else setTimeout(()=>s.resume(),250)};
     setListening(true);
@@ -200,30 +247,35 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     if(on){stopSpeaking();live.current.resume()}else pauseListening();
   },[addLog,confirmDialog,pauseListening,stopSpeaking]);
 
-  // ---------- gravação da entrevista (só neste computador) ----------
+  // ---------- gravação da entrevista (enviada à EVOLU em trechos) ----------
   const download=(blob:Blob,name:string)=>{const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
   const stopRecording=useCallback(()=>{
     const s=live.current;if(!s.recorder)return;
     s.recorder.stop();s.rec?.getAudioTracks().forEach(t=>t.stop());s.recorder=null;setRecording(false);
-  },[]);
+    addLog('Sistema','Gravação parada. O último trecho segue para o servidor.');
+  },[addLog]);
   const toggleRecording=useCallback(async()=>{
     const s=live.current;
     if(lesson)return; // o participante nunca é gravado
     if(s.recorder){stopRecording();return}
     if(typeof MediaRecorder==='undefined'||!navigator.mediaDevices?.getUserMedia){addLog('Sistema','Este navegador não grava. A entrevista segue sem gravação.');return}
-    if(!(await confirmDialog(recDialog.current)))return;
+    const consent=await ensureConsent(true);
+    if(!consent?.recording||!s.uploader){addLog('Sistema','Sem aceite de gravação registrado. Nada foi gravado.');return}
     try{s.rec=await navigator.mediaDevices.getUserMedia({video:true,audio:true})}catch{addLog('Sistema','Não consegui acesso à câmera e ao microfone para gravar.');return}
     s.cam?.getTracks().forEach(t=>t.stop());s.cam=new MediaStream(s.rec.getVideoTracks());attachCam();
-    s.chunks=[];
-    const type=['video/webm;codecs=vp9,opus','video/webm','video/mp4'].find(t=>MediaRecorder.isTypeSupported?.(t))??'';
-    const recorder=new MediaRecorder(s.rec,type?{mimeType:type}:undefined);
-    recorder.ondataavailable=e=>{if(e.data.size)s.chunks.push(e.data)};
-    recorder.onstop=()=>{const blob=new Blob(s.chunks,{type:s.chunks[0]?.type||'video/webm'});s.chunks=[];if(!blob.size)return;
-      download(blob,`entrevista-${new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')}.${blob.type.includes('mp4')?'mp4':'webm'}`);
-      addLog('Sistema','Gravação salva neste computador (pasta de downloads). Nada foi enviado ao servidor.')};
-    recorder.start(1000);s.recorder=recorder;s.recStart=Date.now();setRecElapsed(0);setRecording(true);
-    addLog('Sistema','Gravação iniciada. O arquivo fica só neste computador.');
-  },[addLog,attachCam,confirmDialog,lesson,stopRecording]);
+    const uploader=s.uploader;
+    const recorder=new SegmentRecorder(s.rec,blob=>uploader.enqueue(blob,'recording','session'));
+    recorder.start();s.recorder=recorder;s.recStart=Date.now();setRecElapsed(0);setRecording(true);
+    addLog('Sistema','Gravação iniciada. Vai para a EVOLU em trechos de 1 minuto.');
+  },[addLog,attachCam,ensureConsent,lesson,stopRecording]);
+  const revokeCapture=useCallback(async()=>{
+    const s=live.current,c=s.consent;if(!c)return;
+    stopRecording();
+    try{await revokeConsent(c.id);addLog('Sistema','Aceite revogado. A captação parou. O que já foi enviado continua guardado nesta fase de teste.')}
+    catch(e){addLog('Sistema','Não consegui revogar no servidor: '+((e as Error).message||'sem conexão')+' A captação parou nesta tela.')}
+    s.consent=null;setCapConsent(null);
+  },[addLog,stopRecording]);
+  const downloadFailed=()=>{const items=live.current.uploader?.failedItems??[];items.forEach((it,i)=>download(it.blob,`captacao-nao-enviada-${i+1}.${it.kind==='photo'?'jpg':it.blob.type.includes('mp4')?'mp4':'webm'}`))};
 
   // ---------- relógio da chamada ----------
   useEffect(()=>{
@@ -258,7 +310,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const send=useCallback(async(raw:string)=>{
     const text=String(raw??'').trim();const s=live.current;
     if(!text||s.busy)return;
-    stopSpeaking();s.busy=true;setThinking(true);pauseListening();
+    stopSpeaking();s.busy=true;setThinking(true);pauseListening();s.answerShot=false;
     addLog(lesson?'Você (participante)':'Você (capacitador)',text,true);
     let reply:[string,string|null];
     try{
@@ -298,6 +350,8 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const leave=async()=>{
     const s=live.current;
     stopSpeaking();await setMic(false);stopRecording();
+    s.inCall=false; // para as fotos antes de terminar o envio
+    if(s.uploader&&!s.uploader.idle){addLog('Sistema','Terminando de enviar a captação…');await s.uploader.flush()}
     try{
       if(lesson&&app?.lesson?.run_status==='LIVE')await api('lesson/end',{});
       if(!lesson&&app?.interview?.status==='OPEN'){const r=await api('interview/finish',{});if(r.draft)setDraft(r.draft)}
@@ -355,7 +409,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
             <label>Velocidade da voz <input type="range" min="0.8" max="1.4" step="0.05" value={rate} onChange={e=>setRate(Number(e.target.value))} aria-valuetext={rate.toFixed(2)+'x'}/></label>
           </details>
           <ul className="ev-lobby-notes">
-            <li>{lesson?'Câmera opcional. Ao ligar, você aceita a política de imagem da aula online.':'Câmera opcional. Gravar pede o seu aceite e o arquivo fica só neste computador.'}</li>
+            <li>{lesson?'Câmera opcional. Ao ligar, você aceita a política de imagem da aula online.':'Câmera opcional. Fotos e gravação só com o seu aceite, registrado no servidor, e vão para a EVOLU.'}</li>
             <li>{hasRecognition?'Microfone pelo reconhecimento de voz do navegador (no Chrome, o áudio vai para o Google). O chat funciona sempre.':'Este navegador não reconhece voz. Use o chat.'}</li>
             <li>O avatar é uma versão digital feita com IA.</li>
           </ul>
@@ -368,9 +422,11 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       <div className="ev-left-body">
         <h1>{lesson?'Você saiu da aula':'Entrevista encerrada'}</h1>
         {draft&&<p>O rascunho (DRAFT) do avatar do capacitador está pronto para revisão.</p>}
+        {!lesson&&(capStats.photos+capStats.segments+capStats.failed>0)&&<p>Captação enviada à EVOLU: {plural(capStats.photos,'foto','fotos')} e {plural(capStats.segments,'trecho','trechos')} de gravação.{capStats.failed?` ${plural(capStats.failed,'item não foi enviado','itens não foram enviados')}.`:''}</p>}
         <div className="ev-left-actions">
           <button className="ev-pill-button outline" onClick={()=>setPhase('lobby')}>Participar novamente</button>
           {draft&&<button className="ev-pill-button outline" onClick={downloadDraft}><Download size={16}/> Baixar rascunho</button>}
+          {capFailedCount>0&&<button className="ev-pill-button outline" onClick={downloadFailed}><Download size={16}/> Baixar o que não foi enviado</button>}
           <button className="ev-pill-button lime" onClick={close}>{lesson?'Voltar à aula':'Voltar ao painel'}</button>
         </div>
       </div>
@@ -382,6 +438,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
         <div className="ev-room-flags">
           {recording&&<span className="ev-room-rec" role="status"><Circle size={9} fill="currentColor"/> Gravando {formatClock(recElapsed)}</span>}
           {lesson&&camOn&&<span className="ev-room-chip"><ShieldCheck size={13}/> Câmera ligada · política aceita</span>}
+          {!lesson&&capConsent&&(camOn||recording)&&<span className="ev-room-chip capture" role="status" aria-label="Captação ligada"><ShieldCheck size={13}/> Captação ligada{capConsent.photos?` · ${plural(capStats.photos,'foto','fotos')}`:''}{capConsent.recording?` · ${plural(capStats.segments,'trecho','trechos')}`:''}{capStats.failed?` · ${plural(capStats.failed,'falha','falhas')}`:''}</span>}
           <span className="ev-room-live">{lesson?(l?.run_status==='LIVE'?'AO VIVO':'ENCERRADA'):(interview?.status==='OPEN'?'EM ANDAMENTO':'ENCERRADA')}</span>
         </div>
       </header>
@@ -409,7 +466,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
             <ol className="ev-room-log" aria-live="polite">{log.map(m=><li key={m.id} className={m.me?'me':m.who==='Sistema'?'system':''}><span className="who">{m.who}</span>{m.text}</li>)}<li ref={logEnd} aria-hidden="true" className="end"/></ol>
             {sources.length>0&&<div className="ev-room-sources">Fontes da aula: {sources.map(s=><span className="ev-pill" key={s.id}>{s.title}</span>)}</div>}
             <form className="ev-room-input" onSubmit={submit}>
-              <input value={input} onChange={e=>setInput(e.target.value)} maxLength={1200} placeholder={lesson?'Escreva a sua dúvida':'Escreva a sua resposta'} aria-label={lesson?'Sua dúvida':'Sua resposta'} disabled={thinking}/>
+              <input value={input} onChange={e=>{const v=e.target.value;if(!input&&v&&!live.current.answerShot){live.current.answerShot=true;live.current.shoot('answer_start')}setInput(v)}} maxLength={1200} placeholder={lesson?'Escreva a sua dúvida':'Escreva a sua resposta'} aria-label={lesson?'Sua dúvida':'Sua resposta'} disabled={thinking}/>
               <button className="ev-icon send" type="submit" disabled={thinking||!input.trim()} aria-label="Enviar"><Send size={17}/></button>
             </form>
           </div>}
@@ -417,7 +474,10 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
             {lesson?<ol className="ev-room-segments">{l?.segments?.map((s:R)=><li key={s.id} className={cur&&s.id===cur.id?'current':cur&&s.order<cur.order?'done':''}><span>{s.order}</span>{s.title}</li>)}</ol>
               :<div className="ev-room-coverage"><p>{coverageLabel(interview?.status)}</p><progress value={cov.covered} max={cov.total||1}/><strong>{cov.covered} de {cov.total} pontos</strong>
                 <p>Trajetória, método, personalidade, limites e materiais. Assuntos pessoais, contatos e dados sensíveis não são registrados.</p>
-                {draft&&<button className="ev-pill-button outline" onClick={downloadDraft}><Download size={15}/> Baixar rascunho (DRAFT)</button>}</div>}
+                {draft&&<button className="ev-pill-button outline" onClick={downloadDraft}><Download size={15}/> Baixar rascunho (DRAFT)</button>}
+                <div className="ev-room-capture"><strong>Captação</strong>{capConsent?<><p>Aceite {capConsent.policyVersion}. {capConsent.photos?'Fotos ligadas. ':''}{capConsent.recording?'Gravação liberada. ':''}Enviados: {plural(capStats.photos,'foto','fotos')} e {plural(capStats.segments,'trecho','trechos')} ({(capStats.bytes/1024/1024).toFixed(1)} MB).</p>
+                  <button className="ev-pill-button outline" onClick={()=>run(revokeCapture)}>Revogar aceite</button></>
+                  :<><p>Sem aceite. Nada da sua imagem é enviado.</p><button className="ev-pill-button outline" onClick={()=>run(async()=>{await ensureConsent(false)})}>Ver política e aceitar</button></>}</div></div>}
             <dl className="ev-room-facts">
               <div><dt>Perfil</dt><dd>{app?.avatar?.profile?`${app.avatar.profile.id} · ${app.avatar.profile.activation}`:'-'}</dd></div>
               <div><dt>Modelo</dt><dd>{app?.model?.label||'-'}</dd></div>
@@ -455,10 +515,16 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       <p>O reconhecimento de voz é feito pelo navegador. No Chrome, o áudio vai para o Google para virar texto. O chat funciona sempre, sem enviar áudio.</p>
       <div className="ev-meet-dialog-actions"><button className="ev-pill-button outline" onClick={()=>closeDialog(micDialog.current,false)}>Usar só o chat</button><button className="ev-pill-button lime" onClick={()=>closeDialog(micDialog.current,true)}>Abrir o microfone</button></div>
     </dialog>
-    <dialog ref={recDialog} className="ev-meet-dialog" onCancel={e=>{e.preventDefault();closeDialog(recDialog.current,false)}}>
-      <h3>Gravar a entrevista</h3>
-      <p>A gravação inclui a sua câmera e a sua voz e fica salva só neste computador. Nada é enviado ao servidor. O indicador Gravando fica visível o tempo todo. Usar imagem ou voz para criar um avatar depende do termo de consentimento, assinado à parte.</p>
-      <div className="ev-meet-dialog-actions"><button className="ev-pill-button outline" onClick={()=>closeDialog(recDialog.current,false)}>Não gravar</button><button className="ev-pill-button lime" onClick={()=>closeDialog(recDialog.current,true)}>Aceito gravar</button></div>
+    <dialog ref={capDialog} className="ev-meet-dialog" onCancel={e=>{e.preventDefault();closeDialog(capDialog.current,false)}}>
+      <h3>{CAPTURE_POLICY.title}</h3>
+      <ul>{CAPTURE_POLICY.points.map(p=><li key={p}>{p}</li>)}</ul>
+      <fieldset className="ev-meet-capture-options"><legend>O que você aceita</legend>
+        <label><input type="checkbox" checked={capPhotos} onChange={e=>setCapPhotos(e.target.checked)}/> Fotos (início de cada resposta e a cada 10 s)</label>
+        <label><input type="checkbox" checked={capRecording} onChange={e=>setCapRecording(e.target.checked)}/> Gravação da entrevista (câmera e voz)</label>
+      </fieldset>
+      <p className="ev-meet-dialog-note">Volume estimado: cerca de {estimateMegabytesPerHour(capPhotos,capRecording)} MB por hora.</p>
+      <label className="ev-meet-consent"><input type="checkbox" checked={capChecked} onChange={e=>setCapChecked(e.target.checked)}/> Li e aceito a captação da entrevista ({CAPTURE_POLICY.version}).</label>
+      <div className="ev-meet-dialog-actions"><button className="ev-pill-button outline" onClick={()=>closeDialog(capDialog.current,false)}>Continuar sem captação</button><button className="ev-pill-button lime" disabled={!capChecked||(!capPhotos&&!capRecording)} onClick={()=>closeDialog(capDialog.current,true)}>Aceitar</button></div>
     </dialog>
   </div>;
   return typeof document==='undefined'?null:createPortal(node,document.body);

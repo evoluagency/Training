@@ -55,3 +55,20 @@ export const CAMERA_POLICY={
   ],
   testNote:'Versão de teste: nesta etapa a imagem aparece só na sua tela e ainda não é enviada nem guardada.',
 } as const;
+
+/**
+ * Captação da entrevista do capacitador (D23, D25, D29). RASCUNHO para revisão do proprietário (e jurídica).
+ * O aceite fica registrado no servidor com esta versão. Mudar o texto exige nova versão e novo aceite.
+ */
+export const CAPTURE_POLICY={
+  version:'captacao-rascunho-0.1',
+  title:'Captação da entrevista',
+  points:[
+    'Com o seu aceite, a EVOLU registra a sua imagem e a sua voz durante a entrevista para continuar trabalhando no modelo do avatar.',
+    'Fotos: uma no início de cada resposta e uma a cada 10 segundos enquanto a câmera estiver ligada.',
+    'Gravação: câmera e voz, enviadas em trechos de 1 minuto durante a entrevista.',
+    'Os arquivos vão para um armazenamento privado da EVOLU. Só a administração da EVOLU acessa. Você não fica com cópia.',
+    'Você pode parar a gravação, desligar a câmera ou revogar este aceite a qualquer momento. Revogar interrompe a captação. O que já foi enviado continua guardado nesta fase de teste.',
+    'Usar a sua imagem ou a sua voz para criar um avatar depende do termo de consentimento, assinado à parte.',
+  ],
+} as const;
