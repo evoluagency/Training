@@ -35,6 +35,9 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Tarefas 1 a 5 do PROMPT-1.16 f
   - Orientação falada ou escrita de enquadramento e áudio em tempo real (afaste, aproxime, áudio estourado, não vejo bem o rosto).
 - Modelo exato do celular: o proprietário não tem como informar. Não cobrar de novo. O site mede no próprio aparelho o que a câmera entrega (resolução e quadros por segundo).
 
+- CONFIRMADO (14/11): cadeia separada (ouvir, responder, falar, animar) é o caminho do ciclo ao vivo.
+- CONFIRMADO (14/11): robô fiel à imagem, feito no Blender, entra no plano. O robô em código (commit 996d739) fica como versão provisória e como reserva.
+
 ## Recomendações do agente (para confirmar)
 - Dois modos: adotar. Resolve o microfone (celular perto da boca) e dispensa a segunda tela. Viável com o extrator da sessão A: ele já entrega a rotação da cabeça e a direção dos olhos separadas, então dá para saber na hora se o rosto virou e o olho ficou na câmera. Em vez de aprovar ou reprovar, cada tomada recebe a etiqueta do que aconteceu e um mapa de cobertura decide a instrução das próximas frases.
 - Cuidados: (1) manter boa parte das frases de frente e os giros moderados (até uns 30 graus), porque falar de lado muda o som que chega ao microfone, (2) a câmera frontal serve para expressão, mas a textura fina do rosto (pele, barba) fica melhor com um trecho curto de rosto feito pela câmera traseira no modo afastado, (3) "ninguém faz isso" ainda não foi pesquisado, não afirmar em material de venda antes de conferir.
@@ -44,7 +47,7 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Tarefas 1 a 5 do PROMPT-1.16 f
 - Roupa trocável exige separar corpo e roupa na captação (uma tomada com roupa justa e lisa para o corpo). Entra no roteiro da sessão B.
 
 ## Pendente
-- Confirmação do proprietário: cadeia separada como caminho, e se o robô fiel à imagem (modelo 3D no Blender) entra no plano.
+- Robô fiel no Blender (ver PROMPT-1.17, tarefa 3).
 - Construção: semana 1 do plano do mês 1 e funções do mapa de cobertura (PROMPT-1.17).
 - Teste de 10 frases no modo selfie comparando o áudio com o bloco A.
 - Licenças dos modelos de voz antes de escolher a voz final. Eco ou fone como requisito antes de ligar a interrupção.
