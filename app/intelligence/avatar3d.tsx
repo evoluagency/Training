@@ -1,16 +1,21 @@
 'use client';
 // Avatar humanoide 3D ORIGINAL do EVOLU Intelligence, em tempo real no navegador (three, MIT).
-// Aparência "EVOLU Design No-1" (referência do proprietário em docs/intelligence/referencias/), construída em código,
-// sem modelo externo: casco branco brilhante, olhos verdes acesos com pálpebras, mandíbula articulada, pescoço de cabos,
-// peitoral com a marca e barra de estado, ombros e braços. A barra do peito e os anéis dos ombros mostram o estado.
+// Aparência "EVOLU Design No-1" (referência do proprietário em docs/intelligence/referencias/).
+// Modelo principal: public/intelligence/evolu-design-no-1.glb, gerado por scripts/blender/evolu_design_no1.py
+// (corpo inteiro, peças rígidas presas a pivôs com nome fixo). Enquanto o arquivo carrega, ou se ele falhar,
+// a sala mostra a versão construída em código abaixo (buildRig), com o mesmo desenho simplificado.
+// A barra do peito e os anéis dos ombros mostram o estado.
 // Pisca, respira, mexe cabeça e sobrancelhas. A boca segue o volume do áudio real quando há um AnalyserNode
 // (voz gerada no navegador) e, sem ele, o ritmo de sílabas e os limites de palavra da voz do navegador.
 // Sem WebGL, cai no avatar ilustrado.
 import {forwardRef,useEffect,useImperativeHandle,useRef,useState} from 'react';
 import {
   AmbientLight,CapsuleGeometry,LatheGeometry,SplineCurve,Vector2,Color,CylinderGeometry,DirectionalLight,Group,HemisphereLight,Mesh,MeshStandardMaterial,
-  PerspectiveCamera,Scene,SphereGeometry,TorusGeometry,WebGLRenderer,CanvasTexture,MeshBasicMaterial,PlaneGeometry,SRGBColorSpace,type BufferGeometry,
+  PerspectiveCamera,Scene,SphereGeometry,TorusGeometry,WebGLRenderer,CanvasTexture,MeshBasicMaterial,PlaneGeometry,SRGBColorSpace,
+  PMREMGenerator,type BufferGeometry,type Object3D,
 } from 'three';
+import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
+import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {IllustratedAvatar} from './avatar';
 import {NEUTRAL_VISEME,approach,levelFromSamples,moodTarget,visemeFor,type AvatarMood,type Viseme} from './avatar-motion';
 
@@ -19,11 +24,31 @@ export type Avatar3DHandle={word:(w?:string)=>void;setAnalyser:(a:AnalyserNode|n
 type Disposable={dispose:()=>void};
 
 type Rig={
-  root:Group;head:Group;jaw:Group;torso:Mesh;
-  eyes:Group[];lids:Mesh[];brows:Mesh[];
-  mouth:Mesh;mouthGlow:MeshStandardMaterial;upperLip:Mesh;lowerLip:Mesh;
+  root:Object3D;rootY:number;head:Object3D;jaw:Object3D;torso:Object3D;torsoY:number;
+  eyes:Object3D[];lids:Object3D[];brows:Object3D[];
+  mouth:Object3D;mouthBase:[number,number,number];mouthGlow:MeshStandardMaterial;lips:Object3D[];
   leds:MeshStandardMaterial[];
+  /** Enquadramento: altura do centro, altura e largura visíveis. */
+  view:{y:number;h:number;w:number};
 };
+
+const MODEL_URL='/intelligence/evolu-design-no-1.glb';
+// Modelo do Blender em metros. A escala e o deslocamento deixam a cabeça no mesmo lugar e tamanho da versão em código.
+async function loadModelRig(scene:Scene,track:(x:Disposable)=>void):Promise<Rig>{
+  const model=(await new GLTFLoader().loadAsync(MODEL_URL)).scene,mats=new Map<string,MeshStandardMaterial>();
+  model.traverse(o=>{const m=o as Mesh;if(m.isMesh){const mm=m.material as MeshStandardMaterial;track(m.geometry);track(mm);mats.set(mm.name,mm)}});
+  const node=(n:string)=>{const o=model.getObjectByName(n);if(!o)throw new Error('Modelo sem a peça '+n);return o};
+  const material=(n:string)=>{const m=mats.get(n);if(!m)throw new Error('Modelo sem o material '+n);return m};
+  const rig:Rig={
+    root:new Group(),rootY:-14.09,head:node('Head'),jaw:node('Jaw'),torso:node('Chest'),torsoY:1,
+    eyes:[node('EyeL'),node('EyeR')],lids:[node('LidL'),node('LidR')],brows:[],
+    mouth:node('Mouth'),mouthBase:[1,1,1],mouthGlow:material('MouthGlow'),lips:[],
+    leds:[material('LedBar'),material('LedRing')],
+    view:{y:-1.9,h:5.6,w:4.9},
+  };
+  rig.root.scale.setScalar(8);rig.root.position.y=rig.rootY;rig.root.add(model);scene.add(rig.root);
+  return rig;
+}
 
 // Texto do peito desenhado em tela (sem arquivo de imagem nem fonte externa).
 function chestLabel(track:(x:Disposable)=>void){
@@ -104,7 +129,7 @@ function buildRig(scene:Scene,track:(x:Disposable)=>void):Rig{
   const jaw=new Group();jaw.position.set(0,-.2,.25);head.add(jaw);
   const lowerLip=new Mesh(geo(new CapsuleGeometry(.02,.2,6,12)),shellShade);lowerLip.rotation.z=Math.PI/2;lowerLip.position.set(0,-.255,.56);jaw.add(lowerLip);
   const chin=new Mesh(geo(new SphereGeometry(1,32,16)),shellFace);chin.scale.set(.2,.06,.07);chin.position.set(0,-.43,.4);jaw.add(chin);
-  return {root,head:pivot,jaw,torso:chest,eyes,lids,brows,mouth,mouthGlow,upperLip,lowerLip,leds:[ledBar,ledRing]};
+  return {root,rootY:0,head:pivot,jaw,torso:chest,torsoY:.85,eyes,lids,brows,mouth,mouthBase:[.15,.012,.04],mouthGlow,lips:[upperLip,lowerLip],leds:[ledBar,ledRing],view:{y:-1.55,h:4.6,w:4.5}};
 }
 
 export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(function Avatar3D({mood,label},ref){
@@ -128,18 +153,22 @@ export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(
     el.appendChild(renderer.domElement);
     const scene=new Scene();
     const camera=new PerspectiveCamera(26,1,.1,50);
-    scene.add(new HemisphereLight(0xffffff,0x3a4442,1.25));
-    scene.add(new AmbientLight(0xffffff,.25));
-    const key=new DirectionalLight(0xffffff,2.2);key.position.set(2.5,3,4);scene.add(key);
+    scene.add(new HemisphereLight(0xffffff,0x3a4442,.45));
+    scene.add(new AmbientLight(0xffffff,.08));
+    const key=new DirectionalLight(0xffffff,1);key.position.set(2.5,3,4);scene.add(key);
     const rim=new DirectionalLight(0x8cff6a,.7);rim.position.set(-3,1.5,-2.5);scene.add(rim);
-    const rig=buildRig(scene,x=>owned.push(x));
+    // Ambiente de estúdio só para os reflexos do casco (gerado em código, sem arquivo).
+    const pmrem=new PMREMGenerator(renderer),room=new RoomEnvironment(),env=pmrem.fromScene(room,.04);
+    scene.environment=env.texture;scene.environmentIntensity=.42;room.dispose();pmrem.dispose();owned.push(env);
+    let rig=buildRig(scene,x=>owned.push(x)),alive=true;
+    loadModelRig(scene,x=>owned.push(x)).then(m=>{if(!alive)return;scene.remove(rig.root);rig=m;fit()}).catch(()=>{/* segue com a versão em código */});
     const ledColor=new Color();
 
     const fit=()=>{
       const w=Math.max(1,el.clientWidth),h=Math.max(1,el.clientHeight);
       renderer.setSize(w,h,false);camera.aspect=w/h;
       // Enquadra cabeça, ombros e peitoral em qualquer proporção (tela larga ou celular em pé).
-      const dist=Math.max(4.6,4.5/camera.aspect)/(2*Math.tan(13*Math.PI/180));camera.position.set(0,-1.3,dist);camera.lookAt(0,-1.55,0);camera.updateProjectionMatrix();
+      const v=rig.view,dist=Math.max(v.h,v.w/camera.aspect)/(2*Math.tan(13*Math.PI/180));camera.position.set(0,v.y+.25,dist);camera.lookAt(0,v.y,0);camera.updateProjectionMatrix();
     };
     fit();
     const ro=new ResizeObserver(fit);ro.observe(el);
@@ -174,7 +203,7 @@ export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(
       const motion=reduced?.25:1;
       // Respiração e balanço da cabeça (soma de senos lentos).
       const breath=Math.sin(t*2*Math.PI/4.6);
-      rig.torso.scale.y=.85*(1+.015*breath*motion);rig.root.position.y=.012*breath*motion;
+      rig.torso.scale.y=rig.torsoY*(1+.015*breath*motion);rig.root.position.y=rig.rootY+.012*breath*motion;
       const emph=talking?st.open*.05:0;
       rig.head.rotation.x=st.nod+motion*(.025*Math.sin(t*.53)+.012*Math.sin(t*1.37))-emph;
       rig.head.rotation.y=motion*(.06*Math.sin(t*.31)+.025*Math.sin(t*.87))+st.gazeX*.25;
@@ -187,8 +216,8 @@ export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(
       rig.brows.forEach((b,i)=>{const side=i===0?-1:1;b.position.y=.27+st.browLift+(talking?st.open*.012:0);b.rotation.z=Math.PI/2-side*st.browTilt*.5});
       // Boca e mandíbula.
       rig.jaw.rotation.x=st.open*.2;
-      rig.mouth.scale.set(.15*st.width*(1-st.round*.25),.012+st.open*.085,.04);
-      rig.upperLip.scale.set(1,st.width*(1-st.round*.3),1);rig.lowerLip.scale.set(1,st.width*(1-st.round*.3),1);
+      rig.mouth.scale.set(rig.mouthBase[0]*st.width*(1-st.round*.25),rig.mouthBase[1]*(1+st.open*7),rig.mouthBase[2]);
+      for(const lip of rig.lips)lip.scale.set(1,st.width*(1-st.round*.3),1);
       rig.mouthGlow.emissiveIntensity=talking?.25+st.open*1.4:0;
       // Indicadores laterais.
       ledColor.set(target.led);
@@ -199,7 +228,7 @@ export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(
     };
     raf=requestAnimationFrame(frame);
     return()=>{
-      cancelAnimationFrame(raf);ro.disconnect();
+      alive=false;cancelAnimationFrame(raf);ro.disconnect();
       for(const x of owned)x.dispose();
       renderer.dispose();renderer.domElement.remove();
     };

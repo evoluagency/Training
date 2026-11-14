@@ -28,12 +28,9 @@ NÃO aceito ainda (pedir com franquia e estimativa antes): modelo de IA pago al�
 TAREFA, em ordem:
 1. Semana 1 do plano (seção 9 da arquitetura): interfaces e eventos do ciclo em lib/intelligence/live/, máquina de estados da vez como funções puras com testes, detector de voz no navegador, aluno corta o avatar.
 2. Etiqueta da tomada e mapa de cobertura do modo selfie como funções puras com testes (seção 2 da captação), guardando a etiqueta na trilha `marks` para não exigir servidor novo.
-3. Robô fiel no Blender, sem custo. Referência: docs/intelligence/referencias/evolu-design-no-1.jpg.
-   - Conferir primeiro se o Blender roda no container por script (pacote Python `bpy`, gratuito). Se não rodar, entregar o script e o passo a passo para o proprietário rodar no Blender do computador dele.
-   - Modelo por script, da cintura para cima no enquadramento da sala, corpo inteiro no arquivo: casco branco em painéis, mecânica grafite aparente, cabos verdes, olhos acesos, marca no peito.
-   - Articulações que a sala já anima: cabeça, mandíbula, olhos, pálpebras, sobrancelhas, mais ombros, cotovelos e mãos para os gestos.
-   - Exportar em glTF binário (.glb) com compressão, alvo de até 3 MB, guardado em public/intelligence/. Carregar no avatar3d.tsx com o carregador do three, mantendo o robô em código como reserva se o arquivo falhar.
-   - Avisar o proprietário do limite: modelo feito por script a partir de uma imagem só chega perto, não fica idêntico. O acabamento fino pede ajuste manual no Blender.
+3. Robô do Blender, segunda iteração, só se o proprietário pedir mais fidelidade. A primeira versão já está na sala (HANDOFF-1.16, item 7): scripts/blender/evolu_design_no1.py gera public/intelligence/evolu-design-no-1.glb, e o Blender roda no container pelo pacote Python gratuito `bpy` (instalar num venv fora do repositório).
+   - Melhorias possíveis: painéis recortados no peito e nos membros, rosto mais esculpido, mãos detalhadas, linhas verdes de contorno como na referência (docs/intelligence/referencias/evolu-design-no-1.jpg).
+   - Não mudar os nomes dos pivôs nem dos materiais que a sala usa (lista no topo do script).
    - Conferir em navegador sem tela (tela larga e celular em pé) e mandar as capturas.
 4. Atualizar o HANDOFF-1.17 ao fim de cada etapa e escrever o PROMPT-1.18, com commit [skip ci] e push.
 

@@ -16,6 +16,9 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Tarefas 1 a 5 do PROMPT-1.16 f
 4. docs/intelligence/CAPTACAO_DOIS_MODOS.md (rascunho 0.1): modo selfie (voz e rosto juntos, etiqueta da tomada, mapa de cobertura, orientação em tempo real) e modo afastado (roteiro de sete blocos para corpo, roupa, gestos, mãos, rosto de perto e marcas). Ficha de aparência com versão. Substitui a "sessão B só de tronco".
 5. Pesquisa rápida na internet (3 buscas, modo padrão): preços de avatar ao vivo pronto (Tavus perto de US$ 0,37 por minuto, HeyGen LiveAvatar perto de US$ 0,10 a 0,20, fontes divergentes) e fluxo de captação dos concorrentes (vídeo curto com roteiro e dicas, sem evidência de correção em tempo real). Não prova que ninguém faz.
 6. PROMPT-1.17 escrito.
+7. Robô fiel no Blender, primeira versão (pedido do proprietário em 14/11). Blender 5.3 roda no container como pacote Python gratuito (`bpy`, instalado fora do repositório). scripts/blender/evolu_design_no1.py modela o corpo inteiro por script e exporta public/intelligence/evolu-design-no-1.glb (cerca de 1 MB, 54 mil triângulos, sem textura). Peças rígidas em pivôs com nome fixo (Head, Jaw, Mouth, EyeL/R, LidL/R, Chest, ShoulderL/R, ElbowL/R, WristL/R) e materiais LedBar, LedRing e MouthGlow. avatar3d.tsx carrega o arquivo, com reflexos de estúdio gerados em código, e mantém o robô em código como reserva enquanto carrega ou se falhar. Enquadramento da cintura para cima. Validação: tsc limpo, lint do arquivo sem erro, testes 80 de 80, navegador sem tela em tela larga e celular em pé.
+   Para gerar de novo: `python3 -m venv <pasta> && <pasta>/bin/pip install bpy && <pasta>/bin/python scripts/blender/evolu_design_no1.py public/intelligence/evolu-design-no-1.glb`.
+   Limite: formas ainda simples (tronco liso, rosto de manequim). Faltam painéis recortados do casco, mãos detalhadas e acabamento fino, que pedem mais iterações no script ou ajuste manual no Blender.
 
 ## Decisões e direções do proprietário (14/11/2026, a detalhar na arquitetura)
 - Captação pelo celular (ele usa um Xiaomi Poco, modelo exato a confirmar), câmera traseira, com outra pessoa segurando ou tripé. Considerar outros aparelhos, inclusive iPhone.
@@ -47,7 +50,7 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Tarefas 1 a 5 do PROMPT-1.16 f
 - Roupa trocável exige separar corpo e roupa na captação (uma tomada com roupa justa e lisa para o corpo). Entra no roteiro da sessão B.
 
 ## Pendente
-- Robô fiel no Blender (ver PROMPT-1.17, tarefa 3).
+- Robô do Blender: próximas iterações de fidelidade (painéis do peito e dos membros, rosto, mãos) e ligar ombros, cotovelos e punhos aos gestos.
 - Construção: semana 1 do plano do mês 1 e funções do mapa de cobertura (PROMPT-1.17).
 - Teste de 10 frases no modo selfie comparando o áudio com o bloco A.
 - Licenças dos modelos de voz antes de escolher a voz final. Eco ou fone como requisito antes de ligar a interrupção.
