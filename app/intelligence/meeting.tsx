@@ -11,6 +11,9 @@
 // em trechos enviada à EVOLU pelo /api/training, bucket privado intelligence-capture). Indicador visível o tempo todo.
 // A lógica da conversa roda no Intelligence (/api/intelligence/*).
 import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
+import {startMicVad,type MicVad} from '@/lib/intelligence/live/vad';
+import {stepTurn,initialTurn,type TurnState} from '@/lib/intelligence/live/turn';
+import type {LiveEvent} from '@/lib/intelligence/live/events';
 import {createPortal} from 'react-dom';
 import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot} from 'lucide-react';
 import {Avatar3D,type Avatar3DHandle} from './avatar3d';
@@ -102,6 +105,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     recorder:null as SegmentRecorder|null,recStart:0,voice:null as SpeechSynthesisVoice|null,
     engine:'browser' as 'browser'|'neural',neural:null as PiperVoice|null,audioCtx:null as AudioContext|null,analyser:null as AnalyserNode|null,source:null as AudioBufferSourceNode|null,
     consent:null as CaptureConsent|null,uploader:null as CaptureUploader|null,answerShot:false,shoot:(_m:CaptureMoment)=>{void _m},
+    vad:null as MicVad|null,turn:initialTurn as TurnState,feed:(_e:LiveEvent)=>{void _e},
     dialogResolve:null as ((ok:boolean)=>void)|null,send:(_t:string)=>{void _t},resume:()=>{}});
 
   useEffect(()=>{live.current.voiceOn=voiceOn;live.current.rate=rate;live.current.engine=engine},[voiceOn,rate,engine]);
@@ -220,7 +224,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   useEffect(()=>{live.current.resume=resumeListening},[resumeListening]);
 
   // ---------- falar ----------
-  const setSpeaking=useCallback((v:boolean)=>{live.current.speaking=v;setSpeech({speaking:v});if(v)pauseListening();else live.current.resume()},[pauseListening]);
+  const setSpeaking=useCallback((v:boolean)=>{const s=live.current;s.speaking=v;setSpeech({speaking:v});s.vad?.setAvatarSpeaking(v);s.feed({type:v?'fala.inicio':'fala.fim',at:performance.now()});if(v)pauseListening();else s.resume()},[pauseListening]);
   const avatarLabel=app?.avatar?.label||'Avatar (IA)';
   const avatarLabelRef=useRef(avatarLabel);
   useEffect(()=>{avatarLabelRef.current=avatarLabel},[avatarLabel]);
@@ -285,6 +289,11 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   },[addLog,audioGraph,setSpeaking]);
   const stopSpeaking=useCallback(()=>{const s=live.current;s.speakToken+=1;try{s.source?.stop()}catch{/* já parado */}s.source=null;if('speechSynthesis' in window)window.speechSynthesis.cancel();if(s.speaking)setSpeaking(false)},[setSpeaking]);
 
+  // Aluno corta o avatar: o detector de voz segue ligado enquanto o avatar fala. Fala real por mais de 200 ms silencia o avatar.
+  useEffect(()=>{live.current.feed=e=>{
+    const s=live.current,r=stepTurn(s.turn,e);s.turn=r.state;
+    if(r.effects.some(x=>x.do==='parar.fala')&&s.speaking){s.speakToken+=1;try{s.source?.stop()}catch{/* já parado */}s.source=null;if('speechSynthesis' in window)window.speechSynthesis.cancel();setSpeaking(false)}
+  }},[setSpeaking]);
   const setMic=useCallback(async(on:boolean)=>{
     const s=live.current;
     if(on&&!recognitionCtor()){addLog('Sistema','Este navegador não tem reconhecimento de voz. Use o chat.');return}
@@ -293,7 +302,10 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       if(!accepted){accepted=await confirmDialog(micDialog.current);if(!accepted)return;try{localStorage.setItem(MIC_ACK_KEY,'1')}catch{/* sem armazenamento */}}
     }
     s.micOpen=on;setMicOpenState(on);
-    if(on){stopSpeaking();live.current.resume()}else pauseListening();
+    if(on){
+      if(!s.vad)startMicVad(e=>s.feed(e)).then(v=>{if(s.micOpen&&!s.vad){s.vad=v;v.setAvatarSpeaking(s.speaking)}else v.stop()}).catch(()=>{/* sem detector: segue como antes, o aluno corta pelo botão */});
+      stopSpeaking();live.current.resume();
+    }else{s.vad?.stop();s.vad=null;s.turn=initialTurn;pauseListening()}
   },[addLog,confirmDialog,pauseListening,stopSpeaking]);
 
   // ---------- gravação da entrevista (enviada à EVOLU em trechos) ----------
