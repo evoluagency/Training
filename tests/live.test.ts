@@ -131,3 +131,14 @@ test('marcação: etiqueta vira linha da trilha marks e a trilha é aceita pelo 
   const track={schema:'evolu.motion-track',version:'0.1',track:'marks',session:'s1',camera:'frontal',t0Ms:0,durationMs:5000,extractor:null,source:{kind:'selfie-labels'},columns:[...MARK_COLUMNS],scale:{},frames:[row]};
   assert.equal(validateTrack(track,{track:'marks',session:'s1',camera:'frontal',t0Ms:0}).frames.length,1);
 });
+
+import {stages,summarize,median,fmtMs} from '../lib/intelligence/live/latency.ts';
+test('latência: etapas, mediana e meta de 2 s',()=>{
+  assert.deepEqual(stages({heardAt:100,answerAt:700,firstSoundAt:1300}),{resposta:600,voz:600,total:1200});
+  assert.deepEqual(stages({heardAt:100}),{resposta:null,voz:null,total:null});
+  assert.equal(median([]),null);assert.equal(median([3,1,2]),2);assert.equal(median([1,2,3,4]),3);
+  const s=summarize([{heardAt:0,answerAt:500,firstSoundAt:1000},{heardAt:0,answerAt:900,firstSoundAt:3000},{heardAt:0,answerAt:400,firstSoundAt:1500},{heardAt:5}]);
+  assert.equal(s.count,3);assert.equal(s.medianTotal,1500);assert.equal(s.worstTotal,3000);assert.equal(s.withinGoal,true);
+  assert.equal(summarize([]).withinGoal,null);
+  assert.equal(fmtMs(1500),'1.5 s');assert.equal(fmtMs(300),'300 ms');assert.equal(fmtMs(null),'-');
+});

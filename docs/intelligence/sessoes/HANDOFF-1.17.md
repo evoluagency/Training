@@ -20,8 +20,14 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.16. Tarefas 1, 2 e 4 do PROMPT-1.1
 - Navegador sem tela com microfone e câmera falsos em localhost (prévia com serviço de mentira): entrou na sala, abriu o microfone, o detector pediu o áudio com cancelamento de eco, sem erro de console. Não medi o corte em tempo real porque o navegador sem tela não tem voz sintetizada nem reconhecimento. Falta teste manual no celular e no notebook.
 
 ## Pendente
-- Decisões abertas ao proprietário: (1) mais uma rodada de fidelidade no robô agora ou ciclo primeiro (recomendo ciclo), (2) aceite de Preview novo (gratuito, cerca de 40 s). Sem resposta até o fim desta sessão.
+- DECIDIDO pelo proprietário (14/11): ciclo ao vivo primeiro, robô do Blender depois. Sem Preview novo por enquanto. Espelho ao vivo pedido e incluído no PROMPT-1.18.
 - Semana 2: resposta em fluxo do dublê do Intelligence, frase a frase, com AbortSignal, painel de latência.
 - Medir o tempo real do corte (meta 300 ms) em aparelho de verdade. Eco: fone ou eco cancelado continua requisito antes de liberar a interrupção para todos.
 - Ligar o mapa de cobertura à tela de captação em modo selfie (hoje só funções e testes). Calibrar LIMITS com o extrator de rosto.
 - Pendências do HANDOFF-1.16 seguem valendo (Blender, licenças de voz, teste de 10 frases, placa de vídeo opcional).
+
+## Adendo: início da semana 2 (mesma sessão)
+- lib/intelligence/live/latency.ts: etapas (resposta, voz, total), mediana e meta de 2 s, com teste. Total: 95 testes de 95.
+- meeting.tsx: a busca ao Intelligence (`lesson/ask`, `interview/reply`) agora aceita AbortSignal. Se o aluno volta a falar enquanto o avatar pensa, a resposta é descartada (efeito cancelar.resposta da máquina da vez) e a sala volta a ouvir. Painel de latência na aba Roteiro (mediana, resposta, voz).
+- Medido em navegador sem tela com serviço de mentira: resposta 1,2 s. O trecho de voz (2,7 s) é artefato do navegador sem voz (espera 2,5 s). Medir de novo em aparelho real.
+- Frase a frase: a voz já sintetiza por trechos. Resposta realmente em fluxo exige rota de streaming no Intelligence (a lista de rotas do gateway é fechada, hoje devolve a fala inteira). Decisão para a 1.18 (exige acordo com o backend).

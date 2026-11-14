@@ -14,6 +14,7 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {startMicVad,type MicVad} from '@/lib/intelligence/live/vad';
 import {stepTurn,initialTurn,type TurnState} from '@/lib/intelligence/live/turn';
 import type {LiveEvent} from '@/lib/intelligence/live/events';
+import {summarize,fmtMs,LATENCY_GOAL_MS,type TurnMarks} from '@/lib/intelligence/live/latency';
 import {createPortal} from 'react-dom';
 import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot} from 'lucide-react';
 import {Avatar3D,type Avatar3DHandle} from './avatar3d';
@@ -33,8 +34,8 @@ type CaptionState={who:string;text:string;upTo:number;badge:string|null}|null;
 type Speech={speaking:boolean};
 
 const endpoint='/api/intelligence/';
-async function api(path:string,body?:unknown):Promise<R>{
-  const res=await fetch(endpoint+path,body===undefined?{cache:'no-store'}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
+async function api(path:string,body?:unknown,signal?:AbortSignal):Promise<R>{
+  const res=await fetch(endpoint+path,body===undefined?{cache:'no-store',signal}:{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store',signal});
   const json=await res.json().catch(()=>({error:'BAD_RESPONSE'}));
   if(!res.ok)throw Object.assign(new Error(json.error||'ERRO'),{code:json.error});
   return json;
@@ -65,6 +66,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const [ccOn,setCcOn]=useState(true);
   const [speech,setSpeech]=useState<Speech>({speaking:false});
   const [thinking,setThinking]=useState(false);
+  const [turns,setTurns]=useState<TurnMarks[]>([]);
   const [listening,setListening]=useState(false);
   const [userTalking,setUserTalking]=useState(false);
   const [micOpen,setMicOpenState]=useState(false);
@@ -105,7 +107,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     recorder:null as SegmentRecorder|null,recStart:0,voice:null as SpeechSynthesisVoice|null,
     engine:'browser' as 'browser'|'neural',neural:null as PiperVoice|null,audioCtx:null as AudioContext|null,analyser:null as AnalyserNode|null,source:null as AudioBufferSourceNode|null,
     consent:null as CaptureConsent|null,uploader:null as CaptureUploader|null,answerShot:false,shoot:(_m:CaptureMoment)=>{void _m},
-    vad:null as MicVad|null,turn:initialTurn as TurnState,feed:(_e:LiveEvent)=>{void _e},
+    vad:null as MicVad|null,ask:null as AbortController|null,marks:null as TurnMarks|null,turn:initialTurn as TurnState,feed:(_e:LiveEvent)=>{void _e},
     dialogResolve:null as ((ok:boolean)=>void)|null,send:(_t:string)=>{void _t},resume:()=>{}});
 
   useEffect(()=>{live.current.voiceOn=voiceOn;live.current.rate=rate;live.current.engine=engine},[voiceOn,rate,engine]);
@@ -225,6 +227,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
 
   // ---------- falar ----------
   const setSpeaking=useCallback((v:boolean)=>{const s=live.current;s.speaking=v;setSpeech({speaking:v});s.vad?.setAvatarSpeaking(v);s.feed({type:v?'fala.inicio':'fala.fim',at:performance.now()});if(v)pauseListening();else s.resume()},[pauseListening]);
+  const latency=summarize(turns);
   const avatarLabel=app?.avatar?.label||'Avatar (IA)';
   const avatarLabelRef=useRef(avatarLabel);
   useEffect(()=>{avatarLabelRef.current=avatarLabel},[avatarLabel]);
@@ -236,13 +239,15 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     synth?.cancel();setSpeaking(true);setCaption({who,text,upTo:0,badge});
     const done=()=>{if(token===s.speakToken){setCaption({who,text,upTo:text.length,badge});setSpeaking(false)}};
     const timed=(from:number)=>new Promise<void>(resolve=>{
-      const cps=15*s.rate,t0=performance.now();let last=from;
+      firstSound();const cps=15*s.rate,t0=performance.now();let last=from;
       const tick=()=>{if(token!==s.speakToken)return resolve();
         const pos=Math.min(text.length,from+Math.floor((performance.now()-t0)/1000*cps));
         if(pos!==last){setCaption({who,text,upTo:pos,badge});if(/\s/.test(text[pos]??''))avatarRef.current?.word(text.slice(pos+1).match(/^\S+/)?.[0]);last=pos}
         if(pos>=text.length){done();return resolve()}requestAnimationFrame(tick)};
       tick();
     });
+    const firstSound=()=>{const m=s.marks;if(m&&m.firstSoundAt==null){m.firstSoundAt=performance.now();const done={...m};s.marks=null;setTurns(t=>[...t.slice(-19),done])}};
+    if(!(s.voiceOn&&(s.engine==='neural'&&s.neural||synth)))setTimeout(firstSound,0);
     const graph=s.voiceOn&&s.engine==='neural'&&s.neural?audioGraph():null;
     if(graph&&s.neural){
       const voice=s.neural,{ctx,analyser}=graph,chunks=chunkForSpeech(text);
@@ -255,7 +260,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
             next=i+1<chunks.length?voice.synthesize(chunks[i+1],s.rate):null;next?.catch(()=>{/* tratado no próximo laço */});
             const found=text.indexOf(chunks[i],offset),base=found>=0?found:offset,len=chunks[i].length;
             const buf=ctx.createBuffer(1,pcm.length,voice.sampleRate);buf.copyToChannel(new Float32Array(pcm),0);
-            const src=ctx.createBufferSource();src.buffer=buf;src.connect(analyser);s.source=src;avatarRef.current?.setAnalyser(analyser); // a sala pode ter montado depois do início da fala
+            const src=ctx.createBufferSource();src.buffer=buf;src.connect(analyser);s.source=src;firstSound();avatarRef.current?.setAnalyser(analyser); // a sala pode ter montado depois do início da fala
             await new Promise<void>(res=>{src.onended=()=>res();src.start();const t0=performance.now(),dur=buf.duration*1000;
               const tick=()=>{if(token!==s.speakToken){try{src.stop()}catch{/* já parado */}return res()}
                 const f=Math.min(1,(performance.now()-t0)/dur);setCaption({who,text,upTo:base+Math.floor(len*f),badge});if(f<1)requestAnimationFrame(tick)};tick()});
@@ -276,7 +281,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
         if(!chunk.trim())return next();
         const u=new SpeechSynthesisUtterance(chunk);u.lang='pt-BR';if(s.voice)u.voice=s.voice;u.rate=s.rate;
         let began=false;
-        u.onstart=()=>{began=true};
+        u.onstart=()=>{began=true;firstSound()};
         u.onboundary=ev=>{if(token===s.speakToken){avatarRef.current?.word(chunk.slice(ev.charIndex??0).match(/^\S+/)?.[0]);setCaption({who,text,upTo:base+(ev.charIndex??0),badge})}};
         u.onend=()=>{if(token===s.speakToken)setCaption({who,text,upTo:offset,badge});next()};
         u.onerror=()=>{if(began)next()};
@@ -292,6 +297,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   // Aluno corta o avatar: o detector de voz segue ligado enquanto o avatar fala. Fala real por mais de 200 ms silencia o avatar.
   useEffect(()=>{live.current.feed=e=>{
     const s=live.current,r=stepTurn(s.turn,e);s.turn=r.state;
+    if(r.effects.some(x=>x.do==='cancelar.resposta'))s.ask?.abort();
     if(r.effects.some(x=>x.do==='parar.fala')&&s.speaking){s.speakToken+=1;try{s.source?.stop()}catch{/* já parado */}s.source=null;if('speechSynthesis' in window)window.speechSynthesis.cancel();setSpeaking(false)}
   }},[setSpeaking]);
   const setMic=useCallback(async(on:boolean)=>{
@@ -372,19 +378,24 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
     const text=String(raw??'').trim();const s=live.current;
     if(!text||s.busy)return;
     stopSpeaking();s.busy=true;setThinking(true);pauseListening();s.answerShot=false;
+    const ctl=new AbortController();s.ask=ctl;s.marks={heardAt:performance.now()};s.feed({type:'vez.fim',at:performance.now()});
     addLog(lesson?'Você (participante)':'Você (capacitador)',text,true);
     let reply:[string,string|null];
     try{
       if(lesson){
-        const r=await api('lesson/ask',{text});
+        const r=await api('lesson/ask',{text},ctl.signal);
+        if(s.marks)s.marks.answerAt=performance.now();
         addLog('Avatar',r.speech);setSources(r.sources||[]);
         if(r.usage)setApp(a=>a?{...a,usage:r.usage}:a);
         reply=[r.speech,ROUTE_BADGE[r.route]??null];
       }else{
-        const r=await api('interview/reply',{text});applyInterview(r);reply=[r.line,interviewBadge(r)];
+        const r=await api('interview/reply',{text},ctl.signal);if(s.marks)s.marks.answerAt=performance.now();applyInterview(r);reply=[r.line,interviewBadge(r)];
       }
-    }catch(e){addLog('Sistema',errorText(e));reply=[errorText(e),null]}
-    finally{s.busy=false;setThinking(false)}
+    }catch(e){
+      if(ctl.signal.aborted){ // aluno voltou a falar: resposta descartada, só volta a ouvir
+        s.marks=null;s.busy=false;s.ask=null;setThinking(false);addLog('Sistema','Você interrompeu a resposta. Pode continuar.');setTimeout(()=>s.resume(),0);return}
+      addLog('Sistema',errorText(e));reply=[errorText(e),null]}
+    finally{if(!ctl.signal.aborted){s.busy=false;s.ask=null;setThinking(false)}}
     speak(...reply);
   },[addLog,applyInterview,lesson,pauseListening,speak,stopSpeaking]);
   useEffect(()=>{live.current.send=(t:string)=>{void send(t)}},[send]);
@@ -551,6 +562,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
             <dl className="ev-room-facts">
               <div><dt>Perfil</dt><dd>{app?.avatar?.profile?`${app.avatar.profile.id} · ${app.avatar.profile.activation}`:'-'}</dd></div>
               <div><dt>Modelo</dt><dd>{app?.model?.label||'-'}</dd></div>
+              <div><dt>Latência</dt><dd>{latency.count?`${fmtMs(latency.medianTotal)} (mediana de ${latency.count}), resposta ${fmtMs(latency.medianResposta)}, voz ${fmtMs(latency.medianVoz)}${latency.withinGoal===false?` · acima da meta de ${LATENCY_GOAL_MS/1000} s`:''}`:'sem medida ainda'}</dd></div>
               <div><dt>Custo</dt><dd>{usage?`US$ ${Number(usage.cost_usd).toFixed(4)} de US$ ${usage.budget_usd}`:'zero (sem modelo real)'}</dd></div>
             </dl>
           </div>}
