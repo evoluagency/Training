@@ -1,16 +1,21 @@
-# HANDOFF 1.16 — Avatar ao vivo: robô EVOLU Design No-1, captação pelo celular (em andamento)
+# HANDOFF 1.16 — Avatar ao vivo: robô EVOLU Design No-1, arquitetura do ciclo e captação em dois modos
 
-Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Sessão em andamento, atualizar ao fim de cada etapa.
+Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Tarefas 1 a 5 do PROMPT-1.16 feitas no nível de desenho. Nada foi construído além do robô.
 
 ## Estado
 - Training, branch feat/intelligence-avatar-meeting. vercel.json mantém git.deploymentEnabled falso para a branch.
-- Intelligence: ainda não anexado nesta sessão (falta ler o "Resumo vigente" do BACKEND_COMPLETION_GATE.md).
+- Intelligence: add_repo com push negado de novo (14/11), leitura liberada, clonado em 1905183. Resumo vigente lido: CP042_BACKEND_RELEASE_PASS, BACKEND_COMPLETE, VISUAL_PHASE_AUTHORIZED (11/11/2026). Os documentos desta sessão ficam no Training como cópia de trabalho.
 - Nenhuma publicação, build, workflow ou modelo pago nesta sessão.
 
 ## Feito
 1. Robô da sala (app/intelligence/avatar3d.tsx) refeito no desenho "EVOLU Design No-1" enviado pelo proprietário (referência em docs/intelligence/referencias/evolu-design-no-1.jpg): casco branco brilhante, olhos verdes acesos, pescoço de cabos, peitoral com "EVOLU DESIGN NO-1", barra de estado no peito, ombros com anel de estado e braços. Enquadramento passou de cabeça e ombros para busto. Continua feito em código (three), sem modelo externo. Boca, piscar, olhar e estados iguais aos de antes.
 2. Validação local: tsc limpo, lint do arquivo sem erro, testes 80 de 80, conferido em navegador sem tela (tela larga e celular em pé).
    Limite: é uma aproximação geométrica da imagem, não o modelo fotorrealista. A versão fiel pede um modelo 3D feito em ferramenta própria (Blender, sem custo) ou gerado, e fica para decisão.
+
+3. docs/intelligence/ARQUITETURA_CICLO_AO_VIVO.md (rascunho 0.1): ciclo ouvir, vez, responder, falar, animar, com interfaces e eventos. Orçamento de latência, interrupção nos dois sentidos, comparação entre cadeia separada e fala para fala (recomendação: cadeia separada), as duas camadas (palco com GPU e alunos no navegador) e o plano do mês 1 em quatro semanas, local e sem custo.
+4. docs/intelligence/CAPTACAO_DOIS_MODOS.md (rascunho 0.1): modo selfie (voz e rosto juntos, etiqueta da tomada, mapa de cobertura, orientação em tempo real) e modo afastado (roteiro de sete blocos para corpo, roupa, gestos, mãos, rosto de perto e marcas). Ficha de aparência com versão. Substitui a "sessão B só de tronco".
+5. Pesquisa rápida na internet (3 buscas, modo padrão): preços de avatar ao vivo pronto (Tavus perto de US$ 0,37 por minuto, HeyGen LiveAvatar perto de US$ 0,10 a 0,20, fontes divergentes) e fluxo de captação dos concorrentes (vídeo curto com roteiro e dicas, sem evidência de correção em tempo real). Não prova que ninguém faz.
+6. PROMPT-1.17 escrito.
 
 ## Decisões e direções do proprietário (14/11/2026, a detalhar na arquitetura)
 - Captação pelo celular (ele usa um Xiaomi Poco, modelo exato a confirmar), câmera traseira, com outra pessoa segurando ou tripé. Considerar outros aparelhos, inclusive iPhone.
@@ -39,7 +44,11 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Sessão em andamento, atualiza
 - Roupa trocável exige separar corpo e roupa na captação (uma tomada com roupa justa e lisa para o corpo). Entra no roteiro da sessão B.
 
 ## Pendente
-- Tarefas 2 a 5 do PROMPT-1.16 (arquitetura do ciclo ao vivo, sessão B, plano do mês 1, PROMPT-1.17).
+- Confirmação do proprietário: cadeia separada como caminho, e se o robô fiel à imagem (modelo 3D no Blender) entra no plano.
+- Construção: semana 1 do plano do mês 1 e funções do mapa de cobertura (PROMPT-1.17).
+- Teste de 10 frases no modo selfie comparando o áudio com o bloco A.
+- Licenças dos modelos de voz antes de escolher a voz final. Eco ou fone como requisito antes de ligar a interrupção.
+- Preview novo para ver o robô e testar no celular: depende de aceite (plano gratuito da Vercel, 1 build de cerca de 40 s).
 - Placa de vídeo do notebook (opcional, só define onde treinar sem custo).
 - FULL_BODY_CAPTURE_PROPOSAL.md: não anexado até aqui.
 - Pendências do HANDOFF-1.15 seguem valendo.
