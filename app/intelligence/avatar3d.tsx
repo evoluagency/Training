@@ -17,9 +17,10 @@ import {
 import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/examples/jsm/environments/RoomEnvironment.js';
 import {IllustratedAvatar} from './avatar';
+import {mirrorFresh,NEUTRAL_POSE,type MirrorPose} from '../../lib/intelligence/live/mirror';
 import {NEUTRAL_VISEME,approach,levelFromSamples,moodTarget,visemeFor,type AvatarMood,type Viseme} from './avatar-motion';
 
-export type Avatar3DHandle={word:(w?:string)=>void;setAnalyser:(a:AnalyserNode|null)=>void};
+export type Avatar3DHandle={word:(w?:string)=>void;setAnalyser:(a:AnalyserNode|null)=>void;/** Espelho ao vivo: pose da pessoa (ou null para voltar ao comportamento normal). */setMirror:(p:MirrorPose|null)=>void};
 
 type Disposable={dispose:()=>void};
 
@@ -134,12 +135,13 @@ function buildRig(scene:Scene,track:(x:Disposable)=>void):Rig{
 
 export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(function Avatar3D({mood,label},ref){
   const host=useRef<HTMLDivElement>(null);
-  const moodRef=useRef(mood),pulse=useRef(0),viseme=useRef<Viseme>(NEUTRAL_VISEME),analyser=useRef<AnalyserNode|null>(null);
+  const moodRef=useRef(mood),pulse=useRef(0),viseme=useRef<Viseme>(NEUTRAL_VISEME),analyser=useRef<AnalyserNode|null>(null),mirror=useRef<{pose:MirrorPose;at:number}|null>(null);
   const [failed,setFailed]=useState(false);
   useEffect(()=>{moodRef.current=mood},[mood]);
   useImperativeHandle(ref,()=>({
     word(w){pulse.current=Math.min(1,pulse.current+.6);viseme.current=visemeFor(w)},
     setAnalyser(a){analyser.current=a},
+    setMirror(p){mirror.current=p?{pose:p,at:performance.now()}:null},
   }),[]);
 
   useEffect(()=>{
@@ -176,6 +178,7 @@ export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(
     const reduced=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches;
     const samples=new Uint8Array(1024);
     const st={open:0,width:1,round:0,browLift:0,browTilt:0,gazeX:0,gazeY:0,tilt:0,nod:0,lid:1,blink:0,nextBlink:1.5,saccX:0,saccY:0,nextSacc:1,led:0};
+    const mi={...NEUTRAL_POSE},mw={on:0};
     let raf=0,last=performance.now();
     const frame=(now:number)=>{
       const dt=Math.min(.1,(now-last)/1000),t=now/1000;last=now;
@@ -219,6 +222,23 @@ export const Avatar3D=forwardRef<Avatar3DHandle,{mood:AvatarMood;label:string}>(
       rig.mouth.scale.set(rig.mouthBase[0]*st.width*(1-st.round*.25),rig.mouthBase[1]*(1+st.open*7),rig.mouthBase[2]);
       for(const lip of rig.lips)lip.scale.set(1,st.width*(1-st.round*.3),1);
       rig.mouthGlow.emissiveIntensity=talking?.25+st.open*1.4:0;
+      // Espelho ao vivo: a pose da pessoa (suavizada) assume cabeça, olhos, pálpebras, sobrancelhas e, calado, a boca.
+      const mr=mirror.current,live=Boolean(mr)&&mirrorFresh(mr!.at,now);
+      mw.on=approach(mw.on,live?1:0,8,dt);
+      if(mr){for(const k of Object.keys(mi) as (keyof MirrorPose)[])mi[k]=approach(mi[k],mr.pose[k],18,dt)}
+      if(mw.on>.01){
+        const w=mw.on;
+        rig.head.rotation.x+=(mi.pitch-rig.head.rotation.x)*w;rig.head.rotation.y+=(mi.yaw-rig.head.rotation.y)*w;rig.head.rotation.z+=(mi.roll-rig.head.rotation.z)*w;
+        for(const eye of rig.eyes){eye.rotation.y+=(mi.gazeX*.35-eye.rotation.y)*w;eye.rotation.x+=(-mi.gazeY*.25-eye.rotation.x)*w}
+        for(const lid of rig.lids)lid.rotation.x+=(-.62+mi.blink*1.34-lid.rotation.x)*w;
+        rig.brows.forEach((b,i)=>{const side=i===0?-1:1;b.position.y+=(.27+mi.browUp*.05-b.position.y)*w;b.rotation.z+=(Math.PI/2-side*mi.browInner*.3-b.rotation.z)*w});
+        if(!talking){
+          rig.jaw.rotation.x+=(mi.jaw*.25-rig.jaw.rotation.x)*w;
+          const sx=1+mi.smile*.35-mi.round*.2;
+          rig.mouth.scale.x+=(rig.mouthBase[0]*sx-rig.mouth.scale.x)*w;rig.mouth.scale.y+=(rig.mouthBase[1]*(1+mi.jaw*7)-rig.mouth.scale.y)*w;
+          rig.mouthGlow.emissiveIntensity+=(.15+mi.jaw*1.2-rig.mouthGlow.emissiveIntensity)*w;
+        }
+      }
       // Indicadores laterais.
       ledColor.set(target.led);
       const ledI=.7+(target.ledPulse?.5*Math.sin(t*target.ledPulse*Math.PI):0)+(talking?st.open*.8:0);

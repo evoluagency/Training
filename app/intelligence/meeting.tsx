@@ -14,9 +14,12 @@ import {useCallback,useEffect,useRef,useState,type FormEvent} from 'react';
 import {startMicVad,type MicVad} from '@/lib/intelligence/live/vad';
 import {stepTurn,initialTurn,type TurnState} from '@/lib/intelligence/live/turn';
 import type {LiveEvent} from '@/lib/intelligence/live/events';
+import {mirrorPose} from '@/lib/intelligence/live/mirror';
+import {createFaceExtractor,type FaceExtractor} from './face-extractor';
+import {headAngles} from './motion-capture';
 import {summarize,fmtMs,LATENCY_GOAL_MS,type TurnMarks} from '@/lib/intelligence/live/latency';
 import {createPortal} from 'react-dom';
-import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot} from 'lucide-react';
+import {Mic,MicOff,Video,VideoOff,Captions,MessageSquare,SkipForward,PhoneOff,Circle,Square,Download,Send,X,Info,ShieldCheck,Bot,ScanFace} from 'lucide-react';
 import {Avatar3D,type Avatar3DHandle} from './avatar3d';
 import {listCameras,useBlackWatch,BLACK_WARNING} from './camera-picker';
 import './motion-studio.css';
@@ -67,6 +70,8 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   const [speech,setSpeech]=useState<Speech>({speaking:false});
   const [thinking,setThinking]=useState(false);
   const [turns,setTurns]=useState<TurnMarks[]>([]);
+  const [mirrorOn,setMirrorOn]=useState(false);
+  const [mirrorNote,setMirrorNote]=useState('');
   const [listening,setListening]=useState(false);
   const [userTalking,setUserTalking]=useState(false);
   const [micOpen,setMicOpenState]=useState(false);
@@ -294,6 +299,24 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
   },[addLog,audioGraph,setSpeaking]);
   const stopSpeaking=useCallback(()=>{const s=live.current;s.speakToken+=1;try{s.source?.stop()}catch{/* já parado */}s.source=null;if('speechSynthesis' in window)window.speechSynthesis.cancel();if(s.speaking)setSpeaking(false)},[setSpeaking]);
 
+  // Espelho ao vivo: o robô imita a expressão e a cabeça de quem está na câmera. Roda só no navegador, sem gravar nem enviar nada.
+  useEffect(()=>{
+    if(!mirrorOn||phase!=='call'||!camOn)return;
+    let alive=true,ex:FaceExtractor|null=null,timer=0,misses=0;const avatar=avatarRef.current;
+    const note=setTimeout(()=>setMirrorNote('Carregando o leitor de rosto…'),0);
+    createFaceExtractor().then(x=>{
+      if(!alive){x.close();return}
+      ex=x;clearTimeout(note);setMirrorNote('');
+      timer=window.setInterval(()=>{
+        const v=meVideo.current;if(!v||!ex)return;
+        let f=null;try{f=ex.detect(v,performance.now())}catch{f=null}
+        if(!f){if(++misses>15)avatar?.setMirror(null);return}
+        misses=0;avatar?.setMirror(mirrorPose(f.names,f.scores,f.matrix?headAngles(f.matrix):null));
+      },40);
+    }).catch(()=>{if(alive){setMirrorNote('Não consegui carregar o leitor de rosto.');setMirrorOn(false)}});
+    return()=>{alive=false;clearTimeout(note);clearInterval(timer);ex?.close();avatar?.setMirror(null);setMirrorNote('')};
+  },[mirrorOn,phase,camOn]);
+
   // Aluno corta o avatar: o detector de voz segue ligado enquanto o avatar fala. Fala real por mais de 200 ms silencia o avatar.
   useEffect(()=>{live.current.feed=e=>{
     const s=live.current,r=stepTurn(s.turn,e);s.turn=r.state;
@@ -517,6 +540,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
       <header className="ev-room-head">
         {brand(true)}
         <div className="ev-room-flags">
+          {mirrorNote&&<span className="ev-room-chip" role="status">{mirrorNote}</span>}
           {recording&&<span className="ev-room-rec" role="status"><Circle size={9} fill="currentColor"/> Gravando {formatClock(recElapsed)}</span>}
           {lesson&&camOn&&<span className="ev-room-chip"><ShieldCheck size={13}/> Câmera ligada · política aceita</span>}
           {!lesson&&capConsent&&(camOn||recording)&&<span className="ev-room-chip capture" role="status" aria-label="Captação ligada"><ShieldCheck size={13}/> Captação ligada{capConsent.photos?` · ${plural(capStats.photos,'foto','fotos')}`:''}{capConsent.recording?` · ${plural(capStats.segments,'trecho','trechos')}`:''}{capStats.failed?` · ${plural(capStats.failed,'falha','falhas')}`:''}</span>}
@@ -579,6 +603,7 @@ export function IntelligenceMeeting({mode,contextTitle,onClose}:{mode:MeetingMod
           <button className="ev-pill-button leave" onClick={()=>run(leave)} aria-label="Sair da reunião" title="Sair"><PhoneOff size={20}/></button>
         </div>
         <div className="ev-room-bar-right">
+          <button className={'ev-icon'+(mirrorOn?' active':'')} aria-pressed={mirrorOn} disabled={!camOn} onClick={()=>setMirrorOn(v=>!v)} aria-label={mirrorOn?'Desligar o espelho':'Ligar o espelho: o robô imita você'} title={camOn?'Espelho: o robô imita você':'Ligue a câmera para usar o espelho'}><ScanFace size={20}/></button>
           <button className={'ev-icon'+(panel==='info'?' active':'')} aria-pressed={panel==='info'} onClick={()=>togglePanel('info')} aria-label={lesson?'Roteiro da aula':'Roteiro da entrevista'} title="Roteiro"><Info size={20}/></button>
           <button className={'ev-icon'+(panel==='chat'?' active':'')} aria-pressed={panel==='chat'} onClick={()=>togglePanel('chat')} aria-label="Chat" title="Chat"><MessageSquare size={20}/></button>
         </div>

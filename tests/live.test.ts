@@ -142,3 +142,23 @@ test('latência: etapas, mediana e meta de 2 s',()=>{
   assert.equal(summarize([]).withinGoal,null);
   assert.equal(fmtMs(1500),'1.5 s');assert.equal(fmtMs(300),'300 ms');assert.equal(fmtMs(null),'-');
 });
+
+import {mirrorPose,mirrorFresh,NEUTRAL_POSE,MIRROR_LIMITS} from '../lib/intelligence/live/mirror.ts';
+test('espelho: expressões viram pose do robô, com inversão de espelho e limites',()=>{
+  const names=['jawOpen','mouthSmileLeft','mouthSmileRight','eyeBlinkLeft','eyeBlinkRight','browInnerUp','mouthFunnel','eyeLookOutRight','eyeLookInLeft'];
+  const scores=[0.8,0.6,0.4,1,0.5,0.7,0.2,0.5,0.5];
+  const p=mirrorPose(names,scores,{yaw:20,pitch:-10,roll:5});
+  assert.equal(p.jaw,0.8);assert.equal(p.smile,0.5);assert.equal(p.blink,0.75);assert.equal(p.browUp,0.7);assert.equal(p.round,0.2);
+  assert.ok(p.yaw<0&&Math.abs(p.yaw-(-20*Math.PI/180))<1e-9); // espelho inverte o giro
+  assert.ok(p.gazeX<0);
+  const direct=mirrorPose(names,scores,{yaw:20,pitch:-10,roll:5},false);
+  assert.ok(direct.yaw>0&&direct.gazeX>0);
+  assert.ok(Math.abs(p.pitch)<=MIRROR_LIMITS.headRad);
+  assert.equal(mirrorPose(names,scores,{yaw:170,pitch:0,roll:0}).yaw,-MIRROR_LIMITS.headRad);
+});
+test('espelho: sem dados fica neutro e valores ruins não quebram',()=>{
+  assert.deepEqual(mirrorPose([],[],null),NEUTRAL_POSE);
+  const p=mirrorPose(['jawOpen'],[NaN],null);assert.equal(p.jaw,0);
+  assert.equal(mirrorPose(['jawOpen'],[7],null).jaw,1);
+  assert.equal(mirrorFresh(null,1000),false);assert.equal(mirrorFresh(900,1000),true);assert.equal(mirrorFresh(100,1000),false);
+});
