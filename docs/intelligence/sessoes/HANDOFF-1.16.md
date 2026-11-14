@@ -21,7 +21,10 @@ Data: 14/11/2026. Prevalece sobre o HANDOFF-1.15. Sessão em andamento, atualiza
 - Pergunta dele: depois de extraídos os dados, ainda é preciso guardar o vídeo?
 - Placa de vídeo do notebook: ele não sabe informar. Orientado a ver no Gerenciador de Tarefas (Desempenho, GPU).
 
+- Proposta dele (14/11): gravar voz e câmera juntas, numa sessão só, com os arquivos guardados separados (áudio num lugar, vídeo e trilha em outro). Mais intuitivo para o capacitador.
+
 ## Recomendações do agente (para confirmar)
+- Sessão conjunta de voz e câmera: faz sentido e vira o padrão da sessão B. Ganho principal: boca, expressão e entonação já nascem sincronizadas. Condições: (1) microfone perto da boca (fone com fio ou segundo aparelho), porque o celular a 2 m grava eco da sala e piora a voz, (2) segunda tela (notebook) como monitor e leitor das frases, já que a câmera traseira esconde a tela do celular, (3) as 200 frases do bloco A continuam válidas, não regravar, (4) manter o modo só voz como reserva. Antes de adotar: teste de 10 frases comparando o áudio conjunto com o do bloco A.
 - Vídeo bruto: manter por enquanto. A trilha de pontos (trilha-0.1) guarda movimento, não aparência. Tatuagem, barba, cabelo e pele só saem das imagens, e os modelos de aparência ainda vão melhorar, então reprocessar exige o bruto. Regra vigente já é não apagar nada nos testes. Rever a retenção quando o avatar com a aparência estiver aprovado.
 - Celular com câmera traseira é o caminho certo para a aparência. A orientação ao vivo usa o mesmo extrator da sessão A (MediaPipe no navegador), rodando no próprio celular.
 - Roupa trocável exige separar corpo e roupa na captação (uma tomada com roupa justa e lisa para o corpo). Entra no roteiro da sessão B.
